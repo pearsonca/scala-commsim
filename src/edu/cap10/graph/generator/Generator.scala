@@ -9,7 +9,7 @@ import scala.collection.mutable.MultiMap
 class PersonGraph(val people:Iterable[Person]) {
 //  def +(that:PersonGraph) = new PersonGraph(this.people++that.people, this.channels ++ that.channels)
   override def toString = {
-    "People: [ "+people+" ]\nChannels :\n"+(channels mkString "\n")
+    "People: [ "+people+" ]\nChannels :\n"+(for (p<-people) yield { "->" + p.channels mkString ", " +"\n" } )
   }
 }
 
