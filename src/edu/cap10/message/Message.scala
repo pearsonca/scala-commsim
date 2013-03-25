@@ -16,4 +16,5 @@ class DefaultLogger(src:Person, tar:Person) extends Logger {
 
 object DefaultLogger {
   def apply(src:Person,tar:Person) = new DefaultLogger(src,tar)
+  def curried(src:Person)(tar:Person) = new DefaultLogger(src,tar)
 }
