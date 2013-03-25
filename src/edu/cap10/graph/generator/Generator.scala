@@ -10,7 +10,8 @@ import scala.collection.mutable.MultiMap
 class PersonGraph(val people : Set[Person]) {
 //  def +(that:PersonGraph) = new PersonGraph(this.people++that.people, this.channels ++ that.channels)
   override def toString = {
-    "People: [ "+people+" ]\nChannels :\n"+(for (p<-people) yield { "->" + p.channels mkString ", " +"\n" } )
+    val chan = (for (p<-people) yield { p+" :"+(p.channels mkString ",") }) mkString ",\n"
+    "People: [ "+people+" ]\nChannels :\n"+chan
   }
 }
 
@@ -39,9 +40,9 @@ object Clique extends Generator[Int] {
     cliquer(Sequential.tupler(count))
   }
   def cliquer(people:Set[Person]) : Set[Person] = {
-    for (p1 <- people; p2 <- people if p1 != p2) {
-      p1 + Path(p2,DefaultLogger(p1,p2))
-    }
+    people foreach((p1:Person)=>{
+      for (p2 <- people filter(_ != p1)) p1 + Path(p2,DefaultLogger(p1,p2))
+    })
     people
   }
     

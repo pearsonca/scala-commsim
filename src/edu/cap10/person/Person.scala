@@ -2,14 +2,14 @@ package edu.cap10.person
 
 import scala.actors._
 import scala.actors.Actor._
-import scala.collection.Set;
+import scala.collection.mutable.Set;
 import scala.collection.mutable.HashSet;
 
 import edu.cap10.channels.Path
 import edu.cap10.message._
 
 
-class Person(val id: Long, val channels : Set[Path]) extends Actor with Set[Path] {
+class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.collection.Set[Path] {
 	def this(id:Long) = this(id, HashSet[Path]())
 	override def hashCode = id.hashCode
 	override def equals(that:Any) = that match {
@@ -18,12 +18,12 @@ class Person(val id: Long, val channels : Set[Path]) extends Actor with Set[Path
 	}
 	
 	override def +(p:Path) = {
-	  channels + p
+	  channels += p
 	  this
 	}
 	
 	override def -(p:Path) = {
-	  channels - p
+	  channels -= p
 	  this
 	}
 	

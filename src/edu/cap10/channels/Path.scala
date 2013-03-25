@@ -8,8 +8,14 @@ import scala.actors._
 import scala.actors.Actor._
 
 
-class Path(tar: Person, logger: Logger) extends Actor {
-	override def toString = " -> " + tar
+class Path(val tar: Person, logger: Logger) extends Actor {
+	override def toString = " ->" + tar
+	override def hashCode = tar.id.hashCode
+	override def equals(that:Any) = that match {
+	  case other:Path => tar.id == other.tar.id
+	  case _ => false
+	}
+	
 	def act() = {
 		loop {
 			react {
