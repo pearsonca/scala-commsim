@@ -31,7 +31,7 @@ class Person(val id: Long, val channels : Set[Path]) extends Actor with Set[Path
 	}
 	
 	override def size = channels size
-	override def foreach(f:(Path)=>Unit) = channels foreach f
+	override def foreach[U](f: Path => U) = channels foreach f
 	
 	def mkPath(to:Person) = this + Path(to, DefaultLogger(this,to))
 	

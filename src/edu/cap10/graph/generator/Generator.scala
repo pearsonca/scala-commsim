@@ -2,11 +2,12 @@ package edu.cap10.graph.generator
 
 import edu.cap10.person.Person
 import edu.cap10.channels.Path
+import edu.cap10.message._
 import scala.collection.mutable._
 import scala.collection.mutable.Set
 import scala.collection.mutable.MultiMap
 
-class PersonGraph(val people:Iterable[Person]) {
+class PersonGraph(val people : Set[Person]) {
 //  def +(that:PersonGraph) = new PersonGraph(this.people++that.people, this.channels ++ that.channels)
   override def toString = {
     "People: [ "+people+" ]\nChannels :\n"+(for (p<-people) yield { "->" + p.channels mkString ", " +"\n" } )
@@ -14,8 +15,8 @@ class PersonGraph(val people:Iterable[Person]) {
 }
 
 object PersonGraph {
-  def apply(people:Iterable[Person], channels:MultiMap[Person,Path]) = new PersonGraph(people,channels)
-  implicit def tuple2PersonGraph = (tuple:(Iterable[Person], MultiMap[Person,Path])) => new PersonGraph(tuple._1,tuple._2)
+  def apply(people:Set[Person]) = new PersonGraph(people)
+  implicit def people2PersonGraph = (p:Set[Person]) => new PersonGraph(p)
 }
 
 abstract class Generator[SrcType] {
@@ -24,36 +25,32 @@ abstract class Generator[SrcType] {
 }
 
 object Sequential extends Generator[Int] {
-  override def generate = (count:Int) => tupler(count)
-  def tupler = tuplerFrom(1) _
+  override def generate = (count:Int) => new PersonGraph(tupler(count))
+  def tupler(count:Int) : Set[Person] = tuplerFrom(1)(count)
   def tuplerFrom(start:Int)(count:Int) = {
-    val people = for (id <- start to (count+start-1)) yield Person(id)
-    var channels = new Map[Person,Set[Path]] with MultiMap[Person,Path]
-    // val channels = Iterable[Channel]()
-    (people,channels)
+    val res = Set[Person]()
+    for (id <- start to (count+start-1)) res+=Person(id)
+    res
   }
 }
 
 object Clique extends Generator[Int] {
   override def generate = (count:Int) => {
-    val (people, _) = Sequential.tupler(count) 
-    (people,cliquer(people))
+    cliquer(Sequential.tupler(count))
   }
-  def cliquer(people:Iterable[Person]) : MultiMap[Person,Path] = {
-    var channels = new Map[Person,Set[Path]] with MultiMap[Person,Path]
-    for (p1 <- people) {
-      channels += (p1->Set[Channel](people.filter(_!=p1)))
-      //(people.filter(_!=p1))
+  def cliquer(people:Set[Person]) : Set[Person] = {
+    for (p1 <- people; p2 <- people if p1 != p2) {
+      p1 + Path(p2,DefaultLogger(p1,p2))
     }
-    channels
+    people
   }
     
 }
 
 object TwoGroupEachClique extends Generator[(Int,Int)] {
   override def generate = (sizes:(Int,Int)) => {
-    val (group1, _) = Sequential.tuplerFrom(1)(sizes._1)
-    val (group2, _) = Sequential.tuplerFrom(sizes._1+1)(sizes._2)
-    (group1++group2, Clique.cliquer(group1)++Clique.cliquer(group2))
+    val group1 = Clique.cliquer(Sequential.tuplerFrom(1)(sizes._1))
+    val group2 = Clique.cliquer(Sequential.tuplerFrom(sizes._1+1)(sizes._2))  
+    group1++group2
   }
 }
