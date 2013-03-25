@@ -11,6 +11,11 @@ import edu.cap10.message._
 
 class Person(val id: Long, val channels : Set[Path]) extends Actor with Set[Path] {
 	def this(id:Long) = this(id, HashSet[Path]())
+	override def hashCode = id.hashCode
+	override def equals(that:Any) = that match {
+	  case other:Person => id == other.id
+	  case _ => false
+	}
 	
 	override def +(p:Path) = {
 	  channels + p
