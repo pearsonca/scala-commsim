@@ -7,11 +7,13 @@ import scala.collection.mutable.BitSet
 
 class Clock(size:Int, listener: Actor) extends Actor {
 	val ref = BitSet(size)
+	var time = 0
 	def act() {
 	    react {
 	      case Done(i) if i < size =>
 	        ref += i
 	        if (ref.size == size) {
+	            time += 1
 	            ref.clear()
 	            listener ! "NEXT"
 	        }
