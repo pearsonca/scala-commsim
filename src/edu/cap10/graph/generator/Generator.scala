@@ -8,7 +8,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.MultiMap
 
 class PersonGraph(val people : Set[Person]) {
-//  def +(that:PersonGraph) = new PersonGraph(this.people++that.people, this.channels ++ that.channels)
+  def +(that:PersonGraph) = new PersonGraph(this.people++that.people)
   override def toString = {
     val chan = (for (p<-people) yield { p+" :"+(p.channels mkString ",") }) mkString ",\n"
     "People: [ "+people+" ]\nChannels :\n"+chan
