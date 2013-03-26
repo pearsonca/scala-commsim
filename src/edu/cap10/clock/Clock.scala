@@ -24,4 +24,8 @@ class Clock(size:Int, listener: Actor) extends Actor {
 	}
 }
 
+object Clock {
+  def apply(size:Int, listener:Actor) = new Clock(size,listener)
+}
+
 case class Done(i:Int)

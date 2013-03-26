@@ -4,7 +4,6 @@ import edu.cap10.graph.generator._
 
 object Test {
 	def main(args: Array[String]) {
-	  val pg = Clique(3)
-	  print(pg)
+	  val pg = Clique(3) 
 	}
 }

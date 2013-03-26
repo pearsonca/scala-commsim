@@ -4,6 +4,7 @@ import scala.actors.Actor
 import edu.cap10.clock.Clock
 import edu.cap10.person.Person
 import edu.cap10.graph.generator._
+import edu.cap10.message._
 
 abstract class Simulation(size:Int) extends Actor {
 	val clock = new Clock(size,this)
@@ -24,5 +25,13 @@ abstract class Simulation(size:Int) extends Actor {
 	}
 }
 
-case class SimTask(which: String, val clock:Clock)
-//case class SimTask(which:String,clock:Clock)
+case class SimTask(val which: String, val clock:Clock)
+
+object Simulation {
+  def main(args: Array[String]) {
+    val sim = new Simulation(5) {}
+    sim.pg.setLogging(new FileLoggerFactory(sim.clock) )
+    sim ! "START"
+    sim ! "STOP"
+  }
+}

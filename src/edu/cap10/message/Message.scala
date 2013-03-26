@@ -12,10 +12,16 @@ case class Message(topic:Int, content:Int) {
 
 abstract class Logger {
   def log(msg:Message) : Unit
+  def shutdown : Boolean
+  var isShutdown = false
 }
 
 class DefaultLogger(src:Person, tar:Person) extends Logger {
   override def log(msg:Message) = print(src + " to "+tar+" : "+msg)
+  override def shutdown = {
+    isShutdown = true
+    isShutdown
+  }
 }
 
 object DefaultLogger {
@@ -28,21 +34,48 @@ class TimeStampedFileLogger(clock:Clock,src:Person,tar:Person,filename:String) e
   override def log(msg:Message) = {
     file println(clock.time + ":"+src+"->"+tar+":"+msg)
   }
-  def shutdown = {
+  override def shutdown = {
     file flush()
     file close()
+    isShutdown = true
+    isShutdown
   }
 }
 
-class PathIDClockedFL(clock:Clock, path:Path) extends Logger {
-  val file = new PrintWriter(new File("path_"+path+".txt"))
+class PathIDClockedFL(clock:Clock, pathname:String) extends Logger {
+  def this(clock:Clock,path:Path) = this(clock,path toString)
+  val file = new PrintWriter(new File("path_"+pathname+".txt"))
   override def log(msg:Message) {
-    file println(clock.time+":"+path+":"+msg)
+    file println(clock.time+":"+pathname+":"+msg)
   }
   def shutdown = {
     file flush()
     file close()
+    isShutdown = true
+    isShutdown
   }
+}
+
+abstract class LoggerFactory {
+  def create(p:Path) : Logger
+}
+
+class FileLoggerFactory(val clock:Clock, ext:String) extends LoggerFactory {
+  def this(clock:Clock) = this(clock,".txt")
+  override def create(p:Path) = {
+    val pw = new PrintWriter(new File(p+ext))
+    new Logger {
+      override def shutdown = {
+        pw flush()
+        pw close()
+        true
+      }
+      override def log(msg:Message) = {
+        pw println(p+":"+msg)
+      }
+    }
+  }
+  
 }
 
 //abstract class LogFactory {

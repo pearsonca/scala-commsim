@@ -13,6 +13,14 @@ class PersonGraph(val people : Set[Person]) {
     val chan = (for (p<-people) yield { p+" :"+(p.channels mkString ",") }) mkString ",\n"
     "People: [ "+people+" ]\nChannels :\n"+chan
   }
+  def setLogging(logFactory:LoggerFactory) = {
+    people foreach {
+      _.channels foreach ((p:Path) => {
+        p setLogger( logFactory.create(p) )
+      })
+    }
+    this
+  }
 }
 
 object PersonGraph {
@@ -41,7 +49,7 @@ object Clique extends Generator[Int] {
   }
   def cliquer(people:Set[Person]) : Set[Person] = {
     people foreach((p1:Person)=>{
-      for (p2 <- people filter(_ != p1)) p1 + Path(p2,DefaultLogger(p1,p2))
+      for (p2 <- people filter(_ != p1)) p1 + Path(p2)
     })
     people
   }
