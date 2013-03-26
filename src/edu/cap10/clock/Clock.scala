@@ -6,20 +6,26 @@ import scala.collection._
 import scala.collection.mutable.BitSet
 
 class Clock(size:Int, listener: Actor) extends Actor {
-	val ref = BitSet(size)
+	val done = BitSet(size)
+	val ready = BitSet(size)
 	var time = 0
-	def act() {
+	def act = loop {
 	    react {
 	      case Done(i) if i < size =>
-	        ref += i
-	        if (ref.size == size) {
+	        done += i
+	        if (done.size == size) {
 	            time += 1
-	            ref.clear()
-	            listener ! "NEXT"
+	            done.clear
+	            listener ! "COMMUNICATE"
 	        }
-	        act()
-	      case "STOP" => println("shutting down Clock.")
-	      case msg => println("Unhandled message "+msg) // die from unhandled message
+	      case Ready(i) if i < size =>
+	        ready += i
+	        if (ready.size == size) {
+	            ready.clear
+	            listener ! "UPDATE"
+	        }
+	      case "STOP" => exit()
+	      case msg => println("Unhandled message "+msg)
 	    }
 	}
 }
@@ -28,4 +34,5 @@ object Clock {
   def apply(size:Int, listener:Actor) = new Clock(size,listener)
 }
 
+case class Ready(i:Int)
 case class Done(i:Int)

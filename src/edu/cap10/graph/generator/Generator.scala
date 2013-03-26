@@ -3,11 +3,14 @@ package edu.cap10.graph.generator
 import edu.cap10.person.Person
 import edu.cap10.channels.Path
 import edu.cap10.message._
+import edu.cap10.sim._
+
 import scala.collection.mutable._
 import scala.collection.mutable.Set
 import scala.collection.mutable.MultiMap
+import scala.actors.Actor
 
-class PersonGraph(val people : Set[Person]) {
+class PersonGraph(val people : Set[Person]) extends Actor {
   def +(that:PersonGraph) = new PersonGraph(this.people++that.people)
   override def toString = {
     val chan = (for (p<-people) yield { p+" :"+(p.channels mkString ",") }) mkString ",\n"
@@ -20,6 +23,15 @@ class PersonGraph(val people : Set[Person]) {
       })
     }
     this
+  }
+  override def act = loop {
+    react {
+      case SimTask("STOP",c) => {
+        people foreach { _ ! SimTask("STOP",c) }
+        exit()
+      }
+      case msg => people foreach { _ ! msg }
+    }
   }
 }
 

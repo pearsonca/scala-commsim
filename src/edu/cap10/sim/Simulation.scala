@@ -9,25 +9,39 @@ import edu.cap10.message._
 abstract class Simulation(size:Int) extends Actor {
 	val clock = new Clock(size,this)
 	val pg = Clique(size)
-	val next = SimTask("NEXT",clock)
-	val update = SimTask("UPDATE",clock)
-	def sendNext = pg.people foreach { _ ! next }
-	def sendUp = pg.people foreach { _ ! update }
+	val tasks = Task.map(clock)
+//	val startTask = SimTask("START",clock)
+//	val next = SimTask("NEXT",clock)
+//	val update = SimTask("UPDATE",clock)
+//	val stop = SimTask("STOP",clock)
+	def send(which:String) = pg ! tasks(which)
+	def startup = {
+	  pg.start
+	  send("START")
+	}
 	
 	override def act = react {
 	  case "START" =>
-	    pg.people foreach { _.start }
-	    sendNext
+	    startup
 	    act
-	  case Done(id) => clock ! Done(id)
 	  case "NEXT" if sender == clock =>
 	    sendUp
 	    sendNext
-	  case msg => sender ! msg
+	  case "STOP" => {
+	    
+	  }
+	  case msg => println(msg)
 	}
 }
 
 case class SimTask(val which: String, val clock:Clock)
+
+object Task {
+  val list = List("START", "COMMUNICATE","UPDATE","STOP")
+  def map(clock:Clock) = {
+    list map { task => (task, SimTask(task,clock)) } toMap
+  }
+}
 
 object Test {
   def main(args: Array[String]) {
@@ -42,7 +56,10 @@ object Test {
             sim.start
             sim ! "START"
           }
-          case "STOP" if sender == sim => exit()
+          case "STOP" if sender == sim => {
+            println("sim replied, shutting down")
+            exit()
+          }
           case "STOP" => sim ! "STOP"
         }
       }
