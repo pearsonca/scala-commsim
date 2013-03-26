@@ -20,17 +20,15 @@ abstract class Simulation(size:Int) extends Actor {
 	  send("START")
 	}
 	
-	override def act = react {
-	  case "START" =>
-	    startup
-	    act
-	  case "NEXT" if sender == clock =>
-	    sendUp
-	    sendNext
-	  case "STOP" => {
-	    
-	  }
-	  case msg => println(msg)
+	override def act = loop {
+	  react {
+		  case "START" =>
+		    startup
+		    act
+		  case "NEXT" if sender == clock =>
+		  case "STOP" =>
+		  case msg => println(msg)
+		}
 	}
 }
 
