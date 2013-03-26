@@ -8,37 +8,17 @@ import scala.collection.mutable.HashSet;
 import edu.cap10.channels.Path
 import edu.cap10.message._
 import edu.cap10.sim._
+import edu.cap10.clock._
+import edu.cap10.utils._
 
-
-class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.collection.Set[Path] {
-	def this(id:Long) = this(id, HashSet[Path]())
+class Person(val id: Int, val channels : Set[Path]) extends Actor with DelegateSet[Person,Path] {
+	def this(id:Int) = this(id, HashSet[Path]())
 	override def hashCode = id.hashCode
 	override def equals(that:Any) = that match {
 	  case other:Person => id == other.id
 	  case _ => false
 	}
-	
-	override def +(p:Path) = {
-	  channels += p
-	  this
-	}
-	
-	override def -(p:Path) = {
-	  channels -= p
-	  this
-	}
-	
-	override def contains(p:Path) = channels contains p
-	override def iterator = channels iterator
-	
-	override def empty : Person = {
-	  channels.empty
-	  this
-	}
-	
-	override def size = channels size
-	override def foreach[U](f: Path => U) = channels foreach f
-	
+		
 	def mkPath(to:Person) = this + Path(to, DefaultLogger(this,to))
 	
 	val name : String = "P"+id
@@ -46,8 +26,11 @@ class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.co
 	def act = {
 	  loop {
 	    react {
-		    case SimTask("NEXT",c) => println("NEXT")
-		    case SimTask("UPDATE",c) => println("UPDATE")
+		    case SimTask("NEXT",c) => {
+		      println(name +" received NEXT")
+		      sender ! Done(id)
+		    }
+		    case SimTask("UPDATE",c) => println(name +" received UPDATE")
 		    case msg =>
 	    }
 	  }
@@ -55,10 +38,10 @@ class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.co
 }
 
 object Person {
-	def apply(id:Long) = new Person(id)
+	def apply(id:Int) = new Person(id)
 }
 
-class Plotter(id : Long) extends Person(id) {
+class Plotter(id : Int) extends Person(id) {
 	override def act = {
 	  loop {
 	    
