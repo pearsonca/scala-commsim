@@ -7,6 +7,7 @@ import scala.collection.mutable.HashSet;
 
 import edu.cap10.channels.Path
 import edu.cap10.message._
+import edu.cap10.sim._
 
 
 class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.collection.Set[Path] {
@@ -44,7 +45,11 @@ class Person(val id: Long, val channels : Set[Path]) extends Actor with scala.co
 	override def toString = name
 	def act = {
 	  loop {
-	    
+	    react {
+		    case SimTask("NEXT",c) => println("NEXT")
+		    case SimTask("UPDATE",c) => println("UPDATE")
+		    case msg =>
+	    }
 	  }
 	}
 }
