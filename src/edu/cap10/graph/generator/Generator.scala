@@ -26,11 +26,15 @@ class PersonGraph(val people : Set[Person]) extends Actor {
   }
   override def act = loop {
     react {
+      case SimTask("START",c) => {
+        people foreach { _.start ! SimTask("START",c) }
+      }
       case SimTask("STOP",c) => {
         people foreach { _ ! SimTask("STOP",c) }
-        exit()
+        exit
       }
-      case msg => people foreach { _ ! msg }
+      case task : SimTask => people foreach { _ ! task }
+      case msg => println("Unhandled "+msg)
     }
   }
 }

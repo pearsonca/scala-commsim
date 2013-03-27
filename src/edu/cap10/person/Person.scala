@@ -28,16 +28,22 @@ class Person(val id: Int, val channels : Set[Path]) extends Actor with DelegateS
 	    react {
 	    	case SimTask("START", _) => {
 		      this foreach { _.start }
-		      act
 		    }
 		    case SimTask("COMMUNICATE",c) => {
 		      // generate messages
 		      // drop them into paths
-		      // wait for ACKS?
+		      // [wait for ACKS?]
+		      c ! Ready(id)
+		    }
+		    case SimTask("UPDATE",c) => {
+		      // review inbound message list
+		      // update according to inbound messages
 		      c ! Done(id)
 		    }
-		    case SimTask("UPDATE",c) => println(name +" received UPDATE")
-		    case msg =>
+		    case SimTask("STOP",_) => {
+		      exit
+		    }
+		    case msg => println("Unhandled "+msg)
 	    }
 	  }
 	}

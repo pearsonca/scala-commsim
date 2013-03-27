@@ -10,10 +10,6 @@ abstract class Simulation(size:Int) extends Actor {
 	val clock = new Clock(size,this)
 	val pg = Clique(size)
 	val tasks = Task.map(clock)
-//	val startTask = SimTask("START",clock)
-//	val next = SimTask("NEXT",clock)
-//	val update = SimTask("UPDATE",clock)
-//	val stop = SimTask("STOP",clock)
 	def send(which:String) = pg ! tasks(which)
 	def startup = {
 	  pg.start
@@ -24,9 +20,12 @@ abstract class Simulation(size:Int) extends Actor {
 	  react {
 		  case "START" =>
 		    startup
-		    act
-		  case "NEXT" if sender == clock =>
+		    this ! "COMMUNICATE"
 		  case "STOP" =>
+		    send("STOP")
+		    exit
+		  case "COMMUNICATE" => send("COMMUNICATE")
+		  case "UPDATE" => send("UPDATE")
 		  case msg => println(msg)
 		}
 	}
@@ -47,23 +46,7 @@ object Test {
     println("STARTING")
     println(sim.pg)
     //sim.pg.setLogging(new FileLoggerFactory(sim.clock) )
-    val outerLoop = new Actor {
-      override def act = while(true) {
-        receive {
-          case "START" => {
-            sim.start
-            sim ! "START"
-          }
-          case "STOP" if sender == sim => {
-            println("sim replied, shutting down")
-            exit()
-          }
-          case "STOP" => sim ! "STOP"
-        }
-      }
-    }
-    outerLoop.start
-    outerLoop ! "START"
-    outerLoop ! "STOP"
+    sim.start ! "START" 
+    sim ! "STOP"
   }
 }
