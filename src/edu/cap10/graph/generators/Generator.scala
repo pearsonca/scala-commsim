@@ -1,4 +1,4 @@
-package edu.cap10.graph.generator
+package edu.cap10.graph.generators
 
 import edu.cap10.person.Person
 import edu.cap10.channels.Path
