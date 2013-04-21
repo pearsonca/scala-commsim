@@ -2,8 +2,8 @@ package edu.cap10.person
 
 import scala.actors._
 import scala.actors.Actor._
-import scala.collection.mutable.Set;
-import scala.collection.mutable.HashSet;
+import scala.collection.mutable.{Set => MSet};
+import scala.collection.mutable._;
 
 import edu.cap10.channels.Path
 import edu.cap10.message._
@@ -11,7 +11,7 @@ import edu.cap10.sim._
 import edu.cap10.clock._
 import edu.cap10.utils._
 
-class Person(val id: Int, val channels : Set[Path]) extends Actor with DelegateSet[Person,Path] {
+class Person(val id: Int, val channels : MSet[Path]) extends Actor with DelegateSet[Person,Path] {
 	def this(id:Int) = this(id, HashSet[Path]())
 	override def hashCode = id.hashCode
 	override def equals(that:Any) = that match {
@@ -60,3 +60,14 @@ class Plotter(id : Int) extends Person(id) {
 	  }
 	}
 }
+
+//class TestPerson extends Actor {
+//  val others : Seq[Path];
+//  def act() = {
+//    loop {
+//      react {
+//        case msg => println("received")
+//      }
+//    }
+//  }
+//}

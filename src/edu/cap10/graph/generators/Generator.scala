@@ -36,8 +36,8 @@ object Clique extends Generator[Int] {
     
 }
 
-object TwoGroupEachClique extends Generator[(Int,Int)] {
-  override def generate(sizes:(Int,Int)) = PersonGraph(
-    Clique.cliquer(Sequential.tuplerFrom(1)(sizes._1)) ++ Clique.cliquer(Sequential.tuplerFrom(sizes._1+1)(sizes._2))
-  )
-}
+//object TwoGroupEachClique extends Generator[(Int,Int)] {
+//  override def generate(sizes:(Int,Int)) = PersonGraph(
+//    Clique.cliquer(Sequential.tuplerFrom(1)(sizes._1)) ++ Clique.cliquer(Sequential.tuplerFrom(sizes._1+1)(sizes._2))
+//  )
+//}
