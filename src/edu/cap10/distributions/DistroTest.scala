@@ -2,8 +2,7 @@ package edu.cap10.distributions
 
 object DistroTest {
 	def main(args: Array[String]) {
-		val intgen = IntRangeSrc(10);
-		println(intgen.list(10))
-		println(intgen.list(10))
+		val intgen = BinomialSrc(6,0.3);
+		println(intgen.list(50))
 	}
 }

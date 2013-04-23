@@ -2,7 +2,7 @@ package edu.cap10.distributions
 
 import scala.util.Random.nextInt
 
-abstract class IntRangeSrc extends DistroSrc[Int]
+abstract class IntRangeSrc extends DistroSrcLike[Int]
 
 object IntRangeSrc {
   private def core(mx:Int) = new Iterator[Int] {
