@@ -5,6 +5,7 @@ import scala.collection.LinearSeq.{fill => rep}
 import scala.math.pow
 import scala.runtime.RichDouble
 import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.immutable.PagedSeq
 
 import java.util.Collections.{ binarySearch => jbSearch}
 import java.util.{List => JList}
@@ -90,13 +91,21 @@ object BinomialSrc {
 
 // TODO get smarter on sharing fail / success p?
 class BinomialCache(p:Double) {
-  val src : Stream[BinomialSrc] = {
-    def error() : BinomialSrc = BinomialSrc(0,p)
-    def loop(i: Int): Stream[BinomialSrc] = {
+  private def more(buf:Array[BinomialSrc],s:Int,e:Int) = {
+    for (i <- s until (s+5)) {
       println("calculating "+i)
-      BinomialSrc(i,p) #:: loop(i + 1)
+      buf(i) = BinomialSrc(i,p)
     }
-    error() #:: loop(1)
+    5
   }
-  def apply(max: Int) = src(max)
+  val newSrc = new PagedSeq(more)
+//  val src : Stream[BinomialSrc] = {
+//    def error() : BinomialSrc = BinomialSrc(0,p)
+//    def loop(i: Int): Stream[BinomialSrc] = {
+//      println("calculating "+i)
+//      BinomialSrc(i,p) #:: loop(i + 1)
+//    }
+//    error() #:: loop(1)
+//  }
+  def apply(max: Int) = newSrc(max)
 }
