@@ -29,8 +29,8 @@ object BinomialSrc {
     var (num, den) = (1, 1)
     val coeffbase = 1 +: { for (n <- 0 until (maxref/2+maxref%2)) yield {
       num *= max - n
-      den *= 1 + n
-      num / den
+      num /= 1 + n
+      num
     } }
     
     coeffbase ++ { if (maxref%2 == 0) {
