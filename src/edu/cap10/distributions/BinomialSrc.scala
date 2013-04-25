@@ -1,7 +1,7 @@
 package edu.cap10.distributions
 
 import scala.math.pow
-import scala.collection.LinearSeq
+import scala.collection.LinearSeq.{fill => rep}
 import scala.math.pow
 import scala.runtime.RichDouble
 import scala.collection.JavaConversions.seqAsJavaList
@@ -12,16 +12,23 @@ import java.util.{List => JList}
 abstract class BinomialSrc extends DistroSrc[Int]
 
 object BinomialSrc {
-  def failPs(max:Int,p:Double) =
-    successPs(max,1-p).reverse
-  def successPs(max:Int,p:Double) =
-    LinearSeq.fill(max)(1.0).scanLeft(1.0)( _ * _ * p)
+  /**
+   * @param trials the number of trials
+   * @param p the probability of success
+   * @return the probability of i failures, (1-p)^i 
+   */
+  def failPs(trials:Int, p:Double) =
+    successPs(trials, 1-p).reverse
+    
+  def successPs(trials:Int, p:Double) =
+    rep(trials)(1.0).scanLeft(1.0)( _ * _ * p)
+    
   def comboCoeffs(max:Int) = {
     val maxref = max-1
-    var (num, den) = (1, 1);
+    var (num, den) = (1, 1)
     val coeffbase = 1 +: { for (n <- 0 until (maxref/2+maxref%2)) yield {
       num *= max - n
-      den *= 1+n
+      den *= 1 + n
       num / den
     } }
     
@@ -31,10 +38,10 @@ object BinomialSrc {
       coeffbase.reverse.tail
     } }
   }
-  private class Searchable(p:JList[RichDouble]) {
-    def binarySearch(key:Double) = jbSearch(p,key)
+  
+  private class Searchable(p:JList[RichDouble]) { 
     def apply(key:Double) = {
-      val res = binarySearch(key)
+      val res = jbSearch(p,key)
       if (res < 0) {
         -(res+1)
       } else res
