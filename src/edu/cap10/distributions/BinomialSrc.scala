@@ -51,21 +51,52 @@ object BinomialSrc {
     new Searchable(seqAsJavaList(p).asInstanceOf[JList[RichDouble]])
   
   def apply(max:Int, p:Double) = {
-    require(max > 0,"max arg must be greater than 0.")
-    require(p >= 0 && p <= 1,"p must be a probability (0 <= p <= 1).")
-    val terms = src2Searchable({
-      for((m,p,c) <- 
-    		  (failPs(max,p),successPs(max,p),comboCoeffs(max)).zipped
-    	) yield m*p*c
-    }.scanLeft(0.0)(_+_).slice(1,max+1).toIndexedSeq)
-    // scanLeft adds an extra index (initial 0.0) to the max+1 cumulants, so last index == max+1
-    
-    new BinomialSrc {
-      def apply(n:Int) = {
-        val doubles = DoubleSrc(n)
-        doubles map(terms(_))
-      }
-      def next = terms(DoubleSrc.next)
+    if (max <= 0 || p < 0 || p > 1) {
+      ErrorBinomialSrc
+    } else if (max == 1) {
+      new SingleBinomialSrc(p)
+    } else {
+	    val terms = src2Searchable({
+	      for((m,p,c) <- 
+	    		  (failPs(max,p),successPs(max,p),comboCoeffs(max)).zipped
+	    	) yield m*p*c
+	    }.scanLeft(0.0)(_+_).slice(1,max+1).toIndexedSeq)
+	    // scanLeft adds an extra index (initial 0.0) to the max+1 cumulants, so last index == max+1
+	    
+	    new BinomialSrc {
+	      def apply(n:Int) = {
+	        val doubles = DoubleSrc(n)
+	        doubles map(terms(_))
+	      }
+	      def next = terms(DoubleSrc.next)
+	    }
     }
   }
+  
+  private class SingleBinomialSrc(p:Double) extends BinomialSrc {
+    def apply(n:Int) = {
+      val doubles = DoubleSrc(n)
+      doubles map((d) => if(d < p) 1 else 0)
+    }
+    def next = if (DoubleSrc.next < p) 1 else 0
+  }
+  
+  private object ErrorBinomialSrc extends BinomialSrc {
+    def apply(n:Int) = throw new UnsupportedOperationException("Misconfigured BinomialSrc (max <= 0 || p < 0 || p > 1).")
+    def next = throw new UnsupportedOperationException("Misconfigured BinomialSrc (max <= 0 || p < 0 || p > 1).")
+  }
+}
+
+
+// TODO get smarter on sharing fail / success p?
+class BinomialCache(p:Double) {
+  val src : Stream[BinomialSrc] = {
+    def error() : BinomialSrc = BinomialSrc(0,p)
+    def loop(i: Int): Stream[BinomialSrc] = {
+      println("calculating "+i)
+      BinomialSrc(i,p) #:: loop(i + 1)
+    }
+    error() #:: loop(1)
+  }
+  def apply(max: Int) = src(max)
 }

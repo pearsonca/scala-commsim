@@ -5,15 +5,27 @@ import scala.collection.mutable.{Buffer => MBuffer}
 import scala.actors._
 
 trait PersonLike extends Actor {
-	val contacts : Map[CommunityType,MBuffer[PersonLike]]
+	val contacts : Map[CommunityType,MBuffer[PersonLike]] = Map(
+			Religion -> MBuffer[PersonLike](),
+			Work -> MBuffer[PersonLike](),
+			Family -> MBuffer[PersonLike]()
+	)
 	
 	def connect(community:CommunityType, people:PersonLike*) = {
 	  contacts(community) ++= people
 	  this
 	} 
 	
-	def monitor(msg: Message) : Unit = {
+	/** 
+	 * The monitoring method.  Default monitoring is to System.out.
+	 * 
+	 * monitor(msg) is called for messages received into update(msg).
+	 * 
+	 * @return the incoming message without any side-effects
+	 */
+	def monitor(msg: Message) = {
 	  println(id + ", "+msg)
+	  msg
 	}
 	
 	/** 
@@ -26,7 +38,7 @@ trait PersonLike extends Actor {
 	 *  This is a hook for prepare for internal state changes to a person (which, e.g.,
 	 *  might affect update()).  It's default behavior adds the msg to its inbox 
 	 */
-	def update(msg:Message) : Unit = inbox += msg
+	def update(msg:Message) : Unit = inbox += monitor(msg)
 	val inbox = MBuffer[Message]()
 	
 	/** 
@@ -38,7 +50,7 @@ trait PersonLike extends Actor {
 	 *  */
 	def messages() : Map[CommunityType,Iterable[(Int,Vocabulary)]]
 	
-	def id() : String
+	def id() : Int
 	def messenger(community:CommunityType, what:Vocabulary) = Message(this,community,what)
 	
 	def sendMessages(msgs:Map[CommunityType,Iterable[(Int,Vocabulary)]]) = 
@@ -82,4 +94,3 @@ case object Bad extends Vocabulary {
 case class Message(sender:PersonLike, community:CommunityType, content:Vocabulary) {
   override val toString = sender.id +", "+community+", "+content
 }
-class CommLine

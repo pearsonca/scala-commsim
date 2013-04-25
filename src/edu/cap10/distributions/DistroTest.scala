@@ -2,7 +2,8 @@ package edu.cap10.distributions
 
 object DistroTest {
 	def main(args: Array[String]) {
-		val intgen = BinomialSrc(6,0.3);
-		println(intgen.list(50))
+		val cache = new BinomialCache(0.3)
+		for (max <- 5 to 1; intgen = cache(max)) println(intgen.list(10)) 
+		println(cache(3).list(10))
 	}
 }
