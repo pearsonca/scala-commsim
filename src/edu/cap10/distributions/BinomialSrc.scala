@@ -26,8 +26,8 @@ object BinomialSrc {
     
   def comboCoeffs(max:Int) = {
     val maxref = max-1
-    var (num, den) = (1, 1)
-    val coeffbase = 1 +: { for (n <- 0 until (maxref/2+maxref%2)) yield {
+    var num = BigInt(1)
+    val coeffbase = BigInt(1) +: { for (n <- 0 until (maxref/2+maxref%2)) yield {
       num *= max - n
       num /= 1 + n
       num
@@ -60,7 +60,7 @@ object BinomialSrc {
 	    val terms = src2Searchable({
 	      for((m,p,c) <- 
 	    		  (failPs(max,p),successPs(max,p),comboCoeffs(max)).zipped
-	    	) yield m*p*c
+	    	) yield c.doubleValue*m*p
 	    }.scanLeft(0.0)(_+_).slice(1,max+1).toIndexedSeq)
 	    // scanLeft adds an extra index (initial 0.0) to the max+1 cumulants, so last index == max+1
 	    
@@ -91,21 +91,21 @@ object BinomialSrc {
 
 // TODO get smarter on sharing fail / success p?
 class BinomialCache(p:Double) {
-  private def more(buf:Array[BinomialSrc],s:Int,e:Int) = {
-    for (i <- s until (s+5)) {
-      println("calculating "+i)
-      buf(i) = BinomialSrc(i,p)
-    }
-    5
-  }
-  val newSrc = new PagedSeq(more)
-//  val src : Stream[BinomialSrc] = {
-//    def error() : BinomialSrc = BinomialSrc(0,p)
-//    def loop(i: Int): Stream[BinomialSrc] = {
+//  private def more(buf:Array[BinomialSrc],s:Int,e:Int) = {
+//    for (i <- s until (s+5)) {
 //      println("calculating "+i)
-//      BinomialSrc(i,p) #:: loop(i + 1)
+//      buf(i) = BinomialSrc(i,p)
 //    }
-//    error() #:: loop(1)
+//    5
 //  }
-  def apply(max: Int) = newSrc(max)
+//  val newSrc = new PagedSeq(more)
+  val src : Stream[BinomialSrc] = { 
+    def loop(i: Int): Stream[BinomialSrc] = BinomialSrc(i,p) #:: loop(i + 1)
+    loop(0)
+  }
+  def apply(max: Int) = src(max)
+}
+
+object BinomialCache {
+  def apply(p:Double) = new BinomialCache(p)
 }
