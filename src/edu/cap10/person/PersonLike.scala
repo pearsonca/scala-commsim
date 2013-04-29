@@ -3,19 +3,11 @@ package edu.cap10.person
 import scala.collection._
 import scala.collection.mutable.{Buffer => MBuffer}
 import scala.actors._
+import Community.{Value => CommunityType}
 
 trait PersonLike extends Actor {
-	val contacts : Map[CommunityType,MBuffer[PersonLike]] = Map(
-			Religion -> MBuffer[PersonLike](),
-			Work -> MBuffer[PersonLike](),
-			Family -> MBuffer[PersonLike]()
-	)
-	
-	def connect(community:CommunityType, people:PersonLike*) = {
-	  contacts(community) ++= people
-	  this
-	} 
-	
+	def contacts : Map[CommunityType, MBuffer[PersonLike]]
+		
 	/** 
 	 * The monitoring method.  Default monitoring is to System.out.
 	 * 
@@ -48,16 +40,16 @@ trait PersonLike extends Actor {
 	 *  sets which contacts entry to bring up, then the who index sets which person to send to.
 	 *  Message content is set by the what (Vocabulary) part of the pair.
 	 *  */
-	def messages() : Map[CommunityType,Iterable[(Int,Vocabulary)]]
+	def messages() : Map[CommunityType, Iterable[(PersonLike,Vocabulary)]]
 	
 	def id() : Int
 	def messenger(community:CommunityType, what:Vocabulary) = Message(this,community,what)
 	
-	def sendMessages(msgs:Map[CommunityType,Iterable[(Int,Vocabulary)]]) = 
+	def sendMessages(msgs:Map[CommunityType,Iterable[(PersonLike,Vocabulary)]]) = 
 	  for (community <- msgs.keys; 
 		recipients = contacts(community); 
 	    (who,what) <- msgs(community)) {
-	        recipients(who) ! messenger(community,what)
+	        who ! messenger(community, what)
 	  }
 	
 	def act() = loop {
@@ -72,16 +64,14 @@ trait PersonLike extends Actor {
 	
 }
 
-sealed trait CommunityType
-case object Religion extends CommunityType {
-  override val toString = "RELIGION"
+object Community extends Enumeration {
+  val Religion, Work, Family, Plot = Value
 }
-case object Work extends CommunityType {
-  override val toString = "WORK"
-}
-case object Family extends CommunityType {
-  override val toString = "FAMILY"
-}
+//object Religion extends CommunityType("RELIGION")
+//object Work extends CommunityType("WORK")
+//object Family extends CommunityType("FAMILY")
+//object Plot extends CommunityType("PLOT")
+
 
 sealed trait Vocabulary
 case object Good extends Vocabulary {
