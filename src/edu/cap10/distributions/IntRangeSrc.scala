@@ -21,3 +21,11 @@ object IntRangeSrc {
     }
   }
 }
+
+object IntRangeSrcCache {
+  val src : Stream[IntRangeSrc] = { 
+    def loop(i: Int): Stream[IntRangeSrc] = IntRangeSrc(i) #:: loop(i + 1)
+    loop(0)
+  }
+  def apply(max: Int) = src(max)
+}
