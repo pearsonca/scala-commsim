@@ -2,8 +2,8 @@ package edu.cap10.graph.generators
 
 import edu.cap10.graph._
 
-import edu.cap10.person.Person
-import edu.cap10.channels.Path
+//import edu.cap10.person.Person
+//import edu.cap10.channels.Path
 import edu.cap10.message._
 import edu.cap10.sim._
 

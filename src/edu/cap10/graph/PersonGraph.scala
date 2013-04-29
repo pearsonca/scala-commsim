@@ -2,7 +2,7 @@ package edu.cap10.graph
 
 import scala.actors._
 import edu.cap10.person._
-import edu.cap10.channels._
+//import edu.cap10.channels._
 import edu.cap10.sim._
 import edu.cap10.message._
 import edu.cap10.utils.DelegateIterable
