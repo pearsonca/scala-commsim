@@ -108,21 +108,10 @@ object CliqueUp {
 //class FromGraphML
 //class FromDot
 
-//class Fractal(override val size:Int, val commType:Community.Value, val startId : Int = 0)
-//extends CommunityConfiguration {
-//	override val connections = { 
-//	  // make triad or quartet cliques
-//	  val range = startId until (size+startId)
-//	  for (src <- range) yield {
-//		  range.filter( _ != src )
-//	  } 
-//	}
-//	private def baselink(size:Int, startId:Int) = new Clique(size,commType,startId)
-//	
-//	private def link( groups:Iterable[_ <: Iterable[Int]] ) = {
-//	  var ref = groups flatten
-//	  // pick one from each group, link them
-//	  
-//	}
-//}
-
+import java.io._
+object iGraphELWriter {
+  def write(tar:PrintWriter, pop: Seq[_<:PersonLike]) = {
+    for (psrc <- pop; ctype <- psrc.contacts.keys; ptar <- psrc.contacts(ctype) ) tar.println(psrc.id + " "+ptar.id + " " + ctype)
+    tar.flush
+  }
+}
