@@ -29,7 +29,7 @@ class Clique(val commType:Community.Value = Community.Plot)
 extends CommunityConfiguration {
 	override def apply(pIter : Iterator[PersonLike], size:Int) = {
 	  val people = pIter.take(size).toSeq
-	  for (src <- people) src.contacts(commType) ++= people filter (_ != src)
+	  for (src <- people) src.contacts(commType) ++= (people filter (_ ne src))
 	  people
 	}
 }
@@ -76,28 +76,30 @@ extends CommunityConfiguration {
 
 object CliqueUp {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueUp(cliqueSize,commType)
-  def grouped(src: Seq[_ <: Seq[PersonLike]], cliqueSize:Int, commType:Community.Value) : Seq[PersonLike] =
+  def grouped(src: Seq[_ <: Seq[PersonLike]], cliqueSize:Int, commType:Community.Value) : Seq[PersonLike] = {
     if (src.size == 1)
       src(0)
     else if (src.size < cliqueSize) {
       up(src.iterator, commType, src.size)
-    } else src.size % cliqueSize match {
-      case 0 => grouped(Seq.fill(src.size / cliqueSize)( up(src.iterator, commType, cliqueSize) ), cliqueSize, commType )
-      case rem if rem > (src.size / cliqueSize) =>
-        val iter = src.iterator
-        grouped( up(iter, commType, rem) +: Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
-      case rem =>
-        val iter = src.iterator
-        grouped( Seq.fill(rem)( up(iter, commType, cliqueSize+1) ) ++ Seq.fill((src.size/cliqueSize) - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+    } else {
+      val iter = src.iterator
+      src.size % cliqueSize match {
+	      case 0 => grouped(Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType )
+	      case rem if rem > (src.size / cliqueSize) =>  
+	        grouped( up(iter, commType, rem) +: Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	      case rem =>     
+	        grouped( Seq.fill(rem)( up(iter, commType, cliqueSize+1) ) ++ Seq.fill((src.size/cliqueSize) - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	  }
     }
-  
+  }
   def up(src: Iterator[_ <: Seq[PersonLike]], commType:Community.Value, cliqueSize:Int) = {
     val res = src.take(cliqueSize).toSeq
     for (	srci <- 0 until res.size; 
     		tarj <- 0 until res.size if tarj != srci;
-    		srcp = res(srci)(IntRangeSrcCache(res(srci).size).next);
-    		tarp = res(tarj)(IntRangeSrcCache(res(tarj).size).next)
-    	) srcp.contacts(commType) += tarp;
+    		srcp = res(srci).random;
+    		tarp = res(tarj).random if tarp ne srcp
+    	)
+      srcp.contacts(commType) += tarp;
     res flatten
   }
 }
@@ -109,7 +111,9 @@ object CliqueUp {
 import java.io._
 object iGraphELWriter {
   def write(tar:PrintWriter, pop: Seq[_<:PersonLike]) = {
-    for (psrc <- pop; ctype <- psrc.contacts.keys; ptar <- psrc.contacts(ctype) ) tar.println(psrc.id + " "+ptar.id + " " + ctype)
+    for (psrc <- pop; ctype <- psrc.contacts.keys; ptar <- psrc.contacts(ctype) ) {
+      tar.println(psrc.id + " "+ptar.id + " " + ctype)
+    }
     tar.flush
   }
 }
