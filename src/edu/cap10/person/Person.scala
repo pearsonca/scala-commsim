@@ -47,6 +47,10 @@ class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0) {
   }
 }
 
+object BackgroundFactory {
+  def apply(pComm:Double, pBad:Double) = new BackgroundFactory(pComm, pBad)
+}
+
 /**
  * This class provides a convenient wrapper to sub-ordinate clusters.  The Hub
  * or other clusters can send to a cluster, and it takes care of the send-to-random
