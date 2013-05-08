@@ -23,32 +23,48 @@ class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0) {
   val binCache = BinomialCache(pComm)
   val src : Stream[PersonLike] = {
     def loop(i:Int) : Stream[PersonLike] = {
-      new PersonLike {
-        val id = i
-        override val contacts = Map(
-			Religion -> Buffer[PersonLike](),
-			Work -> Buffer[PersonLike](),
-			Family -> Buffer[PersonLike]()
-        )
-
-        def messages() = {
-          { for ( community <- contacts.keys; // for each possible community
-        		  commContacts = contacts(community); // fish out the contacts
-        		  count = binCache(commContacts.length).next; // figure out how many messages to send to this community
-        		  if count > 0) // if that # is positive
-            yield
-            	community -> 
-          		shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
-          }.toMap
-        }
-      } #:: loop(i+1)
+      new Person(i, binCache, pBad) #:: loop(i+1)
     }
     loop(startId)
   }
 }
 
+class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLike {
+  override val contacts = Map(
+			Religion -> Buffer[PersonLike](),
+			Work -> Buffer[PersonLike](),
+			Family -> Buffer[PersonLike]()
+        )
+        
+	def messages() = {
+	  { for ( community <- contacts.keys; // for each possible community
+			  commContacts = contacts(community); // fish out the contacts
+			  count = binCache(commContacts.length).next; // figure out how many messages to send to this community
+			  if count > 0) // if that # is positive
+	    yield
+	    	community -> 
+	  		shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
+	  }.toMap
+	}
+}
+
 object BackgroundFactory {
   def apply(pComm:Double, pBad:Double) = new BackgroundFactory(pComm, pBad)
+}
+
+class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Person(id, BinomialCache(pComm), pBadNorms) {
+  val clusters = Buffer[Buffer[Plotter]]()
+  val badCache = BinomialCache(pBadSubs)
+  override def messages() = {
+      val res = super.messages
+      val badCount = badCache(clusters.size).next
+      if (badCount > 0) {
+        res + (Plot -> { 
+          for ( cluster <- shuffle(clusters).take(badCount) ) yield (cluster.random, Bad)
+        })
+      } else res
+  }
+
 }
 
 /**
@@ -56,19 +72,6 @@ object BackgroundFactory {
  * or other clusters can send to a cluster, and it takes care of the send-to-random
  * member part.
  */
-//class PlotterCluster extends Buffer[Plotter] {
-//  val delegate = Buffer[Plotter]()
-//  def listener = delegate(IntRangeSrcCache(this.length).next)
-//  
-//  def update(n:Int,newelem:Plotter) = delegate.update(n, newelem)
-//  def +=(p:Plotter) = { delegate += p; this }
-//  def apply(n:Int) = delegate(n)
-//  def clear = delegate.clear
-//}
-//object PlotterCluster {
-//  def apply() = new PlotterCluster 
-//}
-
 class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike {
 	// funky type inference here - 
 	override val contacts = Map( Plot -> Buffer[PersonLike]() )
@@ -99,14 +102,3 @@ class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends Per
 	  
 	} else Map() // do nothing
 }
-
-//class TestPerson extends Actor {
-//  val others : Seq[Path];
-//  def act() = {
-//    loop {
-//      react {
-//        case msg => println("received")
-//      }
-//    }
-//  }
-//}
