@@ -48,7 +48,7 @@ extends CommunityConfiguration {
 }
 
 object CliqueAll {
-  def apply(cliqueSize:Int, commType:Community.Value) = new CliqueAll(cliqueSize,commType)
+  def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueAll(cliqueSize,commType)
   def grouped(src: Iterator[PersonLike], size:Int, cliqueSize:Int, commType:Community.Value) : Seq[_ <: Seq[PersonLike]] = 
     if (size < cliqueSize) // if there are fewer people than the clique size,
         // clique to that smaller size, and then return the smaller group
@@ -57,7 +57,7 @@ object CliqueAll {
     else size % cliqueSize match { // otherwise, consider the remainder from size / clique size
       case 0 => // if it's an exact fit, just make cliques
           Seq.fill(size / cliqueSize)( Clique(commType)(src,cliqueSize) )
-      case rem if rem < (size / cliqueSize) =>
+      case rem if rem > (size / cliqueSize) =>
           // if there's too many left over to evenly increase (some) other cliques,
           // make one small clique, and the rest as requested
           grouped(src, size - rem, cliqueSize, commType) ++ grouped(src, rem, cliqueSize, commType)
@@ -65,8 +65,6 @@ object CliqueAll {
           // otherwise, divy up the rem up by adding an extra person to some cliques
           grouped(src, rem*(cliqueSize+1), cliqueSize+1, commType) ++ grouped(src, size - rem*(cliqueSize+1), cliqueSize, commType )
     }
-
-
 }
 
 class CliqueUp(cliqueSize:Int = 3, val commType:Community.Value)
@@ -77,7 +75,7 @@ extends CommunityConfiguration {
 }
 
 object CliqueUp {
-  def apply(cliqueSize:Int, commType:Community.Value) = new CliqueUp(cliqueSize,commType)
+  def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueUp(cliqueSize,commType)
   def grouped(src: Seq[_ <: Seq[PersonLike]], cliqueSize:Int, commType:Community.Value) : Seq[PersonLike] =
     if (src.size == 1)
       src(0)
@@ -85,7 +83,7 @@ object CliqueUp {
       up(src.iterator, commType, src.size)
     } else src.size % cliqueSize match {
       case 0 => grouped(Seq.fill(src.size / cliqueSize)( up(src.iterator, commType, cliqueSize) ), cliqueSize, commType )
-      case rem if rem < (src.size / cliqueSize) =>
+      case rem if rem > (src.size / cliqueSize) =>
         val iter = src.iterator
         grouped( up(iter, commType, rem) +: Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
       case rem =>
