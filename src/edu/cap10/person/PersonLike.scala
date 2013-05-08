@@ -43,6 +43,9 @@ trait PersonLike extends Actor {
 	def messages() : Map[CommunityType, Iterable[(PersonLike,Vocabulary)]]
 	
 	def id() : Int
+	override def hashCode = id
+	override def equals(other:Any) = this eq other
+	
 	def messenger(community:CommunityType, what:Vocabulary) = Message(this,community,what)
 	
 	def sendMessages(msgs:Map[CommunityType,Iterable[(PersonLike,Vocabulary)]]) = 
@@ -67,11 +70,6 @@ trait PersonLike extends Actor {
 object Community extends Enumeration {
   val Religion, Work, Family, Plot = Value
 }
-//object Religion extends CommunityType("RELIGION")
-//object Work extends CommunityType("WORK")
-//object Family extends CommunityType("FAMILY")
-//object Plot extends CommunityType("PLOT")
-
 
 sealed trait Vocabulary
 case object Good extends Vocabulary {
