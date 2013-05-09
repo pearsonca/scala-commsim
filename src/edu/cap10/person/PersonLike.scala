@@ -7,7 +7,11 @@ import Community.{Value => CommunityType}
 
 trait PersonLike extends Actor {
 	def contacts : Map[CommunityType, MBuffer[PersonLike]]
-		
+	def join(other:PersonLike, commType:Community.Value) = {
+    	other.contacts(commType) += this
+    	contacts(commType) += other
+	}
+
 	/** 
 	 * The monitoring method.  Default monitoring is to System.out.
 	 * 
