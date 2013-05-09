@@ -8,60 +8,41 @@ import scala.collection.Seq.{fill => repeat}
 
 trait CommunityConfiguration {
   
-	def commType : Community.Value
-  
 	def apply(pIter: Iterator[PersonLike], size:Int) : Iterable[PersonLike] 
 	
 }
 
-trait CommunityConfigurationLike extends CommunityConfiguration {
-
-	override def apply(pIter: Iterator[PersonLike], size:Int) = {
-	  val people = pIter.take(size).toSeq
-	  for (src <- 0 until size; tar <- connections(src)) people(src).contacts(commType) += people(tar)
-	  people
-	}
-	
-	def connections : Seq[_ <: Iterable[Int]]
-  
-}
-
 class Clique(val commType:Community.Value = Community.Plot) 
 extends CommunityConfiguration {
-	override def apply(pIter : Iterator[PersonLike], size:Int) = {
-	  val people = pIter.take(size).toSeq
+	override def apply(pIter : Iterator[PersonLike], cliqueSize:Int) = {
+	  val people = pIter.take(cliqueSize).toSeq
 	  for (src <- people) src.contacts(commType) ++= (people filter (_ ne src))
 	  people
 	}
 }
 
-object Clique {
-  def apply(commType:Community.Value) = new Clique(commType)
-}
+object Clique { def apply(commType:Community.Value) = new Clique(commType) }
 
 class CliqueAll(cliqueSize:Int = 3, val commType:Community.Value)
 extends CommunityConfiguration {
   
-  override def apply(src: Iterator[PersonLike], size:Int) = {
-    CliqueAll.grouped(src,size,cliqueSize,commType) flatten
-  }
+  override def apply(src: Iterator[PersonLike], size:Int) = CliqueAll.grouped(src,size,cliqueSize,commType) flatten
   
 }
 
 object CliqueAll {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueAll(cliqueSize,commType)
   def grouped(src: Iterator[PersonLike], size:Int, cliqueSize:Int, commType:Community.Value) : Seq[_ <: Seq[PersonLike]] = 
-    if (size == 0) Seq()
+    if (size == 0 || size == 1) Seq()
     else if (size < cliqueSize) // if there are fewer people than the clique size,
         // clique to that smaller size, and then return the smaller group
-        // TODO: should not run if size == 0 ?
         Seq(Clique(commType)(src,size))
     else size % cliqueSize match { // otherwise, consider the remainder from size / clique size
-      case 0 => // if it's an exact fit, just make cliques
+      case 0 => // if it's an exact fit, make cliques
           repeat(size / cliqueSize)( Clique(commType)(src,cliqueSize) )
       case rem if rem > (size / cliqueSize) =>
           // if there's too many left over to evenly increase (some) other cliques,
-          // make one small clique, and the rest as requested
+          // make one small (size = rem) clique, and the rest as requested
           grouped(src, size - rem, cliqueSize, commType) ++ grouped(src, rem, cliqueSize, commType)
       case rem =>
           // otherwise, divy up the rem up by adding an extra person to some cliques
@@ -79,18 +60,19 @@ extends CommunityConfiguration {
 object CliqueUp {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueUp(cliqueSize,commType)
   def grouped(src: Seq[_ <: Seq[PersonLike]], cliqueSize:Int, commType:Community.Value) : Seq[PersonLike] = {
-    if (src.size == 1)
+    if (src.size == 1) // done condition for exactly divisible pieces
       src(0)
-    else if (src.size < cliqueSize) {
+    else if (src.size <= cliqueSize) { // done condition when there are too few (or exactly the right number of) items to clique
       up(src.iterator, commType, src.size)
     } else {
       val iter = src.iterator
+      val div = src.size / cliqueSize
       src.size % cliqueSize match {
-	      case 0 => grouped(repeat(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType )
-	      case rem if rem > (src.size / cliqueSize) =>  
-	        grouped( up(iter, commType, rem) +: repeat(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	      case 0 => grouped(repeat(div)( up(iter, commType, cliqueSize) ), cliqueSize, commType )
+	      case rem if rem > div =>  
+	        grouped( up(iter, commType, rem) +: repeat(div)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
 	      case rem =>     
-	        grouped( repeat(rem)( up(iter, commType, cliqueSize+1) ) ++ repeat((src.size/cliqueSize) - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	        grouped( repeat(rem)( up(iter, commType, cliqueSize+1) ) ++ repeat(div - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
 	  }
     }
   }
