@@ -46,6 +46,7 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
 	  		shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
 	  }.toMap
 	}
+
 }
 
 object BackgroundFactory {
@@ -64,7 +65,10 @@ class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Perso
         })
       } else res
   }
+}
 
+object Hub {
+  def apply(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) = new Hub(pBadSubs, pBadNorms, pComm, id)
 }
 
 /**
