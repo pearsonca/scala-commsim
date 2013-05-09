@@ -19,6 +19,13 @@ extends CommunityConfiguration {
 	  for (src <- people) src.contacts(commType) ++= (people filter (_ ne src))
 	  people
 	}
+	def add(orig:Iterable[PersonLike], add:PersonLike) = {
+	  for (p <- orig) {
+	    p.contacts(commType) += add
+	    add.contacts(commType) += p
+	  }
+	  orig ++ Seq(add)
+	}
 }
 
 object Clique { def apply(commType:Community.Value) = new Clique(commType) }
@@ -52,9 +59,9 @@ object CliqueAll {
 
 class CliqueUp(cliqueSize:Int = 3, val commType:Community.Value)
 extends CommunityConfiguration {
-  override def apply(src:Iterator[PersonLike], size:Int) =
-    CliqueUp.grouped(shuffle( CliqueAll.grouped(src, size, cliqueSize, commType) ), cliqueSize, commType)
-  
+  override def apply(src:Iterator[PersonLike], size:Int) = apply(CliqueAll.grouped(src, size, cliqueSize, commType))
+  def apply(src:Seq[_<:Seq[PersonLike]]) = 
+    CliqueUp.grouped(shuffle(src), cliqueSize, commType)
 }
 
 object CliqueUp {
