@@ -4,6 +4,7 @@ import edu.cap10.person._
 import edu.cap10.distributions._
 import scala.util.Random.shuffle
 import scala.collection.mutable.Buffer
+import scala.collection.Seq.{fill => repeat}
 
 trait CommunityConfiguration {
   
@@ -50,13 +51,14 @@ extends CommunityConfiguration {
 object CliqueAll {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueAll(cliqueSize,commType)
   def grouped(src: Iterator[PersonLike], size:Int, cliqueSize:Int, commType:Community.Value) : Seq[_ <: Seq[PersonLike]] = 
-    if (size < cliqueSize) // if there are fewer people than the clique size,
+    if (size == 0) Seq()
+    else if (size < cliqueSize) // if there are fewer people than the clique size,
         // clique to that smaller size, and then return the smaller group
         // TODO: should not run if size == 0 ?
-        Seq.fill(size)( Clique(commType)(src,size) )
+        Seq(Clique(commType)(src,size))
     else size % cliqueSize match { // otherwise, consider the remainder from size / clique size
       case 0 => // if it's an exact fit, just make cliques
-          Seq.fill(size / cliqueSize)( Clique(commType)(src,cliqueSize) )
+          repeat(size / cliqueSize)( Clique(commType)(src,cliqueSize) )
       case rem if rem > (size / cliqueSize) =>
           // if there's too many left over to evenly increase (some) other cliques,
           // make one small clique, and the rest as requested
@@ -84,11 +86,11 @@ object CliqueUp {
     } else {
       val iter = src.iterator
       src.size % cliqueSize match {
-	      case 0 => grouped(Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType )
+	      case 0 => grouped(repeat(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType )
 	      case rem if rem > (src.size / cliqueSize) =>  
-	        grouped( up(iter, commType, rem) +: Seq.fill(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	        grouped( up(iter, commType, rem) +: repeat(src.size / cliqueSize)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
 	      case rem =>     
-	        grouped( Seq.fill(rem)( up(iter, commType, cliqueSize+1) ) ++ Seq.fill((src.size/cliqueSize) - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
+	        grouped( repeat(rem)( up(iter, commType, cliqueSize+1) ) ++ repeat((src.size/cliqueSize) - rem)( up(iter, commType, cliqueSize) ), cliqueSize, commType)
 	  }
     }
   }
