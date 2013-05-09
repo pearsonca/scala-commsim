@@ -108,3 +108,13 @@ object iGraphELWriter {
     tar.flush
   }
 }
+object iGraphVIWriter {
+  def write(tar:PrintWriter, pop: Seq[_<:PersonLike]) = {
+    for (psrc <- pop) tar.println( psrc.id + " " + (psrc match {
+      case _:Hub => "hub"
+      case _:Plotter => "plotter"
+      case _ => "person"
+    }))
+    tar.flush
+  }
+}
