@@ -14,11 +14,12 @@ trait CommunityConfiguration {
 
 class Clique(val commType:Community.Value = Community.Plot) 
 extends CommunityConfiguration {
-	override def apply(pIter : Iterator[PersonLike], cliqueSize:Int) = {
+	override def apply(pIter : Iterator[PersonLike], cliqueSize:Int) : Seq[PersonLike] = {
 	  val people = pIter.take(cliqueSize).toSeq
 	  for (src <- people) src.contacts(commType) ++= (people filter (_ ne src))
 	  people
 	}
+	def apply(p : Iterable[PersonLike]) : Seq[PersonLike] = apply(p.iterator, p.size)
 	def add(orig:Iterable[PersonLike], add:PersonLike) = {
 	  for (p <- orig) {
 	    p.contacts(commType) += add
@@ -106,6 +107,7 @@ object iGraphELWriter {
       tar.println(psrc.id + " "+ptar.id + " " + ctype)
     }
     tar.flush
+    tar
   }
 }
 object iGraphVIWriter {
@@ -113,8 +115,10 @@ object iGraphVIWriter {
     for (psrc <- pop) tar.println( psrc.id + " " + (psrc match {
       case _:Hub => "hub"
       case _:Plotter => "plotter"
+      case _:PlotCluster => "bombers"
       case _ => "person"
     }))
     tar.flush
+    tar
   }
 }
