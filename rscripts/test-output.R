@@ -2,10 +2,22 @@ library(igraph)
 edgeinfo <- t(read.table("../commsim-test.txt"))
 vertexinfo <- t(read.table("../commsim-test-vertex-info.txt"))
 g <- graph(as.numeric(edgeinfo[-3,])+1)
-V(g)[as.numeric(vertexinfo[1,which(vertexinfo[2,]=="plotter")])+1]$color <- "yellow"
-V(g)[as.numeric(vertexinfo[1,which(vertexinfo[2,]=="hub")])+1]$color <- "red"
+g2 <- graph(as.numeric(edgeinfo[-3,])+1)
+hubv <- as.numeric(vertexinfo[1,which(vertexinfo[2,]=="hub")])+1
+clustervs <- as.numeric(vertexinfo[1,which(vertexinfo[2,]=="bombers")])+1
+V(g)[1:(hubv-1)]$color <- "lightblue"
+V(g)[clustervs]$color <- "yellow"
+V(g)[hubv]$color <- "red"
+E(g)$color <- "lightgrey"
+E(g)[to(clustervs)]$color <- "red"
+## http://lists.gnu.org/archive/html/igraph-help/2009-03/msg00003.html
+g2 <- g2 - E(g2)[!to(clustervs)]
+V(g2)[clustervs]$color <- "yellow"
+V(g2)[hubv]$color <- "red"
+l2 <- layout.auto(g2)
+l<-layout.drl(g)
 png(file="example_background.png",width=1000,height=1000)
 par(mar=c(0,0,0,0)+0.1)
-plot(g, edge.arrow.size=0.5,
-     vertex.label=NA, vertex.size=2, vertex.frame.color=NA)
+plot(g2, edge.arrow.size=0.5,
+     vertex.label=NA, vertex.size=2, vertex.frame.color=NA, layout=l2)
 dev.off()
