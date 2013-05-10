@@ -54,14 +54,14 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
 }
 
 class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Person(id, BinomialCache(pComm), pBadNorms) {
-  val clusters = Buffer[Buffer[Plotter]]()
+  val clusters = Buffer[PlotCluster]()
   val badCache = BinomialCache(pBadSubs)
   override def messages() = {
       val res = super.messages
       val badCount = badCache(clusters.size).next
       if (badCount > 0) {
         res + (Plot -> { 
-          for ( cluster <- shuffle(clusters).take(badCount) ) yield (cluster.random, Bad)
+          shuffle(clusters).take(badCount) zip Stream.continually(Bad)
         })
       } else res
   }
