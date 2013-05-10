@@ -88,6 +88,12 @@ object PlotterFactory {
 }
 
 class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike {
+  
+  override def start() = {
+    members.foreach( _.start() )
+    super.start();
+  }
+  
   override val contacts = Map( Plot -> Buffer[PersonLike]() )
   val members = Buffer[Plotter]()
   var receivedBad = false
