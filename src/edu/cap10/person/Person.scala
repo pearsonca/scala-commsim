@@ -99,18 +99,21 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends
   var receivedBad = false
   override def update(msg:Message) {
 	receivedBad |= msg.content == Bad
-	members.random ! msg
+	(members filter (_ ne msg.sender)).random ! msg
   }
+  
+  override def messenger(community:CommunityType, what:Vocabulary) = Message(members.random,community,what)
+  
   override def messages = if (receivedBad) {
 	receivedBad = false
 	val buffer = Buffer[(PersonLike,Vocabulary)]()
 	  
-//	  if (DoubleSrc.next < pInner) { // maybe send a member of inner circle bad message
-//	    buffer += { (cluster(IntRangeSrcCache(cluster.length).next), messenger(Family,Bad)) } // TODO what community type should the message be?
-//	  }
-//	  if (DoubleSrc.next < pInner) { // maybe send another hub a bad message
-//	    otherClusters(IntRangeSrcCache(otherClusters.length).next).listener ! messenger(Family,Bad)
-//	  }
+	  if (DoubleSrc.next < pInner) { // maybe send a member of inner circle bad message
+	    buffer += { (this, Bad) }
+	  }
+	  if (DoubleSrc.next < pOuter) { // maybe send another hub a bad message
+	    buffer += { (contacts(Plot).random, Bad) }
+	  }
 	  
 	if (!buffer.isEmpty) {
 	   Map( Plot -> buffer )
@@ -124,25 +127,6 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends
  * member part.
  */
 class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike { 
-	override val contacts = Map[Community.Value,Buffer[PersonLike]]()
-	
-	val otherClusters = Buffer[Seq[Plotter]]()
-	var tasked : Option[PersonLike] = None
-	
-	override def messages = if (tasked.isDefined) {
-	  tasked = None
-	  val buffer = Buffer[(PersonLike,Vocabulary)]()
-	  
-//	  if (DoubleSrc.next < pInner) { // maybe send a member of inner circle bad message
-//	    buffer += { (cluster(IntRangeSrcCache(cluster.length).next), messenger(Family,Bad)) } // TODO what community type should the message be?
-//	  }
-//	  if (DoubleSrc.next < pInner) { // maybe send another hub a bad message
-//	    otherClusters(IntRangeSrcCache(otherClusters.length).next).listener ! messenger(Family,Bad)
-//	  }
-	  
-	  if (!buffer.isEmpty) {
-	    Map( Plot -> buffer )
-	  } else Map()
-	  
-	} else Map() // do nothing
+	override val contacts = Map[Community.Value,Buffer[PersonLike]]()	
+	override def messages = Map() // actually do nothing but record received messages
 }
