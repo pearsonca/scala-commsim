@@ -3,7 +3,7 @@ package edu.cap10.person
 import scala.actors._
 import scala.actors.Actor._
 import scala.collection.mutable.{Set => MSet, Buffer};
-//import scala.collection.mutable.{Map => MMap};
+import scala.collection.immutable.Stream.{continually => fill};
 import scala.util.Random.shuffle
 
 //import edu.cap10.channels.Path
@@ -34,11 +34,7 @@ object BackgroundFactory {
 }
 
 class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLike {
-  override val contacts = Map(
-			Religion -> Buffer[PersonLike](),
-			Work -> Buffer[PersonLike](),
-			Family -> Buffer[PersonLike]()
-        )
+  override val contacts = Seq(Religion, Work, Family).zip( fill(Buffer[PersonLike]()) ).toMap
         
 	def messages() = {
 	  { for ( community <- contacts.keys; // for each possible community
@@ -54,6 +50,8 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
 }
 
 class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Person(id, BinomialCache(pComm), pBadNorms) {
+  override val contacts = Seq(Religion, Work, Family, Plot).zip( fill(Buffer[PersonLike]()) ).toMap
+  
   val clusters = Buffer[PlotCluster]()
   val badCache = BinomialCache(pBadSubs)
   override def messages() = {
@@ -84,10 +82,25 @@ class PlotterFactory(pInner:Double, pOuter:Double, startId : Int = 0) {
 }
 
 object PlotterFactory {
-  def apply(pInner:Double, pOuter:Double, startId:Int) = new PlotterFactory(pInner, pOuter, startId)
+  def apply(pInner:Double, pOuter:Double, startId:Int) 
+  	= new PlotterFactory(pInner, pOuter, startId)
 }
 
-class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike {
+class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike { 
+	override val contacts = Map[Community.Value,Buffer[PersonLike]]()	
+	override def messages = Map() // actually do nothing but record received messages
+}
+
+object PlotClusters {
+  def apply(startId : Int, pInner: Double, pOuter : Double, size : Int) = loop(startId, pInner, pOuter, size)
+  private def loop(id : Int, pInner: Double, pOuter : Double, skip : Int) : Stream[PlotCluster] = {
+    new PlotCluster(id, pInner, pOuter, skip) #:: loop(id + skip, pInner, pOuter, skip)
+  }
+}
+
+class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : Int) extends PersonLike {
+  
+  val members = PlotterFactory(pInner,pOuter,id).src.take(size).toSeq // these are a clique
   
   override def start() = {
     members.foreach( _.start() )
@@ -95,7 +108,6 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends
   }
   
   override val contacts = Map( Plot -> Buffer[PersonLike]() )
-  val members = Buffer[Plotter]()
   var receivedBad = false
   override def update(msg:Message) {
 	receivedBad |= msg.content == Bad
@@ -119,14 +131,4 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double) extends
 	   Map( Plot -> buffer )
 	} else Map()
   } else Map() // do nothing
-}
-
-/**
- * This class provides a convenient wrapper to sub-ordinate clusters.  The Hub
- * or other clusters can send to a cluster, and it takes care of the send-to-random
- * member part.
- */
-class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike { 
-	override val contacts = Map[Community.Value,Buffer[PersonLike]]()	
-	override def messages = Map() // actually do nothing but record received messages
 }

@@ -20,17 +20,14 @@ object Test {
 	   val triads = CliqueAll.grouped(people.iterator,popSize, cliqueSize, Community.Family)
 	   for (c <- triads if DoubleSrc.next < hConP) c.random.join(H, Community.Family)
 	   
-	   val clusterCount = 3
-	   val clusterSize = 5
-	   val terrorFactory = PlotterFactory(pComm, pBadBack, popSize+1)
-	   val terrorists = terrorFactory.src.take(clusterCount * clusterSize);
-	   CliqueAll.grouped(terrorists.iterator, terrorists.size, clusterSize, Community.Plot) flatten
-	   val pwEL = new PrintWriter("./commsim-test.txt")
-	   val output = cliquer.apply(triads) ++ CliqueAll.grouped(terrorists.iterator, terrorists.size, clusterSize, Community.Plot).flatten :+ H
-	   iGraphELWriter.write(pwEL, output)
-	   pwEL.close
-	   val pwVI = new PrintWriter("./commsim-test-vertex-info.txt")
-	   iGraphVIWriter.write(pwVI, output)
-	   pwVI.close
+	   val (clusterCount,clusterSize) = (3,5)
+
+	   val terrorists = PlotClusters(popSize+1, pComm, pBadBack, clusterSize).take(clusterCount)
+
+	   H.contacts(Community.Plot) ++= Clique(Community.Plot)(terrorists)
+	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
+	   val output = cliquer.apply(triads) ++ terrorists :+ H
+	   iGraphELWriter.write(pwEL, output).close 
+	   iGraphVIWriter.write(pwVI, output).close
 	}
 }
