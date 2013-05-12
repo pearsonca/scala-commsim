@@ -59,13 +59,14 @@ trait PersonLike extends Actor {
 	        who ! messenger(community, what)
 	  }
 	
-	def act() = loop {
+	override def act() = loop {
 	  react {
 	    case "NEXT" =>
 	      update
 	      sendMessages(messages)
 	      reply("ACK")  
 	    case m:Message => update(m)
+	    case "TEST" => println(id + " received TEST")
 	  }
 	}
 	

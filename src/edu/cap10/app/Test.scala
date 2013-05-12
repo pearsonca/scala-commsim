@@ -8,7 +8,7 @@ import java.io._
 
 object Test {
 	def main(args: Array[String]) {
-	   val popSize = 1000
+	   val popSize = 3
 	   val cliqueSize = 3
 	   val (pBadBack, pBadFore, pBadNormDiscount, pComm) = (0.1, 0.1, 0.5, 0.2)
 	   val factory = BackgroundFactory(pComm, pBadBack)
@@ -25,9 +25,11 @@ object Test {
 	   val terrorists = PlotClusters(popSize+1, pComm, pBadBack, clusterSize).take(clusterCount)
 
 	   H.contacts(Community.Plot) ++= Clique(Community.Plot)(terrorists)
-	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
 	   val output = cliquer.apply(triads) ++ terrorists :+ H
-	   iGraphELWriter.write(pwEL, output).close 
-	   iGraphVIWriter.write(pwVI, output).close
+//	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
+//	   iGraphELWriter.write(pwEL, output).close 
+//	   iGraphVIWriter.write(pwVI, output).close
+	   output foreach( _.start )
+	   output foreach( a => a ! "TEST")
 	}
 }
