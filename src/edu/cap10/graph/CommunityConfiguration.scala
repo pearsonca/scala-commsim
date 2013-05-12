@@ -16,7 +16,7 @@ class Clique(val commType:Community.Value = Community.Plot)
 extends CommunityConfiguration {
 	override def apply(pIter : Iterator[PersonLike], cliqueSize:Int) : Seq[PersonLike] = {
 	  val people = pIter.take(cliqueSize).toSeq
-	  for (src <- people) src.contacts(commType) ++= (people filter (_ ne src))
+	  for (src <- people) src.contacts(commType) ++= (people filter (_.id != src.id))
 	  people
 	}
 	def apply(p : Iterable[PersonLike]) : Seq[PersonLike] = apply(p.iterator, p.size)
@@ -87,9 +87,9 @@ object CliqueUp {
   def up(src: Iterator[_ <: Seq[PersonLike]], commType:Community.Value, cliqueSize:Int) = {
     val res = src.take(cliqueSize).toSeq
     for (	srci <- 0 until res.size; 
-    		tarj <- 0 until res.size if tarj != srci;
+    		tarj <- (0 until res.size).filter(_ != srci);
     		srcp = res(srci).random;
-    		tarp = res(tarj).random if tarp ne srcp
+    		tarp = res(tarj).random if tarp.id != srcp.id
     	)
       srcp.contacts(commType) += tarp;
     res flatten
