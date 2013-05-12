@@ -2,11 +2,14 @@ package edu.cap10.person
 
 import scala.collection._
 import scala.collection.mutable.{Buffer => MBuffer}
-import scala.actors._
-import Community.{Value => CommunityType}
+import scala.actors.Actor
+
+import edu.cap10.message.Message
+import Community.{Value => CValue}
+import Vocabulary.{Value => VValue}
 
 trait PersonLike extends Actor {
-	def contacts : Map[CommunityType, MBuffer[PersonLike]]
+	def contacts : Map[CValue, MBuffer[PersonLike]]
 	def join(other:PersonLike, commType:Community.Value) = {
     	other.contacts(commType) += this
     	contacts(commType) += other
@@ -28,7 +31,7 @@ trait PersonLike extends Actor {
 	 *  This is a hook for making any internal state changes to a person (which, e.g.,
 	 *  might affect messages()).  The default behavior clears the inbox
 	 */
-	def update() : Unit = inbox.clear
+	def update(t:Int) : Unit = inbox.clear
 	
 	/** 
 	 *  This is a hook for prepare for internal state changes to a person (which, e.g.,
@@ -44,31 +47,36 @@ trait PersonLike extends Actor {
 	 *  sets which contacts entry to bring up, then the who index sets which person to send to.
 	 *  Message content is set by the what (Vocabulary) part of the pair.
 	 *  */
-	def messages() : Map[CommunityType, Iterable[(PersonLike,Vocabulary)]]
+	def messages() : Map[CValue, Iterable[(PersonLike,VValue)]]
 	
 	def id() : Int
 	override def hashCode = id
-	override def equals(other:Any) = this eq other
 	
-	def messenger(community:CommunityType, what:Vocabulary) = Message(this,community,what)
+	def testEvent(t:Int) = println(id + " received TEST @ "+t)
 	
-	def sendMessages(msgs:Map[CommunityType,Iterable[(PersonLike,Vocabulary)]]) = 
+	def act() = loop {
+	 react {
+	    case SimulationCommand(SimulationEvent.NEXT, t) =>
+	      update(t)
+	      sendMessages(messages)
+	      reply("ACK")
+	    case SimulationCommand(SimulationEvent.TEST, t) => 
+	    	testEvent(t)
+	    case m:Message => update(m)
+	    case SimulationCommand(SimulationEvent.DONE, t) => stop
+	  }
+	}
+	
+	def stop = exit
+	
+	def messenger(community:CValue, what:VValue) = Message(this,community,what)
+	
+	def sendMessages(msgs:Map[CValue,Iterable[(PersonLike,VValue)]]) = 
 	  for (community <- msgs.keys; 
 		recipients = contacts(community); 
 	    (who,what) <- msgs(community)) {
 	        who ! messenger(community, what)
 	  }
-	
-	override def act() = loop {
-	  react {
-	    case "NEXT" =>
-	      update
-	      sendMessages(messages)
-	      reply("ACK")  
-	    case m:Message => update(m)
-	    case "TEST" => println(id + " received TEST")
-	  }
-	}
 	
 }
 
@@ -76,14 +84,12 @@ object Community extends Enumeration {
   val Religion, Work, Family, Plot = Value
 }
 
-sealed trait Vocabulary
-case object Good extends Vocabulary {
-  override val toString = 0.toString
-}
-case object Bad extends Vocabulary {
-  override val toString = 1.toString
+object Vocabulary extends Enumeration {
+  val Good, Bad = Value;
 }
 
-case class Message(sender:PersonLike, community:CommunityType, content:Vocabulary) {
-  override val toString = sender.id +", "+community+", "+content
+object SimulationEvent extends Enumeration {
+  val NEXT, DONE, TEST = Value
 }
+
+case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
