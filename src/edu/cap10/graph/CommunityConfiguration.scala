@@ -8,19 +8,19 @@ import scala.collection.Seq.{fill => repeat}
 
 trait CommunityConfiguration {
   
-	def apply(pIter: Iterator[PersonLike], size:Int) : Iterable[PersonLike] 
+	def apply[P <: PersonLike](pIter: Iterator[P], size:Int) : Iterable[P] 
 	
 }
 
 class Clique(val commType:Community.Value = Community.Plot) 
 extends CommunityConfiguration {
-	override def apply(pIter : Iterator[PersonLike], cliqueSize:Int) : Seq[PersonLike] = {
+	override def apply[P <: PersonLike](pIter : Iterator[P], cliqueSize:Int) : Seq[P] = {
 	  val people = pIter.take(cliqueSize).toSeq
 	  for (src <- people) src.contacts(commType) ++= (people filter (_.id != src.id))
 	  people
 	}
-	def apply(p : Iterable[PersonLike]) : Seq[PersonLike] = apply(p.iterator, p.size)
-	def add(orig:Iterable[PersonLike], add:PersonLike) = {
+	def apply[P <: PersonLike](p : Iterable[P]) : Seq[P] = apply(p.iterator, p.size)
+	def add[P <: PersonLike](orig:Iterable[P], add:P) = {
 	  for (p <- orig) {
 	    p.contacts(commType) += add
 	    add.contacts(commType) += p
@@ -34,13 +34,13 @@ object Clique { def apply(commType:Community.Value) = new Clique(commType) }
 class CliqueAll(cliqueSize:Int = 3, val commType:Community.Value)
 extends CommunityConfiguration {
   
-  override def apply(src: Iterator[PersonLike], size:Int) = CliqueAll.grouped(src,size,cliqueSize,commType) flatten
+  override def apply[P <: PersonLike](src: Iterator[P], size:Int) = CliqueAll.grouped(src,size,cliqueSize,commType) flatten
   
 }
 
 object CliqueAll {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueAll(cliqueSize,commType)
-  def grouped(src: Iterator[PersonLike], size:Int, cliqueSize:Int, commType:Community.Value) : Seq[_ <: Seq[PersonLike]] = 
+  def grouped[P <: PersonLike](src: Iterator[P], size:Int, cliqueSize:Int, commType:Community.Value) : Seq[_ <: Seq[P]] = 
     if (size == 0 || size == 1) Seq()
     else if (size < cliqueSize) // if there are fewer people than the clique size,
         // clique to that smaller size, and then return the smaller group
@@ -60,14 +60,15 @@ object CliqueAll {
 
 class CliqueUp(cliqueSize:Int = 3, val commType:Community.Value)
 extends CommunityConfiguration {
-  override def apply(src:Iterator[PersonLike], size:Int) = apply(CliqueAll.grouped(src, size, cliqueSize, commType))
-  def apply(src:Seq[_<:Seq[PersonLike]]) = 
-    CliqueUp.grouped(shuffle(src), cliqueSize, commType)
+  override def apply[P <: PersonLike](src:Iterator[P], size:Int) = apply(CliqueAll.grouped(src, size, cliqueSize, commType))
+  def apply[P <: PersonLike](src:Seq[_<:Seq[P]]) =
+    CliqueUp.grouped[P](shuffle(src), cliqueSize, commType)
+
 }
 
 object CliqueUp {
   def apply(cliqueSize:Int = 3, commType:Community.Value) = new CliqueUp(cliqueSize,commType)
-  def grouped(src: Seq[_ <: Seq[PersonLike]], cliqueSize:Int, commType:Community.Value) : Seq[PersonLike] = {
+  def grouped[P <: PersonLike](src: Seq[_ <: Seq[P]], cliqueSize:Int, commType:Community.Value) : Seq[P] = {
     if (src.size == 1) // done condition for exactly divisible pieces
       src(0)
     else if (src.size <= cliqueSize) { // done condition when there are too few (or exactly the right number of) items to clique
@@ -84,7 +85,7 @@ object CliqueUp {
 	  }
     }
   }
-  def up(src: Iterator[_ <: Seq[PersonLike]], commType:Community.Value, cliqueSize:Int) = {
+  def up[P <: PersonLike](src: Iterator[_ <: Seq[P]], commType:Community.Value, cliqueSize:Int) = {
     val res = src.take(cliqueSize).toSeq
     for (	srci <- 0 until res.size; 
     		tarj <- (0 until res.size).filter(_ != srci);
