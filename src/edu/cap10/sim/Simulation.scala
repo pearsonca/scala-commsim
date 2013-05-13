@@ -2,7 +2,6 @@ package edu.cap10.sim
 
 import scala.actors.Actor
 import edu.cap10.clock._
-import edu.cap10.graph.generators._
 import edu.cap10.message._
 
 //abstract class Simulation(size:Int) extends Actor {
