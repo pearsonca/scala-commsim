@@ -73,7 +73,6 @@ trait PersonLike extends Actor {
 	
 	def sendMessages(msgs:Map[CValue,Iterable[(PersonLike,VValue)]]) = 
 	  for (community <- msgs.keys; 
-		recipients = contacts(community); 
 	    (who,what) <- msgs(community)) {
 	        who ! messenger(community, what)
 	  }
