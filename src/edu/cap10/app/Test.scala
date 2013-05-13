@@ -29,7 +29,7 @@ object Test {
 
 	   val terrorists = PlotClusters(-(popSize+1), pComm, pBadBack, clusterSize).take(clusterCount)
 
-	   H.contacts(Community.Plot) ++= Clique(Community.Plot)(terrorists)
+	   H.clusters ++= Clique(Community.Plot)(terrorists)
 	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
 //	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
 //	   iGraphELWriter.write(pwEL, output).close 
@@ -40,7 +40,13 @@ object Test {
 	   val test = SimulationCommand(SimulationEvent.TEST, 0)
 	   val done = SimulationCommand(SimulationEvent.DONE, 0)
 	   output foreach( _ start )
-	   output foreach( _ ! test)
+	   //output foreach( _ ! test)
+	   val simlim = 1
+	   for (t <- 1 to simlim) {
+		   val results = output map( _ !! SimulationCommand(SimulationEvent.NEXT, 1))
+		   for (res <- results) println(res())
+	   }
+	   println("here")
 	   output foreach( _ ! done)
 	}
 }
