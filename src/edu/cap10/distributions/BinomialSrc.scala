@@ -53,7 +53,9 @@ object BinomialSrc {
   
   def apply(max:Int, p:Double) = {
     if (max <= 0 || p < 0 || p > 1) {
-      ErrorBinomialSrc
+      var msg = Seq(if(max <=0) "max <= 0" else "")
+      if (p < 0) msg +: "p < 0" else if (p > 1) msg +: "p > 1";
+      ErrorBinomialSrc(msg mkString ", ")
     } else if (max == 1) {
       new SingleBinomialSrc(p)
     } else {
@@ -82,9 +84,9 @@ object BinomialSrc {
     def next = if (DoubleSrc.next < p) 1 else 0
   }
   
-  private object ErrorBinomialSrc extends BinomialSrc {
-    def apply(n:Int) = throw new UnsupportedOperationException("Misconfigured BinomialSrc (max <= 0 || p < 0 || p > 1).")
-    def next = throw new UnsupportedOperationException("Misconfigured BinomialSrc (max <= 0 || p < 0 || p > 1).")
+  def ErrorBinomialSrc(msg:String) = new BinomialSrc {
+    def apply(n:Int) = throw new UnsupportedOperationException(msg)
+    def next = throw new UnsupportedOperationException(msg)
   }
 }
 
