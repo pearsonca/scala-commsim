@@ -8,6 +8,8 @@ import edu.cap10.message.Message
 import Community.{Value => CValue}
 import Vocabulary.{Value => VValue}
 
+import edu.cap10.app.Logger
+
 trait PersonLike extends Actor {
 	def contacts : Map[CValue, MBuffer[PersonLike]]
 	def join(other:PersonLike, commType:Community.Value) = {
@@ -23,7 +25,7 @@ trait PersonLike extends Actor {
 	 * @return the incoming message without any side-effects
 	 */
 	def monitor(msg: Message) = {
-	  println(id + ", "+msg)
+	  Logger.println(this,id+" "+msg)
 	  msg
 	}
 	
@@ -56,9 +58,11 @@ trait PersonLike extends Actor {
 	
 	def act() = loop {
 	 react {
-	    case SimulationCommand(SimulationEvent.NEXT, t) =>
+	   	case SimulationCommand(SimulationEvent.UPDATE, t) =>
 	      update(t)
-	      sendMessages(messages)
+	      reply("ACK")
+	    case SimulationCommand(SimulationEvent.NEXT, t) =>
+	      sendMessages(messages, t)
 	      reply("ACK")
 	    case SimulationCommand(SimulationEvent.TEST, t) => 
 	    	testEvent(t)
@@ -69,12 +73,12 @@ trait PersonLike extends Actor {
 	
 	def stop = exit
 	
-	def messenger(community:CValue, what:VValue) = Message(this,community,what)
+	def messenger(community:CValue, what:VValue, t:Int) = Message(this,community,what,t)
 	
-	def sendMessages(msgs:Map[CValue,Iterable[(PersonLike,VValue)]]) = 
+	def sendMessages(msgs:Map[CValue,Iterable[(PersonLike,VValue)]], t:Int) = 
 	  for (community <- msgs.keys; 
 	    (who,what) <- msgs(community)) {
-	        who ! messenger(community, what)
+	        who ! messenger(community, what, t)
 	  }
 	
 }
@@ -88,7 +92,7 @@ object Vocabulary extends Enumeration {
 }
 
 object SimulationEvent extends Enumeration {
-  val NEXT, DONE, TEST = Value
+  val UPDATE, NEXT, DONE, TEST = Value
 }
 
 case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
