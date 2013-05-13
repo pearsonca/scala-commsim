@@ -63,6 +63,7 @@ class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Perso
         })
       } else res
   }
+
 }
 
 object Hub {
@@ -113,14 +114,16 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : 
   }
   
   override val contacts = Map( Plot -> Buffer[PersonLike]() )
-  var receivedBad = false
+  
   override def update(msg:Message) = {
-	receivedBad |= msg.content == Bad
 	(members filter (_.id != msg.sender.id)).random ! msg
+	super.update(msg)
   }
   
+  var receivedBad = false
   override def update(t:Int) = {
     members foreach { _ ! SimulationCommand(SimulationEvent.NEXT, t) }
+    receivedBad = inbox.foldLeft(false)((res,msg) => res || (msg.content == Bad))
     super.update(t)
   }
   
@@ -129,10 +132,9 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : 
     super.testEvent(t)
   }
   
-  override def messenger(community:CValue, what:VValue) = Message(members.random,community,what)
+  override def messenger(community:CValue, what:VValue, t:Int) = Message(members.random,community,what,t)
   
   override def messages = if (receivedBad) {
-	receivedBad = false
 	val buffer = Buffer[(PersonLike,VValue)]()
 	  
 	  if (DoubleSrc.next < pInner) { // maybe send a member of inner circle bad message
