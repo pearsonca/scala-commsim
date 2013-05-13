@@ -39,7 +39,7 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
         
 	def messages() = {
 	  { for ( community <- contacts.keys; // for each possible community
-			  commContacts = contacts(community); // fish out the contacts
+			  commContacts = contacts(community) if commContacts.size != 0; // fish out the contacts
 			  count = binCache(commContacts.length).next; // figure out how many messages to send to this community
 			  if count > 0) // if that # is positive
 	    yield
@@ -51,8 +51,7 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
 }
 
 class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Person(id, BinomialCache(pComm), pBadNorms) {
-  override val contacts = Seq(Religion, Work, Family, Plot).zip( fill(Buffer[PersonLike]()) ).toMap
-  
+   
   val clusters = Buffer[PlotCluster]()
   val badCache = BinomialCache(pBadSubs)
   override def messages() = {
@@ -109,7 +108,7 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : 
   }
   
   override def stop = {
-    members.foreach( _ ! "DONE" )
+    members.foreach( _ ! SimulationCommand(SimulationEvent.DONE,0) )
     super.stop
   }
   
