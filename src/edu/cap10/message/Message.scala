@@ -6,8 +6,8 @@ import edu.cap10.person._
 import edu.cap10.clock._
 //import edu.cap10.channels._
 
-case class Message(sender:PersonLike, community:Community.Value, content:Vocabulary.Value) {
-  override val toString = sender.id +", "+community+", "+content
+case class Message(sender:PersonLike, community:Community.Value, content:Vocabulary.Value, t:Int) {
+  override val toString = Seq(sender.id,community,content,t) mkString " "
 }
 
 abstract class Logger {
