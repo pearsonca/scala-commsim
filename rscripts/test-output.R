@@ -28,7 +28,22 @@ hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","s
 backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 
-edges <- unique(backInc[,c("recipient_id","sender_id")])
+uniqueedges <- unique(backInc[,c("recipient_id","sender_id")]) ## get the unique dyads
+urows <- row.names(uniqueedges) ## get the rows from source data for those
+
+## make a matrix A = rows(recipients), cols(timestep)
+A<-matrix(0,nrow=(max(backInc$recipient_id)+1), ncol=max(backInc$timestep))
+## make a matrix B = rows(senders), cols(timestep) : NB, senders can include hub
+B<-matrix(0,nrow=(max(backInc$sender_id)+1), ncol=max(backInc$timestep))
+
+for (urow in urows) {
+  sender <- uniqueedges[urow,]$sender_id
+  recipient <- uniqueedges[urow,]$recipient_id
+}
+
+## iterate over unique edges - for each pair
+##  increment A[recipient, timestep] by 1, then fill entries after that time step with resulting values
+##  increment B[sender, timestep] by 1, then fill entries after that time step with resulting values
 
 unique(hubInc[which(hubInc$timestep < 5),"sender_id"])
 
