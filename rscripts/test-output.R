@@ -21,3 +21,17 @@ par(mar=c(0,0,0,0)+0.1)
 plot(g2, edge.arrow.size=0.5,
      vertex.label=NA, vertex.size=2, vertex.frame.color=NA, layout=l2)
 dev.off()
+
+###
+
+hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+
+edges <- unique(backInc[,c("recipient_id","sender_id")])
+
+unique(hubInc[which(hubInc$timestep < 5),"sender_id"])
+
+sapply(1:max(hubInc$timestep),function(t) {
+  length(unique(hubInc[which(hubInc$timestep < t),"sender_id"]))
+})
