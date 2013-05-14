@@ -29,17 +29,21 @@ backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id",
 plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 
 uniqueedges <- unique(backInc[,c("recipient_id","sender_id")]) ## get the unique dyads
-urows <- row.names(uniqueedges) ## get the rows from source data for those
+urows <- row.names(unique(backInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
 
 ## make a matrix A = rows(recipients), cols(timestep)
-A<-matrix(0,nrow=(max(backInc$recipient_id)+1), ncol=max(backInc$timestep))
-## make a matrix B = rows(senders), cols(timestep) : NB, senders can include hub
-B<-matrix(0,nrow=(max(backInc$sender_id)+1), ncol=max(backInc$timestep))
 
-for (urow in urows) {
-  sender <- uniqueedges[urow,]$sender_id
-  recipient <- uniqueedges[urow,]$recipient_id
-}
+## make a matrix B = rows(senders), cols(timestep) : NB, senders can include hub
+tlim <- length(A[1,])
+subset <- backInc[urows,]
+test_r<-Vectorize(function(recipient_id, timestep) {
+  sum( (subset$recipient_id == (recipient_id-1)) & (subset$timestep <= timestep))
+})
+A<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_r)
+test_s<-Vectorize(function(sender_id, timestep) {
+  sum( (subset$sender_id == (sender_id-1)) & (subset$timestep <= timestep))
+})
+B<-outer(1:max(backInc$sender_id)+1,1:max(subset$timestep),test_s)
 
 ## iterate over unique edges - for each pair
 ##  increment A[recipient, timestep] by 1, then fill entries after that time step with resulting values
