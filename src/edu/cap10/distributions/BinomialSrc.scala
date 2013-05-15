@@ -108,6 +108,12 @@ class BinomialCache(p:Double) {
   def apply(max: Int) = src(max)
 }
 
-object BinomialCache {
-  def apply(p:Double) = new BinomialCache(p)
+object BinomialCache { def apply(p:Double) = new BinomialCache(p) }
+
+// TODO allow for max == min case
+class ShiftBinomialSrc(p:Double, min:Int, max:Int) extends DistroSrc[Int] {
+  require(max > min)
+  val inner = BinomialSrc(max-min,p)
+  def next = inner.next + min
+  def apply(n:Int) = inner(n).map(_ + min)
 }

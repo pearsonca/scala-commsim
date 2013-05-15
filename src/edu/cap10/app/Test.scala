@@ -13,11 +13,10 @@ import java.io._
 
 object Test {
 	def main(args: Array[String]) = {
-	  val iterlim = 100
-	  val simlim = 1000
-	  val popSize = 1000
-	   val cliqueSize = 3
-	   val (pBadBack, pBadFore, pBadNormDiscount, pComm) = (0.1, 1.0, 0.5, 0.2)
+	  val (iterlim, simlim, popSize) = (100,1000,1000)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm) = (0.1, 1.0, 0.5, 0.2)
+	  val cliqueSize = 3
+
 	   val cliquer = CliqueUp(cliqueSize,Community.Family)
 	   val hMeanK = 30
 	   val hConP = (hMeanK * cliqueSize).toDouble / popSize
