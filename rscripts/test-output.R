@@ -45,12 +45,3 @@ test_s<-Vectorize(function(sender_id, timestep) {
 })
 B<-outer(1:max(backInc$sender_id)+1,1:max(subset$timestep),test_s)
 
-## iterate over unique edges - for each pair
-##  increment A[recipient, timestep] by 1, then fill entries after that time step with resulting values
-##  increment B[sender, timestep] by 1, then fill entries after that time step with resulting values
-
-unique(hubInc[which(hubInc$timestep < 5),"sender_id"])
-
-sapply(1:max(hubInc$timestep),function(t) {
-  length(unique(hubInc[which(hubInc$timestep < t),"sender_id"]))
-})
