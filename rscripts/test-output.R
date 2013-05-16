@@ -28,20 +28,50 @@ hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","s
 backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 
-uniqueedges <- unique(backInc[,c("recipient_id","sender_id")]) ## get the unique dyads
 urows <- row.names(unique(backInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
 
 ## make a matrix A = rows(recipients), cols(timestep)
 
 ## make a matrix B = rows(senders), cols(timestep) : NB, senders can include hub
-tlim <- length(A[1,])
 subset <- backInc[urows,]
 test_r<-Vectorize(function(recipient_id, timestep) {
   sum( (subset$recipient_id == (recipient_id-1)) & (subset$timestep <= timestep))
 })
-A<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_r)
+IN<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_r)
 test_s<-Vectorize(function(sender_id, timestep) {
   sum( (subset$sender_id == (sender_id-1)) & (subset$timestep <= timestep))
 })
-B<-outer(1:max(backInc$sender_id)+1,1:max(subset$timestep),test_s)
+OUT<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_s) # max sender = H
+INOUT <- IN + OUT
+# maxOUT <- apply(OUT,2,max)
+# maxIN <- apply(IN,2,max)
+maxINOUT <- apply(INOUT, 2, max)
+Hid <- hubInc[1,"recipient_id"]+1
+Hin <- hubInc[row.names(unique(hubInc[,c("recipient_id","sender_id")])),"timestep"] 
+HinT <- sapply(1:max(Hin),function(t) { sum(Hin <= t) })
+Hlast <- HinT[length(HinT)]
+HinT <- c(HinT,rep.int(Hlast,length(OUT[1,])-length(HinT)))
 
+
+ploturows <- row.names(unique(plotInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
+plotsubset <- plotInc[ploturows,]
+first_plot_id <- min(plotInc$recipient_id)
+last_plot_id <- max(plotInc$recipient_id)
+test_r_plot<-Vectorize(function(recipient_id, timestep) {
+  sum( (plotsubset$recipient_id == recipient_id) & (plotsubset$timestep <= timestep))
+})
+
+test_s_plot<-Vectorize(function(sender_id, timestep) {
+  sum( (plotsubset$sender_id == sender_id) & (plotsubset$timestep <= timestep))
+})
+
+Pin <- outer(first_plot_id:last_plot_id, 1:max(plotsubset$timestep), test_r_plot)
+Pout <- outer(first_plot_id:last_plot_id, 1:max(plotsubset$timestep), test_s_plot)
+
+Hout <- mapply(test_s, sender_id=rep.int(Hid,max(subset$timestep)), timestep=1:max(subset$timestep))
+Hout <- c(Hout, rep.int(Hout[length(Hout)],max(plotsubset$timestep)-max(subset$timestep)))
+Hout <- Hout+ mapply(test_s_plot, sender_id=rep.int(Hid-1,max(plotsubset$timestep)), timestep=1:max(plotsubset$timestep))
+
+## baseline TPR / FPR based on H has highest in-out degree
+TPR <- ifelse(maxINOUT < Hout + HinT,1,0)
+FPR <- ifelse(TPR == 1, 0, 1)
