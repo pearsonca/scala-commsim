@@ -24,6 +24,20 @@ dev.off()
 
 ###
 
+plotFiles <- sort(list.files(".","plot-\\d+\\.txt"))
+backFiles <- sort(list.files(".","back-\\d+\\.txt"))
+hubFiles <- sort(list.files(".","hub-\\d+\\.txt"))
+
+mapply(function(p,b,h) { 
+  srcs<-lapply(list(plot=p,back=b,hub=h), read.table, sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))  
+  hubData<-srcs$plot
+  backData<-srcs$hub
+  plotData<-srcs$back
+  urows <- row.names(unique(backData[,c("recipient_id","sender_id")])) ## get the rows from source data for those
+  
+  length(urows)
+}, plotFiles, backFiles, hubFiles, USE.NAMES=F)
+
 hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
