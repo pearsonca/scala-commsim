@@ -14,7 +14,7 @@ import java.io._
 object Test {
 	def main(args: Array[String]) = {
 	  val (iterlim, simlim, popSize) = (100,1000,1000)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm) = (0.1, 1.0, 0.5, 0.2)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount) = (0.01, 0.05, 0.5, 0.2, 0.75)
 	  val cliqueSize = 3
 
 	   val cliquer = CliqueUp(cliqueSize,Community.Family)
@@ -31,20 +31,20 @@ object Test {
 	   val factory = BackgroundFactory(pComm, pBadBack)
 	   val people = factory.src.take(popSize)
 	   
-	   val H = Hub(pBadBack,pBadFore*pBadNormDiscount,pComm, popSize)
+	   val H = Hub(pBadBack,pBadFore*pBadNormDiscount, pForeCommDiscount*pComm, popSize)
 	   
 	   val triads = CliqueAll.grouped(people.iterator,popSize, cliqueSize, Community.Family)
 	   for (c <- triads if DoubleSrc.next < hConP) c.random.join(H, Community.Family)
 	   
 	   
 
-	   val terrorists = PlotClusters(-(popSize+1), pComm, pBadFore, clusterSize).take(clusterCount)
+	   val terrorists = PlotClusters(-(popSize+1), pForeCommDiscount*pComm, pBadFore, clusterSize).take(clusterCount)
 
 	   H.clusters ++= Clique(Community.Plot)(terrorists)
 	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
-//	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
-//	   iGraphELWriter.write(pwEL, output).close 
-//	   iGraphVIWriter.write(pwVI, output).close
+	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
+	   iGraphELWriter.write(pwEL, output).close 
+	   iGraphVIWriter.write(pwVI, output).close
 
 	   output foreach( _ start )
 	   
