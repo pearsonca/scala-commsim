@@ -23,21 +23,27 @@ class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0) {
   
   val binCache = BinomialCache(pComm)
   val src : Stream[PersonLike] = {
-    def loop(i:Int) : Stream[PersonLike] = {
-      new Person(i, binCache, pBad) #:: loop(i+1)
-    }
+    def loop(i:Int) : Stream[PersonLike] = new Person(i, binCache, pBad) #:: loop(i+1)
     loop(startId)
   }
 }
 
 object BackgroundFactory {
-  def apply(pComm:Double, pBad:Double) = new BackgroundFactory(pComm, pBad)
+  def apply(pComm:Double, pBad:Double, startId:Int = 0) = new BackgroundFactory(pComm, pBad, startId)
 }
 
 class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLike {
   override val contacts = Seq(Religion, Work, Family).zip( fill(Buffer[PersonLike]()) ).toMap
-        
-	def messages() = {
+  def messages(commType:CValue) = { 
+    val commContacts = contacts(commType)
+    var res = Iterable[(PersonLike,VValue)]()
+    if (commContacts.size !=0) {
+	  val count = binCache(commContacts.length).next
+      if (count != 0) res = shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
+	}
+    res
+  }
+  def messages() = {
 	  { for ( community <- contacts.keys; // for each possible community
 			  commContacts = contacts(community) if commContacts.size != 0; // fish out the contacts
 			  count = binCache(commContacts.length).next; // figure out how many messages to send to this community

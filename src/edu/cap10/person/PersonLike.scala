@@ -50,6 +50,7 @@ trait PersonLike extends Actor {
 	 *  Message content is set by the what (Vocabulary) part of the pair.
 	 *  */
 	def messages() : Map[CValue, Iterable[(PersonLike,VValue)]]
+	def messages(commType:CValue) : Iterable[(PersonLike,VValue)]
 	
 	def id() : Int
 	override def hashCode = id
@@ -96,3 +97,7 @@ object SimulationEvent extends Enumeration {
 }
 
 case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
+
+object SimulationCommand {
+  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand = SimulationCommand(e,_)
+}
