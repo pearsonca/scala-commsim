@@ -97,6 +97,26 @@ object CliqueUp {
   }
 }
 
+object BinomialMix {
+  def apply(pop:Seq[PersonLike], rate:Double, commType:Community.Value) = {
+    DoubleSrc(pop.size).filter( _ < rate ).foreach( _ => { 
+      // determine how many perturbations based on a binomial number of connections
+      val start = pop.random
+      val end = pop.random( _.id != start.id )
+      val slist = start.contacts(commType)
+      if (slist.contains(end)) 
+        slist -= end 
+      else 
+        slist += end
+      val elist = end.contacts(commType)
+      if (elist.contains(start)) 
+        elist -= start 
+      else 
+        elist += start
+    })
+    pop
+  }
+}
 
 //class FromGraphML
 //class FromDot
