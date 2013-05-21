@@ -13,44 +13,44 @@ import java.io._
 
 object Test {
 	def main(args: Array[String]) = {
-	  val (iterlim, simlim, popSize) = (100,1000,1000)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount) = (0.01, 0.05, 0.5, 0.2, 0.75)
+	  val (iterlim, simlim, popSize) = (1,1,500)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.05, 0.5, 0.02, 0.5, 0.1)
 	  val cliqueSize = 3
 
 	   val cliquer = CliqueUp(cliqueSize,Community.Family)
-	   val hMeanK = 30
+	   val hMeanK = 10
 	   val hConP = (hMeanK * cliqueSize).toDouble / popSize
 	   val (clusterCount,clusterSize) = (3,5)
-	   val test = SimulationCommand(SimulationEvent.TEST, 0)
-	   val done = SimulationCommand(SimulationEvent.DONE, 0)
+	   val (test,done) = ( SimulationCommand(SimulationEvent.TEST, 0), SimulationCommand(SimulationEvent.DONE, 0) )
+	   val (updater,nexter) = (SimulationCommand(SimulationEvent.UPDATE),SimulationCommand(SimulationEvent.NEXT))
 	for (iteration <- 0 until iterlim) {
 	  println("starting iteration "+iteration)
 	  val start = System.currentTimeMillis()
 		Logger.start(iteration)
 	   
-	   val factory = BackgroundFactory(pComm, pBadBack)
+	   val factory = BackgroundFactory(pComm, pBadBack, 1)
 	   val people = factory.src.take(popSize)
 	   
-	   val H = Hub(pBadBack,pBadFore*pBadNormDiscount, pForeCommDiscount*pComm, popSize)
+	   val H = Hub(pBadBack,pBadFore*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
 	   
 	   val triads = CliqueAll.grouped(people.iterator,popSize, cliqueSize, Community.Family)
 	   for (c <- triads if DoubleSrc.next < hConP) c.random.join(H, Community.Family)
-	   
+	   BinomialMix(triads.flatten, pBlend, Community.Family)
 	   
 
-	   val terrorists = PlotClusters(-(popSize+1), pForeCommDiscount*pComm, pBadFore, clusterSize).take(clusterCount)
+	   val terrorists = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pBadFore, clusterSize).take(clusterCount)
 
 	   H.clusters ++= Clique(Community.Plot)(terrorists)
 	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
-	   val (pwEL, pwVI) = (new PrintWriter("./commsim-test.txt"), new PrintWriter("./commsim-test-vertex-info.txt"))
+	   val (pwEL, pwVI) = (new PrintWriter("./commsim-mix.txt"), new PrintWriter("./commsim-mix-vertex-info.txt"))
 	   iGraphELWriter.write(pwEL, output).close 
 	   iGraphVIWriter.write(pwVI, output).close
 
 	   output foreach( _ start )
 	   
 	   for (t <- 1 to simlim) {
-		   if ( !output.map( _ !! SimulationCommand(SimulationEvent.UPDATE, t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed UPDATE")
-		   if ( !output.map( _ !! SimulationCommand(SimulationEvent.NEXT, t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed NEXT")
+		   if ( !output.map( _ !! updater(t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed UPDATE")
+		   if ( !output.map( _ !! nexter(t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed NEXT")
 	   }
 	   output foreach( _ ! done)
 	   Logger.close
