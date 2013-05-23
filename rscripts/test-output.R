@@ -38,7 +38,7 @@ dev.off()
 
 plotFiles <- sort(list.files(".","plot-\\d+\\.txt"))
 backFiles <- sort(list.files(".","back-\\d+\\.txt"))
-hubFiles <- sort(list.files(".","1-\\d+\\.txt"))
+hubFiles <- sort(list.files(".","hub-\\d+\\.txt"))
 viFiles <- sort(list.files(".","\\d+-VI\\.txt"))
 elFiles <- sort(list.files(".","\\d+-EL\\.txt"))
 
