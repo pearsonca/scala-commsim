@@ -158,6 +158,17 @@ contentTPR<-sapply(contentFiles,function(fname) {
 },simplify="matrix") / plotsize
 cTPRq <- apply(contentTPR,1,quantile)
 
+sandcFPR<-sapply(sandcFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$FPR
+},simplify="matrix") / popsize
+sandcFPRq <- apply(sandcFPR,1,quantile)
+
+sandcTPR<-sapply(sandcFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$TPR
+},simplify="matrix") / plotsize
+sandcTPRq <- apply(sandcTPR,1,quantile)
+
+
 badMR <- sapply(badFiles,function(fname) {
   read.table(fname,header=F,col.names=c("badMR"))$badMR
 },simplify="matrix")
@@ -168,11 +179,47 @@ timesteps <- 100
 samples <- 100
 t<-1:timesteps
 tm <- matrix(t,nrow=timesteps,ncol=samples)
+backpoly<-function(t,x,color,lb=0) {
+  polygon( c(min(t), t, max(t)), c( lb, x, lb), col=color, border=NA )
+}
+plot(t,badMRq[5,],type="l",col="grey93",ylab="",xlab="",yaxt="n",xaxt="n",bty="n")
+backpoly(t,badMRq[5,],col="grey93")
+backpoly(t,badMRq[4,],col="grey85")
+backpoly(t,badMRq[2,],col="grey93")
+backpoly(t,badMRq[1,],col="white",lb=-1)
+axis(side=1,at=c(min(t),max(t)),labels=c(expression(t[min]),expression(t[max])),tick=F,line=-1)
+text(75,0.5,"MR")
 
-barplot(badmessages/max(badmessages),width=1,space=0,border=NA,col="lightgrey")
-lines(x=t,y=TPRq["50%",],col="green3",type="l",xlab="iterate",ylab="FPR",ylim=c(0,1))
-lines(x=t,y=TPRq["75%",],col="darkolivegreen1")
-lines(x=t,y=TPRq["25%",],col="darkolivegreen1")
-lines(x=t,y=FPRq["50%",],col="red")
-lines(x=t,y=FPRq["75%",],col="coral")
-lines(x=t,y=FPRq["25%",],col="coral")
+liner<-function(t,TPRq,FPRq,TPRxy,FPRxy) {
+  lines(x=t,y=TPRq[3,],col="green3",type="l",xlab="iterate",ylab="FPR",ylim=c(0,1))
+  lines(x=t,y=TPRq[4,],col="darkolivegreen1")
+  lines(x=t,y=TPRq[2,],col="darkolivegreen1")
+  lines(x=t,y=FPRq[3,],col="red")
+  lines(x=t,y=FPRq[4,],col="coral")
+  lines(x=t,y=FPRq[2,],col="coral")
+  text(TPRxy[1],TPRxy[2],"TPR",col="green3")
+  text(FPRxy[1],FPRxy[2],"FPR",col="red")
+}
+
+plotter<-function(t,badMRq,TPRq,FPRq,TPRxy,FPRxy) {
+  plot(t,badMRq[5,],type="l",col="grey93",ylab="",xlab="",yaxt="n",xaxt="n",bty="n")
+  backpoly(t,badMRq[5,],col="grey93")
+  backpoly(t,badMRq[4,],col="grey85")
+  backpoly(t,badMRq[2,],col="grey93")
+  backpoly(t,badMRq[1,],col="white",lb=-1)
+  axis(side=1,at=c(min(t),max(t)),labels=c(expression(t[min]),expression(t[max])),tick=F,line=-1)
+  text(75,0.5,"MR")
+  liner(t,TPRq,FPRq,TPRxy,FPRxy)
+}
+scale <- 500
+png(file="4_1_500_s.png",width=scale,height=scale)
+plotter(t,badMRq,sTPRq,sFPRq,c(20,0.5),c(80,.15))
+dev.off()
+
+png(file="4_1_500_c.png",width=scale,height=scale)
+plotter(t,badMRq,cTPRq,cFPRq,c(20,0.5),c(80,.15))
+dev.off()
+
+png(file="4_1_500_sandc.png",width=scale,height=scale)
+plotter(t,badMRq,sandcTPRq,sandcFPRq,c(20,0.5),c(80,.15))
+dev.off()
