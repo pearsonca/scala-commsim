@@ -42,32 +42,21 @@ class Person(val id:Int, binCache: BinomialCache, pBad:Double) extends PersonLik
       if (count != 0) res = shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
 	}
     res
-  }
-  def messages() = {
-	  { for ( community <- contacts.keys; // for each possible community
-			  commContacts = contacts(community) if commContacts.size != 0; // fish out the contacts
-			  count = binCache(commContacts.length).next; // figure out how many messages to send to this community
-			  if count > 0) // if that # is positive
-	    yield
-	    	community -> 
-	  		shuffle(commContacts).take(count).map( (person) => (person,if (DoubleSrc.next < pBad) Bad else Good))
-	  }.toMap
-	}
-  
+  }  
 }
 
 class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) extends Person(id, BinomialCache(pComm), pBadNorms) {
-   
-  val clusters = Buffer[PlotCluster]()
+  override val contacts = Seq(Religion, Work, Family, Plot).zip( fill(Buffer[PersonLike]()) ).toMap
+  def clusters = contacts(Plot)
   val badCache = BinomialCache(pBadSubs)
-  override def messages() = {
-      val res = super.messages
+  override def messages(commType:CValue) = commType match {
+    case Plot => 
       val badCount = badCache(clusters.size).next
-      if (badCount > 0) {
-        res + (Plot -> { 
-          shuffle(clusters).take(badCount) zip Stream.continually(Bad)
-        })
-      } else res
+      if (badCount > 0)
+        shuffle(clusters).take(badCount) zip Stream.continually(Bad)
+      else
+        Buffer()
+    case _ => super.messages(commType)
   }
 
 }
@@ -95,7 +84,7 @@ object PlotterFactory {
 
 class Plotter(val id : Int, val pInner: Double, val pOuter : Double) extends PersonLike { 
 	override val contacts = Map[Community.Value,Buffer[PersonLike]]()	
-	override def messages = Map() // actually do nothing but record received messages
+	override def messages(commType:CValue) = Buffer() // actually do nothing but record received messages
 }
 
 object PlotClusters {
@@ -140,7 +129,7 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : 
   
   override def messenger(community:CValue, what:VValue, t:Int) = Message(members.random,community,what,t)
   
-  override def messages = if (receivedBad) {
+  override def messages(commType:CValue) = if (commType == Plot && receivedBad) {
 	val buffer = Buffer[(PersonLike,VValue)]()
 	  
 	  if (DoubleSrc.next < pInner) { // maybe send a member of inner circle bad message
@@ -149,9 +138,6 @@ class PlotCluster(val id : Int, val pInner: Double, val pOuter : Double, size : 
 	  if (DoubleSrc.next < pOuter) { // maybe send another hub a bad message
 	    buffer += { (contacts(Plot).random, Bad) }
 	  }
-	  
-	if (!buffer.isEmpty) {
-	   Map( Plot -> buffer )
-	} else Map()
+	buffer
   } else Map() // do nothing
 }

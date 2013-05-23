@@ -49,7 +49,13 @@ trait PersonLike extends Actor {
 	 *  sets which contacts entry to bring up, then the who index sets which person to send to.
 	 *  Message content is set by the what (Vocabulary) part of the pair.
 	 *  */
-	def messages() : Map[CValue, Iterable[(PersonLike,VValue)]]
+	def messages() : Map[CValue, Iterable[(PersonLike,VValue)]] = { 
+	  for ( community <- contacts.keys; // for each of the PersonLike's communities
+			res = messages(community);	// generate messages for that community
+			if res.size != 0)			// if there are messages
+	    yield community -> res			// add them to the outbox
+	}.toMap
+	
 	def messages(commType:CValue) : Iterable[(PersonLike,VValue)]
 	
 	def id() : Int
