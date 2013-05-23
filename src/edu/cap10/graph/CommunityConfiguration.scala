@@ -132,14 +132,20 @@ object iGraphELWriter {
   }
 }
 object iGraphVIWriter {
-  def write(tar:PrintWriter, pop: Seq[_<:PersonLike]) = {
-    for (psrc <- pop) tar.println( psrc.id + " " + (psrc match {
-      case _:Hub => "hub"
-      case _:Plotter => "plotter"
-      case _:PlotCluster => "bombers"
-      case _ => "person"
-    }))
+  def write(tar:PrintWriter, pop: Seq[_<:PersonLike]) : PrintWriter = {
+    for (psrc <- pop) { 
+      if (psrc.isInstanceOf[PlotCluster]) { write(tar, psrc.asInstanceOf[PlotCluster].members) }
+      writeOne(tar, psrc)
+    }
     tar.flush
     tar
+  }
+  def writeOne(tar:PrintWriter, p:PersonLike) = {
+    tar.println( p.id + " " + (p match {
+	      case _:Hub => "hub"
+	      case _:Plotter => "plotter"
+	      case _:PlotCluster => "bombers"
+	      case _ => "person"
+	    }))
   }
 }
