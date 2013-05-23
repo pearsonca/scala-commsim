@@ -53,9 +53,9 @@ elFiles <- sort(list.files(".","\\d+-EL\\.txt"))
 bothdegrees <- function(messages,maxid) {
   sapply(1:maxid, function(id) { dim(unique(subset(messages, messages$recipient_id == id, select = "sender_id")))[1] + dim(unique(subset(messages, messages$sender_id == id, select = "recipient_id")))[1] })
 }
-hasbad <- function(id,badmessages) {
+hasbad <- Vectorize(function(id,badmessages) {
   any(badmessages$recipient_id == id | badmessages$sender_id == id)
-}
+}, vectorize.args = "id", SIMPLIFY="array")
 
 cols <- c("recipient_id","sender_id","timestep","content")
 mapply(function(p,b,h,vi,id) { 
@@ -82,7 +82,7 @@ mapply(function(p,b,h,vi,id) {
     peopleDegrees <- (bdegrees[people] != 0) & ((bdegrees[people] < qs[2]) | (bdegrees[people] > qs[3]))
     sFPR <- sum(peopleDegrees)
     plotterDegrees <- (bdegrees[plotter_ids] != 0) & (bdegrees[plotter_ids] < qs[2])
-    hubDegrees <- bdegrees[hubv] > qs[3]
+    hubDegrees <- (bdegrees[hubv] > qs[3])
     sTPR <- sum(plotterDegrees) + hubDegrees
     # calculate content FPR / TPR
     subc <- unique( subset(submerge, submerge$content == 'Bad', select=c("recipient_id","sender_id")) )
@@ -94,7 +94,7 @@ mapply(function(p,b,h,vi,id) {
     plotterBad <- hasbad(plotter_ids,subc)
     hubBad <- hasbad(hubv,subc)
     sandcFPR <- sum(peopleDegrees & peopleBad)
-    sandcTPR <- sum(plotterDegrees & plotterBad) + hubBad & hubDegrees
+    sandcTPR <- sum(plotterDegrees & plotterBad) + (hubBad & hubDegrees)
     # calculate total in-plot bads
     bads <- 
       dim(subset(submerge, 
@@ -114,15 +114,15 @@ mapply(function(p,b,h,vi,id) {
   T
 }, plotFiles, backFiles, hubFiles, viFiles, 1:length(viFiles), USE.NAMES=F)
 
-hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
-backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
-plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
-
-allData <- rbind( 
-  hubInc[,cols], 
-  backInc[,cols], 
-  plotInc[,cols]
-)
+# hubInc <- read.table("./4-1-hub-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+# backInc <- read.table("./4-1-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+# plotInc <- read.table("./4-1-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+# 
+# allData <- rbind( 
+#   hubInc[,cols], 
+#   backInc[,cols], 
+#   plotInc[,cols]
+# )
 # submerge <- subset(allInc, allInc$timestep <= 10)
 # unique(subset(submerge, submerge$content == 'Bad',select=c("recipient_id","sender_id") ))
 # 
@@ -135,37 +135,39 @@ contentFiles <- sort(list.files(".","content_\\d+\\.txt"))
 sandcFiles <- sort(list.files(".","sandc_\\d+\\.txt"))
 badFiles <- sort(list.files(".","bad_\\d+\\.txt"))
 
+popsize <- 500
+plotsize <- 16
+
 structureFPR<-sapply(structureFiles,function(fname) {
   read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$FPR
-},simplify="matrix")
+},simplify="matrix") / popsize
+sFPRq <- apply(structureFPR,1,quantile)
 
 structureTPR<-sapply(structureFiles,function(fname) {
   read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$TPR
-},simplify="matrix")
+},simplify="matrix") / plotsize
+sTPRq <- apply(structureTPR,1,quantile)
 
 contentFPR<-sapply(contentFiles,function(fname) {
   read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$FPR
-},simplify="matrix")
+},simplify="matrix") / popsize
+cFPRq <- apply(contentFPR,1,quantile)
 
 contentTPR<-sapply(contentFiles,function(fname) {
   read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$TPR
-},simplify="matrix")
+},simplify="matrix") / plotsize
+cTPRq <- apply(contentTPR,1,quantile)
 
 badMR <- sapply(badFiles,function(fname) {
   read.table(fname,header=F,col.names=c("badMR"))$badMR
 },simplify="matrix")
+badMR <- badMR / max(badMR)
+badMRq <- apply(badMR,1,quantile)
 
 timesteps <- 100
-t<-1:timesteps
-tm <- matrix(t,ncol=timesteps,nrow=samples,byrow=T)
 samples <- 100
-FPR <- matrix(runif(timesteps*samples), nrow=samples, ncol=timesteps)
-TPR <- matrix(runif(timesteps*samples), nrow=samples, ncol=timesteps)
-
-TPRq <- apply(TPR,2,quantile)
-FPRq <- apply(FPR,2,quantile)
-
-badmessages<-0:100
+t<-1:timesteps
+tm <- matrix(t,nrow=timesteps,ncol=samples)
 
 barplot(badmessages/max(badmessages),width=1,space=0,border=NA,col="lightgrey")
 lines(x=t,y=TPRq["50%",],col="green3",type="l",xlab="iterate",ylab="FPR",ylim=c(0,1))
