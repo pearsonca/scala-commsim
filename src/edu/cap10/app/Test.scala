@@ -13,9 +13,9 @@ import java.io._
 
 object Test {
 	def main(args: Array[String]) = {
-	  val (iterlim, simlim, popSize) = (1,1,500)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.05, 0.5, 0.02, 0.5, 0.1)
-	  val cliqueSize = 3
+	  val (iterlim, simlim, popSize) = (100,100,500)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.05, 0.5, 0.02, 0.5, 0.01)
+	  val cliqueSize = 4
 
 	   val cliquer = CliqueUp(cliqueSize,Community.Family)
 	   val hMeanK = 10
@@ -40,9 +40,9 @@ object Test {
 
 	   val terrorists = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pBadFore, clusterSize).take(clusterCount)
 
-	   H.clusters ++= Clique(Community.Plot)(terrorists)
+	   H.contacts(Plot) ++= Clique(Community.Plot)(terrorists)
 	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
-	   val (pwEL, pwVI) = (new PrintWriter("./commsim-mix.txt"), new PrintWriter("./commsim-mix-vertex-info.txt"))
+	   val (pwEL, pwVI) = (new PrintWriter("./"+(iteration+1)+"-EL.txt"), new PrintWriter("./"+(iteration+1)+"-VI.txt"))
 	   iGraphELWriter.write(pwEL, output).close 
 	   iGraphVIWriter.write(pwVI, output).close
 
@@ -57,18 +57,19 @@ object Test {
 	   println("completed iteration "+iteration)
 	   println("run time: "+ (System.currentTimeMillis()-start))
 	}
+	Logger.cleanup(iterlim)
 	}
 }
 
 object Logger {
+  val runname = "4-1"
   val filter = new FilenameFilter() {
     def accept(f:File, name:String) = name.contains("current")
   }
   var pws : Seq[PrintWriter] = Seq()
   def start(step:Int=0) = {
-    val others = (new File("./")).listFiles(filter)
-    others.foreach( (file) => file.renameTo(new File(file.getPath.replace("current",step.toString) )) ) 
-    pws = Seq("./test-hub-current.txt","./test-plot-current.txt","./test-cluster-current.txt","./test-back-current.txt") map ( s => new PrintWriter(s) )
+    cleanup(step) 
+    pws = Seq("./"+runname+"-hub-current.txt","./"+runname+"-plot-current.txt","./"+runname+"-cluster-current.txt","./"+runname+"-back-current.txt") map ( s => new PrintWriter(s) )
   }
   def println(src:PersonLike,msg:String) = {
     src match {
@@ -81,5 +82,10 @@ object Logger {
   def close = {
     pws foreach { pw => pw.flush; pw.close; }
   }
+  def cleanup(step:Int) = {
+    val others = (new File("./")).listFiles(filter)
+    val replace = step.toString
+    others.foreach( (file) => file.renameTo(new File(file.getPath.replace("current",replace) )) )
+  } 
   
 }
