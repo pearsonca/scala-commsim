@@ -14,7 +14,7 @@ import java.io._
 object Test {
 	def main(args: Array[String]) = {
 	  val (iterlim, simlim, popSize) = (100,100,500)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.05, 0.5, 0.02, 0.5, 0.01)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.1, 0.5, 0.02, 0.5, 0.01)
 	  val cliqueSize = 4
 
 	   val cliquer = CliqueUp(cliqueSize,Community.Family)
@@ -31,14 +31,14 @@ object Test {
 	   val factory = BackgroundFactory(pComm, pBadBack, 1)
 	   val people = factory.src.take(popSize)
 	   
-	   val H = Hub(pBadBack,pBadFore*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
+	   val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
 	   
 	   val triads = CliqueAll.grouped(people.iterator,popSize, cliqueSize, Community.Family)
 	   for (c <- triads if DoubleSrc.next < hConP) c.random.join(H, Community.Family)
 	   BinomialMix(triads.flatten, pBlend, Community.Family)
 	   
 
-	   val terrorists = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pBadFore, clusterSize).take(clusterCount)
+	   val terrorists = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount)
 
 	   H.contacts(Plot) ++= Clique(Community.Plot)(terrorists)
 	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
