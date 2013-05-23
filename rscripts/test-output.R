@@ -1,97 +1,176 @@
 library(igraph)
-pree <- read.table("../commsim-mix.txt")
-edgeinfo <- t(pree[which(pree[,1]>0 & pree[,2]>0),-3])
-vertexinfo <- t(read.table("../commsim-mix-vertex-info.txt"))
+pree <- read.table("../1-EL.txt",col.names=c("sender_id","recipient_id","type"))
+pree[which(pree[,1]<0),1] <- -pree[which(pree[,1]<0),1]
+pree[which(pree[,2]<0),2] <- -pree[which(pree[,2]<0),2]
+edgeinfo <- t(pree[,-3])
+vertexinfo <- read.table("../1-VI.txt",sep=" ", col.names=c("id","type"))
 g <- graph( edgeinfo )
 #degree(g,v=which(vertexinfo[2,] == "hub"))
 #mean(degree(g))
 
 #g2 <- graph(as.numeric(edgeinfo[-3,])+1)
-hubv <- which(vertexinfo[2,]=="hub")
-#clustervs <- as.numeric(vertexinfo[1,which(vertexinfo[2,]=="bombers")])+1
+hubv <- which(vertexinfo[,"V2"]=="hub")
+clustervs <- -vertexinfo[which(vertexinfo[,"V2"]=="bombers"),"V1"]
+plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"V2"]=="plotter"),"V1"])
+
+V(g)$size <- 2
 V(g)[1:(hubv-1)]$color <- "lightblue"
-V(g)[clustervs]$color <- "yellow"
+V(g)[clustervs]$color <- "khaki"
 V(g)[hubv]$color <- "red"
-E(g)$color <- "lightgrey"
-E(g)$lty <- 1
-E(g)[to(clustervs)]$color <- "red"
-E(g)[to(clustervs)]$lty <- 4
+# low <- 0.001
+# E(g)[to(clustervs)]$weight <- low
+# E(g)[from(clustervs)]$weight <- low
+# E(g)[to(clustervs)]$color <- "red"
+# E(g)[to(clustervs)]$lty <- 4
 ## http://lists.gnu.org/archive/html/igraph-help/2009-03/msg00003.html
-g2 <- g2 - E(g2)[!to(clustervs)]
-V(g2)[clustervs]$color <- "yellow"
-V(g2)[hubv]$color <- "red"
+# g2 <- g2 - E(g2)[!to(clustervs)]
+# V(g2)[clustervs]$color <- "yellow"
+# V(g2)[hubv]$color <- "red"
 #l2 <- layout.auto(g2)
 l<-layout.auto(g)
-png(file="example_background.png",width=1000,height=1000)
+png(file="4_1_500.png",width=1000,height=1000)
 par(mar=c(0,0,0,0)+0.1)
 plot(g, edge.arrow.size=0.5,
-     vertex.label=NA, vertex.size=2, vertex.frame.color=NA, layout=l)
+     vertex.label=NA, vertex.frame.color=NA, layout=l)
 dev.off()
 
 ###
 
 plotFiles <- sort(list.files(".","plot-\\d+\\.txt"))
 backFiles <- sort(list.files(".","back-\\d+\\.txt"))
-hubFiles <- sort(list.files(".","hub-\\d+\\.txt"))
+hubFiles <- sort(list.files(".","1-\\d+\\.txt"))
+viFiles <- sort(list.files(".","\\d+-VI\\.txt"))
+elFiles <- sort(list.files(".","\\d+-EL\\.txt"))
 
-mapply(function(p,b,h) { 
-  srcs<-lapply(list(plot=p,back=b,hub=h), read.table, sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))  
+# indegrees <- function(messages,maxid) {
+#   sapply(1:maxid, function(id) { dim(unique(subset(allmessages, allmessages$recipient_id == id, select = "sender_id")))[1] })
+# }
+# 
+# outdegrees <- function(messages,maxid) {
+#   sapply(1:maxid, function(id) { dim(unique(subset(allmessages, allmessages$sender_id == id, select = "recipient_id")))[1] })
+# }
+
+bothdegrees <- function(messages,maxid) {
+  sapply(1:maxid, function(id) { dim(unique(subset(messages, messages$recipient_id == id, select = "sender_id")))[1] + dim(unique(subset(messages, messages$sender_id == id, select = "recipient_id")))[1] })
+}
+hasbad <- function(id,badmessages) {
+  any(badmessages$recipient_id == id | badmessages$sender_id == id)
+}
+
+cols <- c("recipient_id","sender_id","timestep","content")
+mapply(function(p,b,h,vi,id) { 
+  srcs<-lapply(list(plot=p,back=b,hub=h), read.table, sep=" ", 
+               col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+  vertexinfo <- read.table(vi, sep=" ", col.names=c("id","type"))
+  people <- subset(vertexinfo, vertexinfo$type=="person",select="id")$id
+  hubv <- subset(vertexinfo, vertexinfo$type=="hub",select="id")$id
+  plotter_ids <- subset(vertexinfo, vertexinfo$type=="plotter", select="id")$id
+  allplotters <- c(hubv, plotter_ids)
+  max_id <- max(plotter_ids)
   hubData<-srcs$hub
   backData<-srcs$back
   plotData<-srcs$plot
-  urows <- row.names(unique(backData[,c("recipient_id","sender_id")])) ## get the rows from source data for those
-  
-  length(urows)
-}, plotFiles, backFiles, hubFiles, USE.NAMES=F)
+  allData <- rbind( hubData[,cols], backData[,cols], plotData[,cols] )
+  max_time <- max(allData$timestep)
+  fnames <- sapply(c("structure","content","sandc","bad"),function(head) { paste(head, "_", id,".txt", sep="",collapse="") })
+  files <- lapply(fnames, file, open="w")
+  chuck<-sapply(1:max_time,function(t){
+    submerge <- subset(allData, allData$timestep <= t)
+    # calculate structure FPR / TPR
+    bdegrees <- bothdegrees(submerge,max_id)
+    qs<-quantile(bdegrees[which(bdegrees > 0)],probs=c(0,0.05,0.95,1))
+    peopleDegrees <- (bdegrees[people] != 0) & ((bdegrees[people] < qs[2]) | (bdegrees[people] > qs[3]))
+    sFPR <- sum(peopleDegrees)
+    plotterDegrees <- (bdegrees[plotter_ids] != 0) & (bdegrees[plotter_ids] < qs[2])
+    hubDegrees <- bdegrees[hubv] > qs[3]
+    sTPR <- sum(plotterDegrees) + hubDegrees
+    # calculate content FPR / TPR
+    subc <- unique( subset(submerge, submerge$content == 'Bad', select=c("recipient_id","sender_id")) )
+    hit <- unique(c(subc$recipient_id,subc$sender_id)) %in% allplotters
+    cTPR <- sum(hit)
+    cFPR <- sum(!hit)
+    # calculate structure and content FPR / TPR
+    peopleBad <- hasbad(people,subc)
+    plotterBad <- hasbad(plotter_ids,subc)
+    hubBad <- hasbad(hubv,subc)
+    sandcFPR <- sum(peopleDegrees & peopleBad)
+    sandcTPR <- sum(plotterDegrees & plotterBad) + hubBad & hubDegrees
+    # calculate total in-plot bads
+    bads <- 
+      dim(subset(submerge, 
+        submerge$content == 'Bad' & 
+        (submerge$sender_id %in% allplotters) & 
+        (submerge$recipient_id %in% allplotters), 
+        select="content")
+      )[1]
+    write(c(sFPR,sTPR),files$structure,ncol=2,append=T)
+    write(c(cFPR,cTPR),files$content,ncol=2,append=T)
+    write(c(sandcFPR,sandcTPR),files$sandc,ncol=2,append=T)
+    write(bads,files$bad,ncol=1,append=T)
+  })
+  chuck<-lapply(files,flush)
+  chuck<-lapply(files,close)
+  print(id)
+  T
+}, plotFiles, backFiles, hubFiles, viFiles, 1:length(viFiles), USE.NAMES=F)
 
 hubInc <- read.table("../test-hub-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
-backInc <- read.table("./test-back-98.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+backInc <- read.table("../test-back-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 plotInc <- read.table("../test-plot-1.txt", sep=" ", col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
 
-urows <- row.names(unique(backInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
+allData <- rbind( 
+  hubInc[,cols], 
+  backInc[,cols], 
+  plotInc[,cols]
+)
+# submerge <- subset(allInc, allInc$timestep <= 10)
+# unique(subset(submerge, submerge$content == 'Bad',select=c("recipient_id","sender_id") ))
+# 
+# test<-sapply(1:max(merge[,"timestep"]),indegreer(all_ids),simplify="matrix")
+# 
+# urows <- row.names(unique(backInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
 
-## make a matrix A = rows(recipients), cols(timestep)
+structureFiles <- sort(list.files(".","structure_\\d+\\.txt"))
+contentFiles <- sort(list.files(".","content_\\d+\\.txt"))
+sandcFiles <- sort(list.files(".","sandc_\\d+\\.txt"))
+badFiles <- sort(list.files(".","bad_\\d+\\.txt"))
 
-## make a matrix B = rows(senders), cols(timestep) : NB, senders can include hub
-subset <- backInc[urows,]
-test_r<-Vectorize(function(recipient_id, timestep) {
-  sum( (subset$recipient_id == (recipient_id-1)) & (subset$timestep <= timestep))
-})
-IN<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_r)
-test_s<-Vectorize(function(sender_id, timestep) {
-  sum( (subset$sender_id == (sender_id-1)) & (subset$timestep <= timestep))
-})
-OUT<-outer(1:max(backInc$recipient_id)+1,1:max(subset$timestep),test_s) # max sender = H
-INOUT <- IN + OUT
-# maxOUT <- apply(OUT,2,max)
-# maxIN <- apply(IN,2,max)
-maxINOUT <- apply(INOUT, 2, max)
-Hid <- hubInc[1,"recipient_id"]+1
-Hin <- hubInc[row.names(unique(hubInc[,c("recipient_id","sender_id")])),"timestep"] 
-HinT <- sapply(1:max(Hin),function(t) { sum(Hin <= t) })
-Hlast <- HinT[length(HinT)]
-HinT <- c(HinT,rep.int(Hlast,length(OUT[1,])-length(HinT)))
+structureFPR<-sapply(structureFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$FPR
+},simplify="matrix")
 
+structureTPR<-sapply(structureFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$TPR
+},simplify="matrix")
 
-ploturows <- row.names(unique(plotInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
-plotsubset <- plotInc[ploturows,]
-first_plot_id <- min(plotInc$recipient_id)
-last_plot_id <- max(plotInc$recipient_id)
-test_r_plot<-Vectorize(function(recipient_id, timestep) {
-  sum( (plotsubset$recipient_id == recipient_id) & (plotsubset$timestep <= timestep))
-})
+contentFPR<-sapply(contentFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$FPR
+},simplify="matrix")
 
-test_s_plot<-Vectorize(function(sender_id, timestep) {
-  sum( (plotsubset$sender_id == sender_id) & (plotsubset$timestep <= timestep))
-})
+contentTPR<-sapply(contentFiles,function(fname) {
+  read.table(fname,header=F,sep=" ",col.names=c("FPR","TPR"))$TPR
+},simplify="matrix")
 
-Pin <- outer(first_plot_id:last_plot_id, 1:max(plotsubset$timestep), test_r_plot)
-Pout <- outer(first_plot_id:last_plot_id, 1:max(plotsubset$timestep), test_s_plot)
+badMR <- sapply(badFiles,function(fname) {
+  read.table(fname,header=F,col.names=c("badMR"))$badMR
+},simplify="matrix")
 
-Hout <- mapply(test_s, sender_id=rep.int(Hid,max(subset$timestep)), timestep=1:max(subset$timestep))
-Hout <- c(Hout, rep.int(Hout[length(Hout)],max(plotsubset$timestep)-max(subset$timestep)))
-Hout <- Hout+ mapply(test_s_plot, sender_id=rep.int(Hid-1,max(plotsubset$timestep)), timestep=1:max(plotsubset$timestep))
+timesteps <- 100
+t<-1:timesteps
+tm <- matrix(t,ncol=timesteps,nrow=samples,byrow=T)
+samples <- 100
+FPR <- matrix(runif(timesteps*samples), nrow=samples, ncol=timesteps)
+TPR <- matrix(runif(timesteps*samples), nrow=samples, ncol=timesteps)
 
-## baseline TPR / FPR based on H has highest in-out degree
-TPR <- ifelse(maxINOUT < Hout + HinT,1,0)
-FPR <- ifelse(TPR == 1, 0, 1)
+TPRq <- apply(TPR,2,quantile)
+FPRq <- apply(FPR,2,quantile)
+
+badmessages<-0:100
+
+barplot(badmessages/max(badmessages),width=1,space=0,border=NA,col="lightgrey")
+lines(x=t,y=TPRq["50%",],col="green3",type="l",xlab="iterate",ylab="FPR",ylim=c(0,1))
+lines(x=t,y=TPRq["75%",],col="darkolivegreen1")
+lines(x=t,y=TPRq["25%",],col="darkolivegreen1")
+lines(x=t,y=FPRq["50%",],col="red")
+lines(x=t,y=FPRq["75%",],col="coral")
+lines(x=t,y=FPRq["25%",],col="coral")
