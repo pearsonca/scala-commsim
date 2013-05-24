@@ -105,5 +105,6 @@ object SimulationEvent extends Enumeration {
 case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
 
 object SimulationCommand {
-  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand = SimulationCommand(e,_)
+  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand =
+    SimulationCommand(e,_)
 }
