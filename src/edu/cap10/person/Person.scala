@@ -16,7 +16,7 @@ class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0) {
   require(pComm >= 0 && pComm <= 1,"pComm is not a probability.")
   require(pBad >= 0 && pBad <= 1,"pBad is not a probability.")
   
-  val binCache = BinomialCache(pComm)
+  val binCache = BinomialCache(pComm) // set up a binomial distribution cache
   private def loop(i:Int) : Stream[PersonLike] =
     new Person(i, binCache, pBad) #:: loop(i+1)
   val src : Stream[PersonLike] = loop(startId)
