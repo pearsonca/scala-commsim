@@ -1,58 +1,80 @@
 package edu.cap10.app
 
 import edu.cap10.person._
-import edu.cap10.graph._
+
+import edu.cap10.graph.generators.Clique
+import edu.cap10.graph.generators.BinomialMix
+import edu.cap10.graph.generators.CliqueHierarchy
+
+import edu.cap10.graph.io.igraph._
+
 import edu.cap10.distributions._
+import edu.cap10.sim.Event
+import edu.cap10.sim.EventType._
 
 import edu.cap10.person.Vocabulary._ // Good, Bad
 import edu.cap10.person.Community._ // 
 
 import scala.collection.mutable.Buffer
+import scala.util.Random.shuffle
 
 import java.io._
 
 object Test {
 	def main(args: Array[String]) = {
-	  val (iterlim, simlim, popSize) = (100,100,500)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.1, 0.5, 0.02, 0.5, 0.01)
-	  val cliqueSize = 4
+	  val (iterlim, simlim, popSize) = (1,10,500)
+	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.1, 0.5, 0.02, 0.5, 0.0)
+	  val cliqueSize = 3
 
-	   val cliquer = CliqueUp(cliqueSize,Community.Family)
+	   val cliquer = CliqueHierarchy(Community.Family)
 	   val hMeanK = 10
 	   val hConP = (hMeanK * cliqueSize).toDouble / popSize
 	   val (clusterCount,clusterSize) = (3,5)
-	   val (test,done) = ( SimulationCommand(SimulationEvent.TEST, 0), SimulationCommand(SimulationEvent.DONE, 0) )
-	   val (updater,nexter) = (SimulationCommand(SimulationEvent.UPDATE),SimulationCommand(SimulationEvent.NEXT))
+
 	for (iteration <- 0 until iterlim) {
 	  println("starting iteration "+iteration)
 	  val start = System.currentTimeMillis()
 		Logger.start(iteration)
 	   
 	   val factory = BackgroundFactory(pComm, pBadBack, 1)
-	   val people = factory.src.take(popSize)
+	   val people = factory.src.take(popSize).toSeq
 	   
 	   val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
 	   
-	   val triads = CliqueAll.grouped(people.iterator,popSize, cliqueSize, Community.Family)
-	   for (c <- triads if DoubleSrc.next < hConP) c.random.join(H, Community.Family)
-	   BinomialMix(triads.flatten, pBlend, Community.Family)
 	   
-
-	   val terrorists = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount)
-
-	   H.contacts(Plot) ++= Clique(Community.Plot)(terrorists)
-	   val output = (cliquer.apply(triads) :+ H) ++ terrorists 
-	   val (pwEL, pwVI) = (new PrintWriter("./"+(iteration+1)+"-EL.txt"), new PrintWriter("./"+(iteration+1)+"-VI.txt"))
-	   iGraphELWriter.write(pwEL, output).close 
-	   iGraphVIWriter.write(pwVI, output).close
-
-	   output foreach( _ start )
 	   
-	   for (t <- 1 to simlim) {
-		   if ( !output.map( _ !! updater(t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed UPDATE")
-		   if ( !output.map( _ !! nexter(t)).foldLeft(true)((res,f)=> res && (f() == "ACK")) ) println("failed NEXT")
+	   
+	   {
+	       implicit val edge = Community.Family
+		   val families = Clique(edge).all(shuffle(people), cliqueSize)
+		   for (family <- families if DoubleSrc.next < hConP) family.random <~> H
+		   BinomialMix(edge)(CliqueHierarchy(edge).grouped(families, cliqueSize),pBlend)
 	   }
-	   output foreach( _ ! done)
+	   
+	   {
+	       implicit val edge = Community.Work
+		   val businesses = Clique(Community.Work).all(shuffle(people), cliqueSize)
+		   for (business <- businesses if DoubleSrc.next < hConP) business.random <~> H
+		   BinomialMix(edge)(CliqueHierarchy(edge).grouped(businesses, cliqueSize),pBlend)
+	   }
+	   
+	   val terrorists : Iterable[PersonLike] = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount)
+	   H.~>(Clique(Community.Plot).apply(terrorists):_*)(Community.Plot);
+	  
+	   val output = ((cliquer.apply(people)) :+ H) ++ terrorists 
+	   val (pwEL, pwVI) = (new PrintWriter("./"+(iteration+1)+"-EL.txt"), new PrintWriter("./"+(iteration+1)+"-VI.txt"))
+	   EdgeWriter.apply[Community.Value,PersonLike](output)(pwEL)
+	   VertexWriter.apply[Community.Value,PersonLike](output)(pwVI)
+
+	   output foreach { _ start }
+	   val done = Event(DONE,simlim,null)
+	   val updater = (t:Int) => Event(UPDATE,t,null)
+	   val nexter = (t:Int) => Event(NEXT,t,null)
+	   for (t <- 1 to simlim) {
+		   if ( !output.map( _ !! updater(t)).foldLeft(true)((res,f)=> res && (f() == ACK)) ) println("failed UPDATE")
+		   if ( !output.map( _ !! nexter(t)).foldLeft(true)((res,f)=> res && (f() == ACK)) ) println("failed NEXT")
+	   }
+	   output foreach { _ ! done }
 	   Logger.close
 	   println("completed iteration "+iteration)
 	   println("run time: "+ (System.currentTimeMillis()-start))

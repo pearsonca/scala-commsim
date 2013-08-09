@@ -6,15 +6,15 @@ import edu.cap10.person._
 import edu.cap10.clock._
 //import edu.cap10.channels._
 
-case class Message(sender:PersonLike, community:Community.Value, content:Vocabulary.Value, t:Int) {
-  override val toString = Seq(sender.id,community,content,t) mkString " "
-}
-
-abstract class Logger {
-  def log(msg:Message) : Unit
-  def shutdown : Boolean
-  var isShutdown = false
-}
+//case class Message(sender:PersonLike, community:Community.Value, content:Vocabulary.Value, t:Int) {
+//  override val toString = Seq(sender.id,community,content,t) mkString " "
+//}
+//
+//abstract class Logger {
+//  def log(msg:Message) : Unit
+//  def shutdown : Boolean
+//  var isShutdown = false
+//}
 
 //class DefaultLogger(src:Person, tar:Person) extends Logger {
 //  override def log(msg:Message) = print(src + " to "+tar+" : "+msg)

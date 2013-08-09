@@ -3,44 +3,50 @@ package edu.cap10.person
 import scala.collection._
 import scala.collection.mutable.{Buffer => MBuffer}
 import scala.actors.Actor
+import scala.collection.immutable.Stream.{continually => fill};
 
-import edu.cap10.message.Message
 import Community.{Value => CValue}
 import Vocabulary.{Value => VValue}
 
 import edu.cap10.app.Logger
 
-trait PersonLike extends Actor {
-	def contacts : Map[CValue, MBuffer[PersonLike]]
-	def join(other:PersonLike, commType:Community.Value) = {
-    	other.contacts(commType) += this
-    	contacts(commType) += other
-	}
+import edu.cap10.sim.SimulationActor
+import edu.cap10.sim.Event
+import edu.cap10.graph.Vertex
 
-	/** 
-	 * The monitoring method.  Default monitoring is to System.out.
-	 * 
-	 * monitor(msg) is called for messages received into update(msg).
-	 * 
-	 * @return the incoming message without any side-effects
-	 */
-	def monitor(msg: Message) = {
-	  Logger.println(this,id+" "+msg)
-	  msg
+trait PersonLike extends Vertex[Community.Value,PersonLike] with SimulationActor[Long,(Community.Value, Vocabulary.Value, PersonLike)] {
+    type Repr = PersonLike
+  
+    override def toString() = id.toString
+  	
+	val logger = new Logger {
+	  def record(msg:MType) = {
+	    // println(id+" "+msg+" ")
+	    msg
+	  }
 	}
 	
 	/** 
 	 *  This is a hook for making any internal state changes to a person (which, e.g.,
 	 *  might affect messages()).  The default behavior clears the inbox
 	 */
-	def update(t:Int) : Unit = inbox.clear
-	
-	/** 
-	 *  This is a hook for prepare for internal state changes to a person (which, e.g.,
-	 *  might affect update()).  It's default behavior adds the msg to its inbox 
-	 */
-	def update(msg:Message) : Unit = inbox += monitor(msg)
-	val inbox = MBuffer[Message]()
+	val inbox = MBuffer[MType]()
+	override def hear(msg:MType,t:Int) = {
+	  inbox += super.hear(msg,t)
+	  msg
+	}
+	override def update(t:Int) = {
+	  inbox.clear
+	  super.update(t)
+	}
+	override def next(t:Int) = {
+	  val msgs = messages()
+	  for (community <- msgs.keys; 
+	    (who,what) <- msgs(community)) {
+	        who ! messenger(community, what, t)
+	  }
+	  super.next(t)
+	}
 	
 	/** 
 	 *  This is the algorithm for deciding what messages will be sent on an iteration.
@@ -50,7 +56,7 @@ trait PersonLike extends Actor {
 	 *  Message content is set by the what (Vocabulary) part of the pair.
 	 *  */
 	def messages() : Map[CValue, Iterable[(PersonLike,VValue)]] = { 
-	  for ( community <- contacts.keys; // for each of the PersonLike's communities
+	  for ( community <- edgeTypes; // for each of the PersonLike's communities
 			res = messages(community);	// generate messages for that community
 			if res.size != 0)			// if there are messages
 	    yield community -> res			// add them to the outbox
@@ -58,35 +64,10 @@ trait PersonLike extends Actor {
 	
 	def messages(commType:CValue) : Iterable[(PersonLike,VValue)]
 	
-	def id() : Int
-	override def hashCode = id
+	override val hashCode = id.hashCode
 	
-	def testEvent(t:Int) = println(id + " received TEST @ "+t)
-	
-	def act() = loop {
-	 react {
-	   	case SimulationCommand(SimulationEvent.UPDATE, t) =>
-	      update(t)
-	      reply("ACK")
-	    case SimulationCommand(SimulationEvent.NEXT, t) =>
-	      sendMessages(messages, t)
-	      reply("ACK")
-	    case SimulationCommand(SimulationEvent.TEST, t) => 
-	    	testEvent(t)
-	    case m:Message => update(m)
-	    case SimulationCommand(SimulationEvent.DONE, t) => stop
-	  }
-	}
-	
-	def stop = exit
-	
-	def messenger(community:CValue, what:VValue, t:Int) = Message(this,community,what,t)
-	
-	def sendMessages(msgs:Map[CValue,Iterable[(PersonLike,VValue)]], t:Int) = 
-	  for (community <- msgs.keys; 
-	    (who,what) <- msgs(community)) {
-	        who ! messenger(community, what, t)
-	  }
+	import edu.cap10.sim.EventType
+	def messenger(community:CValue, what:VValue, t:Int) = Event(EventType.MSG,t,(community,what,this))
 	
 }
 
@@ -98,13 +79,13 @@ object Vocabulary extends Enumeration {
   val Good, Bad = Value;
 }
 
-object SimulationEvent extends Enumeration {
-  val UPDATE, NEXT, DONE, TEST = Value
-}
-
-case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
-
-object SimulationCommand {
-  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand =
-    SimulationCommand(e,_)
-}
+//object SimulationEvent extends Enumeration {
+//  val UPDATE, NEXT, DONE, TEST = Value
+//}
+//
+//case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
+//
+//object SimulationCommand {
+//  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand =
+//    SimulationCommand(e,_)
+//}

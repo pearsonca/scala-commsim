@@ -1,8 +1,10 @@
 package edu.cap10
 
+import scala.collection.SortedSet
+
 package object distributions {
-	implicit def seqToEnhanced[T](from:Seq[T]) = new RandomDrawSeq[T](from)
-	class RandomDrawSeq[T](src:Seq[T]) {
+	
+	implicit class RandomDrawSeq[T](src:Seq[T]) {
 	  def random() : T = src(IntRangeSrcCache(src.size).next)
 	  def random( filter:(T)=>Boolean ) : T = {
 	    var res = random()
@@ -10,4 +12,17 @@ package object distributions {
 	    res
 	  }
 	}
+	
+	implicit class RandomDrawIterable[T](src:Iterable[T]) {
+	  def random() : T = {
+	    val from = IntRangeSrcCache(src.size).next
+	    src.slice(from, from+1).head
+	  }
+	  def random( filter:(T)=>Boolean ) : T = {
+	    var res = random()
+	    while (!filter(res)) res = random()
+	    res
+	  }
+	}
+	
 }

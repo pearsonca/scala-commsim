@@ -2,21 +2,39 @@ library(igraph)
 pree <- read.table("../1-EL.txt",col.names=c("sender_id","recipient_id","type"))
 pree[which(pree[,1]<0),1] <- -pree[which(pree[,1]<0),1]
 pree[which(pree[,2]<0),2] <- -pree[which(pree[,2]<0),2]
-edgeinfo <- t(pree[,-3])
+edgeinfo <- t(pree)
+workEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Work")])
+familyEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Family")])
+gWork <- graph(workEdges)
+gFamily <- graph(familyEdges)
+
 vertexinfo <- read.table("../1-VI.txt",sep=" ", col.names=c("id","type"))
 g <- graph( edgeinfo )
 #degree(g,v=which(vertexinfo[2,] == "hub"))
 #mean(degree(g))
 
 #g2 <- graph(as.numeric(edgeinfo[-3,])+1)
-hubv <- which(vertexinfo[,"V2"]=="hub")
-clustervs <- -vertexinfo[which(vertexinfo[,"V2"]=="bombers"),"V1"]
-plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"V2"]=="plotter"),"V1"])
+hubv <- which(vertexinfo[,"type"]=="hub")
+clustervs <- -vertexinfo[which(vertexinfo[,"type"]=="plotcluster"),"id"]
+plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"type"]=="plotter"),"id"])
 
-V(g)$size <- 2
-V(g)[1:(hubv-1)]$color <- "lightblue"
-V(g)[clustervs]$color <- "khaki"
-V(g)[hubv]$color <- "red"
+plotG<-function(graph) {
+  V(graph)$size <- 2
+  V(graph)[1:(hubv-1)]$color <- "lightblue"
+  V(graph)[clustervs]$color <- "khaki"
+  V(graph)[hubv]$color <- "red"
+  E(graph)$color <- "lightgrey"
+  l<-layout.auto(graph)
+  par(mar=c(0,0,0,0)+0.1)
+  plot(graph, edge.arrow.size=0.1,
+       vertex.label=NA, vertex.frame.color=NA, layout=l)  
+}
+
+V(gWork)$size <- 1
+colorG(g)
+plotG(gWork)
+colorG(gFamily)
+
 # low <- 0.001
 # E(g)[to(clustervs)]$weight <- low
 # E(g)[from(clustervs)]$weight <- low
@@ -27,8 +45,12 @@ V(g)[hubv]$color <- "red"
 # V(g2)[clustervs]$color <- "yellow"
 # V(g2)[hubv]$color <- "red"
 #l2 <- layout.auto(g2)
+
+plotG(gWork)
+plotG(gFamily)
+
 l<-layout.auto(g)
-png(file="4_1_500.png",width=1000,height=1000)
+png(file="test.png",width=1000,height=1000)
 par(mar=c(0,0,0,0)+0.1)
 plot(g, edge.arrow.size=0.5,
      vertex.label=NA, vertex.frame.color=NA, layout=l)
