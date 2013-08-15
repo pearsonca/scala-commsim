@@ -30,12 +30,14 @@ case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 	(iter : Iterable[V])
 	(implicit edge:EdgeType = defEdge)
 	: Seq[V] = {
-	  iter.toSeq.flow( _.uPairs.foreach { pair => pair._1 <~> pair._2 } )
+	  iter.toSeq.flow( _.uPairs.foreach {
+	    pair =>
+	      pair._1 <~> pair._2 
+	  } )
 	}
 	
 	def add[V <: Vertex[EdgeType,V]](orig : Seq[V], add: V)
-	(implicit e:EdgeType) = 
-	  add <~> (orig:_*)
+	(implicit e:EdgeType) = add <~> orig
 
 	def all[V <: Vertex[EdgeType,V]](iter : Iterable[V], size : Int = DEF_SIZE)
 	(implicit edge:EdgeType = defEdge) : Seq[Seq[V]] = {

@@ -59,7 +59,7 @@ object Test {
 	   }
 	   
 	   val terrorists : Iterable[PersonLike] = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount)
-	   H.~>(Clique(Community.Plot).apply(terrorists):_*)(Community.Plot);
+	   H.~>(Clique(Community.Plot).apply(terrorists))(Community.Plot);
 	  
 	   val output = ((cliquer.apply(people)) :+ H) ++ terrorists 
 	   val (pwEL, pwVI) = (new PrintWriter("./"+(iteration+1)+"-EL.txt"), new PrintWriter("./"+(iteration+1)+"-VI.txt"))

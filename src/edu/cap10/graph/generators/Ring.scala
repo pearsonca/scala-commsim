@@ -20,7 +20,7 @@ case class Ring[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
       case size => 
         val (it1,it2) = iter.iterator.duplicate
         for (grp <- it1.sliding(width+1, 1).withPadding(it2.next)) {
-          grp.head ~> (grp.tail:_*)
+          grp.head ~> grp.tail
         }
         res
     }
@@ -39,7 +39,7 @@ case class DirectedRing[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,I
       case size => 
         val (it1,it2) = iter.iterator.duplicate
         for (grp <- it1.sliding(width+1, 1).withPadding(it2.next)) {
-          grp.head ~> (grp.tail:_*)
+          grp.head ~> grp.tail
         }
         res
     }
