@@ -16,11 +16,9 @@ import edu.cap10.graph.Vertex
 
 trait PersonLike extends Vertex[Community.Value,PersonLike] with SimulationActor[Long,(Community.Value, Vocabulary.Value, PersonLike)] {
     type Repr = PersonLike
-  
-    override def toString() = id.toString
   	
 	val logger = new Logger {
-	  def record(msg:MType) = {
+	  def record(msg:MType, t:Int) = {
 	    // println(id+" "+msg+" ")
 	    msg
 	  }
@@ -63,8 +61,6 @@ trait PersonLike extends Vertex[Community.Value,PersonLike] with SimulationActor
 	}.toMap
 	
 	def messages(commType:CValue) : Iterable[(PersonLike,VValue)]
-	
-	override val hashCode = id.hashCode
 	
 	import edu.cap10.sim.EventType
 	def messenger(community:CValue, what:VValue, t:Int) = Event(EventType.MSG,t,(community,what,this))
