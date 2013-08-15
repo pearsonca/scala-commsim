@@ -8,8 +8,14 @@ object MockEdge extends Enumeration {
 
 import MockEdge.{Value => Edge, _}
 
-class MockVertex(val id:Long) extends Vertex[Edge,MockVertex] {
+case class MockVertex(val id:Long) extends Vertex[Edge,MockVertex] {
 
-  def edges = Map( (EDGE,SortedSet()) )
+  val edges = Map( (EDGE, SortedSet[MockVertex]()) )
   
+}
+
+object MockVertexFactory extends Iterator[MockVertex] {
+  val underly = Iterator.from(0).map( MockVertex(_) )
+  val hasNext = true
+  def next = underly.next
 }
