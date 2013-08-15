@@ -9,29 +9,26 @@ import edu.cap10.graph.MockVertex
 
 import collection.mutable.SortedSet
 
-class CliqueTest extends FlatSpec {
+class RingTest extends FlatSpec {
   
   val refSize = 5
   implicit val e = EDGE
-  val generator = Clique(e)
+  val generator = Ring(e)
   def src = MockVertexFactory.take(refSize).toSeq
   
-  
-  "A Clique" should "return a Seq of its inputs" in {
+  "A Ring" should "return a Seq of its inputs" in {
     val vertices = src
-    val res = generator whole vertices
+    val res = generator(vertices)
     assert(vertices.size === res.size)
   }
   
-  it should "connect all of its elements" in {
+  it should "connect each of its elements to their neighboors" in {
     val vertices = src
-    val res = generator whole vertices
-    res foreach {
-      v => {
-        assert( v(e).size === (vertices.size - 1) )
-        assert( v ?~> vertices.filterNot(v == _) )
-      }
+    val res = generator(vertices)
+    for (i <- 0 until vertices.size-1) {
+      assert(vertices(i) ?~> vertices(i+1))
     }
+    assert(vertices.last ?~> vertices.head)
   }
   
 }
