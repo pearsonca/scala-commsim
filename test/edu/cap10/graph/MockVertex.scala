@@ -9,9 +9,8 @@ object MockEdge extends Enumeration {
 import MockEdge.{Value => Edge, _}
 
 case class MockVertex(val id:Long) extends Vertex[Edge,MockVertex] {
-
+  override def name = "MockEdge"
   val edges = Map( (EDGE, SortedSet[MockVertex]()) )
-  
 }
 
 object MockVertexFactory extends Iterator[MockVertex] {

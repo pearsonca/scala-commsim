@@ -27,7 +27,10 @@ trait Vertex[EdgeType, Repr <: Vertex[EdgeType, Repr]] extends Ordered[Repr] wit
   def self = this.asInstanceOf[Repr]
   
   override val hashCode = id.hashCode
-  override def toString = id.toString
+  def name = "Vertex"
+  override def toString = name + " "+ id.toString + { for ((e,vs) <- edges) {
+    "\n"+e.toString + " : " + { vs map { _.id } mkString ", " }
+  } }
   override def equals(other:Any) = other match {
     case o:Vertex[EdgeType,Repr] => o.id == id
     case _ => false
