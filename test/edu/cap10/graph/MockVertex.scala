@@ -3,14 +3,14 @@ package edu.cap10.graph
 import collection.mutable.SortedSet
 
 object MockEdge extends Enumeration {
-  val EDGE = Value
+  val MOCKEDGE = Value
 }
 
 import MockEdge.{Value => Edge, _}
 
 case class MockVertex(val id:Long) extends Vertex[Edge,MockVertex] {
-  override def name = "MockEdge"
-  val edges = Map( (EDGE, SortedSet[MockVertex]()) )
+  override def name = "MockVertex"
+  val edges = Map( (MOCKEDGE, SortedSet[MockVertex]()) )
 }
 
 object MockVertexFactory extends Iterator[MockVertex] {
