@@ -20,51 +20,58 @@ case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
   
     //def <~>[V <: Vertex[EdgeType,V]](implicit edge : EdgeType = defEdge) : ((V,V)) => Unit = Vertex.<~>[EdgeType,V].tupled
   
-	override def apply[V <: Vertex[EdgeType,V]]
+	override def apply
+	[V <: Vertex[EdgeType,V]]
 	(iter : Iterable[V], size:Int = DEF_SIZE)
 	(implicit edge:EdgeType = defEdge)
 	: Seq[V] = 
-	  whole(iter.take(size))
+	  clique(iter take size)
 	
-	def whole[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V])
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
-	  iter.toSeq.flow( _.uPairs.foreach {
-	    pair =>
-	      pair._1 <~> pair._2 
-	  } )
+	def clique
+	  [V <: Vertex[EdgeType,V]]
+	  (iter : Iterable[V])
+	  (implicit edge:EdgeType = defEdge)
+	  : Seq[V] = {
+	    val vertices = iter.toSeq					// collect the vertices that will be returned
+	    for ( (left, right) <- vertices.uPairs )	// for each unique, unordered pair in that col.
+	      left <~> right							//   form a bidirectional edge between those
+	    vertices									// return the vertices
 	}
 	
-	def add[V <: Vertex[EdgeType,V]](orig : Seq[V], add: V)
-	(implicit e:EdgeType) = add <~> orig
+	def add
+	[V <: Vertex[EdgeType,V]]
+	(orig : Seq[V], add: V)
+	(implicit e:EdgeType)
+	: V =
+	  add <~> orig
 
-	def all[V <: Vertex[EdgeType,V]](iter : Iterable[V], size : Int = DEF_SIZE)
-	(implicit edge:EdgeType = defEdge) : Seq[Seq[V]] = {
+	def all
+	[V <: Vertex[EdgeType,V]]
+	  (iter : Iterable[V], size : Int = DEF_SIZE)
+	(implicit edge:EdgeType = defEdge)
+	: Seq[Seq[V]] = {
 	  require(size > 0,"Clique size must be > 0.")
-	  val iterSize = iter.size
-	  require(iterSize > 0,"Attempted to clique an empty collection.")
-	  
-	  if (iterSize == 1)
-	    Seq(Seq(iter.head)) // if there's only one, done
-	  else if (iterSize <= size)
-        Seq(apply(iter,iterSize))
-      else iterSize % size match {
-      	case 0 => each(iter, size) // exact division
-      	case rem => iterSize / size match {
-      	  case div if rem == div => each(iter, size+1)  
-      	  case div if rem < div => 
-      	    val (left,right) = iter.splitAt(div*size)
-      	    each(left, size) :+ whole(right)
-      	  case div => 
-      	    val (left,right) = iter.splitAt(div*(size+1))
-      	    each(left, size+1) :+ whole(right)
-      	}
-      }
+	  iter.size match {
+	    case 0 => throw new IllegalArgumentException("Attempted to clique an empty collection.")
+	    case 1 => Seq(Seq(iter.head)) // the single item edge case; TODO: error / warn?
+	    case iSize => iSize % size match {
+	      case 0 => each(iter, size)
+	      case rem => iSize / size match {
+	        case div if rem == div => each(iter, size+1)  
+      	    case div => 
+      	      val refSize = if (rem < div) size else size+1
+      	      val (left, right) = iter.splitAt(div*refSize)
+      	      each(left, refSize) :+ clique(right)
+	      }
+	    }
+	  }
     }
 	
-	private def each[V <: Vertex[EdgeType,V]](iter : Iterable[V], size : Int)
-	(implicit edge:EdgeType = defEdge) : Seq[Seq[V]] = {
-	  for (group <- iter.grouped(size)) yield whole(group) 
+	private def each
+	[V <: Vertex[EdgeType,V]]
+	(iter : Iterable[V], size : Int)
+	(implicit edge:EdgeType = defEdge)
+	: Seq[Seq[V]] = {
+	  for (group <- iter.grouped(size)) yield clique(group) 
 	}.toSeq
 }
