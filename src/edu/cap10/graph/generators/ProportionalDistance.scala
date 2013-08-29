@@ -11,7 +11,7 @@ import collection.mutable.{Set=>MSet}
 import annotation.tailrec
 import scala.math.random
 
-class ProportionalDistance[EdgeType](refEdge:EdgeType, defEdge:EdgeType) extends Generator[EdgeType,(Double,Double)] {
+case class ProportionalDistance[EdgeType](refEdge:EdgeType, defEdge:EdgeType) extends Generator[EdgeType,(Double,Double)] {
 
   	override def apply[V <: Vertex[EdgeType,V]]
 	(iter : Iterable[V], baseAndDiscount:(Double,Double) = (DEF_BASE,DEF_DISCOUNT))
@@ -19,7 +19,7 @@ class ProportionalDistance[EdgeType](refEdge:EdgeType, defEdge:EdgeType) extends
 	: Seq[V] = {
   	  val (p,d) = baseAndDiscount
   	  iter.scanLeft( Set[V]() )( (acc,v) => { 
-  	    groups( Set(), List(v(refEdge).toSet) ).reverse.scanLeft(p)( (lp,lvl)=> {
+  	    levels( List[Set[V]](v(refEdge).toSet) ).reverse.scanLeft(p)( (lp,lvl)=> {
   	      v <~> ((lvl &~ acc) filter (_ => random < p))
   	      lp*d 
   	    })
@@ -28,22 +28,20 @@ class ProportionalDistance[EdgeType](refEdge:EdgeType, defEdge:EdgeType) extends
   	  iter.toSeq
   	}
 
-  	@tailrec
-	final def groups[V <: Vertex[EdgeType,V]](acc: Set[V], res:Seq[Set[V]]): Seq[Set[V]] = {
-  	  res.head match {
-  	    case e if e.isEmpty => res
-  	    case step => {
-  	      // combine all the one steps, filtering acc
-  	      val nextStep = step.map(
-  	          // for each step, get all its targeted vertices
-  	          v => v(refEdge)
-  	      ).foldLeft(Set[V]())(
-  	          // merge all those targets into a single set
-  	          (l,r) => { l ++ r }
-  	      ) &~ acc // then remove the accumulated v's
-  	      groups(acc ++ nextStep, nextStep +: res)
-  	    }
-  	  }
-  	}
+  	@tailrec final def levels
+  	[V <: Vertex[EdgeType,V]]
+  	(lvls:Seq[Set[V]], seen: Set[V] = Set.empty[V]) :
+  	Seq[Set[V]] =
+  	lvls.head match {								// match against the head of the accumulator (lvls)
+  	  case empty if empty.isEmpty => lvls.tail		// if head element is empty, we're done
+	  case prevLvl => {								// otherwise ...
+	      val newLvl = prevLvl.map(					//   for each vertex in the previous level
+	          vertex => vertex(refEdge)				//	   get their neighbors via the ref edge flavor
+	      ).foldLeft(Set[V]())(						//   fold those neighbors into a single set
+	          (total, add) => total ++ add
+	      ) -- seen									//   remove the v's we already know the distance to
+	      levels(newLvl +: lvls, seen ++ newLvl)	//   recurse with the newly determined level
+	  }
+    }
   
 }
