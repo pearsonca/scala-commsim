@@ -19,7 +19,7 @@ case class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0) {
 
 class Person(val id:Long, binCache: BinomialCache, pBad:Double) extends PersonLike {
   
-  override val toString = super.toString + " person"
+  override val name = "Person"
   
   override val edges = Seq(Religion, Work, Family).zip( edgeCollSrc ).toMap
   def messages(commType:CValue) = { 

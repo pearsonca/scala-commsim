@@ -3,6 +3,7 @@ package edu.cap10.graph.generators
 import edu.cap10.graph.Vertex
 import edu.cap10.graph.Vertex._
 import edu.cap10.utils._
+import edu.cap10.distributions.RandomDrawSeq
 
 object Clique {
   val DEF_SIZE = 3
@@ -19,14 +20,20 @@ import Clique._
 case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
   
     //def <~>[V <: Vertex[EdgeType,V]](implicit edge : EdgeType = defEdge) : ((V,V)) => Unit = Vertex.<~>[EdgeType,V].tupled
-  
+    
 	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], size:Int = DEF_SIZE)
+	(data : (Iterable[V], Int))
 	(implicit edge:EdgeType = defEdge)
 	: Seq[V] = 
-	  clique(iter take size)
+	  clique(data._1 take data._2)
 	
+	override implicit def default
+	[V <: Vertex[EdgeType,V]]
+	(pIter: Iterable[V]) :
+      (Iterable[V],Int) = (pIter,pIter.size)
+
+	  
 	def clique
 	  [V <: Vertex[EdgeType,V]]
 	  (iter : Iterable[V])
@@ -47,9 +54,10 @@ case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 
 	def all
 	[V <: Vertex[EdgeType,V]]
-	  (iter : Iterable[V], size : Int = DEF_SIZE)
+	(data : (Iterable[V], Int))
 	(implicit edge:EdgeType = defEdge)
 	: Seq[Seq[V]] = {
+	    val (iter, size) = data
 	  require(size > 0,"Clique size must be > 0.")
 	  iter.size match {
 	    case 0 => throw new IllegalArgumentException("Attempted to clique an empty collection.")

@@ -10,7 +10,7 @@ import scala.util.Random.shuffle
 
 class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int)
 extends Person(id, BinomialCache(pComm), pBadNorms) {
-  override val toString = id + " hub"
+  override val name = "Hub"
   
   override val edges = Seq(Religion, Work, Family, Plot).zip( fill(SortedSet[PersonLike]()) ).toMap
   def clusters = edges(Plot)

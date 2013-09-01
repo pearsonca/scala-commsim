@@ -22,7 +22,7 @@ class LineTest extends FlatSpec {
   
   "A Line" should "return a Seq of its inputs" in {
     val vertices = src
-    val res = generator( vertices, refSize )
+    val res = generator( vertices )
     assert(vertices.size === res.size)
     for (v <- res) println(v)
   }

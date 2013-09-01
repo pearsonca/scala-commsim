@@ -10,8 +10,12 @@ import edu.cap10.distributions.DoubleSrc
 import edu.cap10.utils._
 
 case class BinomialMix[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Double] {
-  override def apply[V <: Vertex[EdgeType,V]](iter : Iterable[V], rate:Double = DEF_RATE)
-	(implicit edge:EdgeType = defEdge) : Seq[V] = {
+  override def apply
+  [V <: Vertex[EdgeType,V]]
+  (data : (Iterable[V], Double))
+  (implicit edge:EdgeType = defEdge) :
+  Seq[V] = {
+    val (iter, rate) = data
     require(0 <= rate && rate <= 1,"rate parameter is not a probability; provided rate: "+rate.toString)
     if (rate != 0d)
 	    iter.dPairs.filter( _ => DoubleSrc.next < rate ).foreach { 
@@ -19,4 +23,8 @@ case class BinomialMix[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Do
 	    }
     iter.toSeq
   }
+  
+  	override implicit def default
+	[V <: Vertex[EdgeType,V]]
+	(pIter: Iterable[V]) = (pIter,DEF_RATE)
 }

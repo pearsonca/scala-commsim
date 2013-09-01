@@ -10,8 +10,12 @@ import Ring._
 
 case class Ring[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 
-  override def apply[V <: Vertex[EdgeType,V]](iter : Iterable[V], width:Int = DEF_WIDTH)
-	(implicit edge:EdgeType = defEdge) : Seq[V] = {
+  override def apply
+  [V <: Vertex[EdgeType,V]]
+  (data : (Iterable[V], Int))
+  (implicit edge:EdgeType = defEdge) :
+  Seq[V] = {
+    val (iter, width) = data
     val res = iter.toSeq
     res.size match {
       case size if (size+1)/2 <= width => 
@@ -26,12 +30,29 @@ case class Ring[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
     }
   }
   
+  override implicit def default
+  [V <: Vertex[EdgeType,V]]
+  (pIter: Iterable[V]) :
+  (Iterable[V],Int) =
+    (pIter, DEF_WIDTH)
+
+  
 }
 
 case class DirectedRing[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 
-  override def apply[V <: Vertex[EdgeType,V]](iter : Iterable[V], width:Int = DEF_WIDTH)
-	(implicit edge:EdgeType = defEdge) : Seq[V] = {
+  override implicit def default
+  [V <: Vertex[EdgeType,V]]
+  (pIter: Iterable[V]) :
+  (Iterable[V],Int) =
+    (pIter, DEF_WIDTH)
+  
+  override def apply
+  [V <: Vertex[EdgeType,V]]
+  (data : (Iterable[V], Int))
+  (implicit edge:EdgeType = defEdge) :
+  Seq[V] = {
+    val (iter, width) = data
     val res = iter.toSeq
     res.size match { // TODO actual logic is width >= size/2
       case size if size <= width => throw new IllegalArgumentException("width greater than or equal to size; width: "+width+", size: "+size)

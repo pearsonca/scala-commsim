@@ -17,7 +17,7 @@ import edu.cap10.sim.Event
 
 class PlotCluster(val id : Long, val pInner: Double, val pOuter : Double, size : Int) extends PersonLike {
   
-  override val toString = super.toString + " plotcluster"
+  override val name = "PlotCluster"
   
   val members = SortedSet(PlotterFactory(-id).src.take(size):_*) // these are a clique
   

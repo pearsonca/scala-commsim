@@ -1,7 +1,6 @@
 package edu.cap10.graph.generators
 
 import org.scalatest.FlatSpec
-import collection.mutable.Stack
 
 import edu.cap10.graph.MockVertexFactory
 import edu.cap10.graph.MockEdge.MOCKEDGE
@@ -19,7 +18,7 @@ class CliqueTest extends FlatSpec {
   
   "A Clique" should "return a Seq of its inputs" in {
     val vertices = src
-    val res = generator clique vertices
+    val res = generator( vertices )
     assert(vertices.size === res.size)
   }
   

@@ -16,9 +16,10 @@ case class Tree[EdgeType](defEdge:EdgeType) extends Generator[EdgeType, Int] {
 
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], width:Int = DEF_WIDTH)
+	(data : (Iterable[V], Int))
 	(implicit edge:EdgeType = defEdge)
 	: Seq[V] = {
+  	  val (iter, width) = data
   	  iter size match {
   	    case 0 => throw new IllegalArgumentException("Attempted to tree an empty src.")
   	    case 1 => Seq(iter.head)
@@ -36,7 +37,14 @@ case class Tree[EdgeType](defEdge:EdgeType) extends Generator[EdgeType, Int] {
   	  }
   	  iter.toSeq
   	}
-	
+
+  	override implicit def default
+	[V <: Vertex[EdgeType,V]]
+	(pIter: Iterable[V]) :
+    (Iterable[V],Int) = 
+      (pIter,DEF_WIDTH)
+
+  	
   	private def bind[V <: Vertex[EdgeType,V]](implicit edge:EdgeType = defEdge) = 
   	  { (group:Iterable[V], head:V) => head <~> group }.tupled
   	

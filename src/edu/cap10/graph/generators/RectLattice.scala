@@ -14,11 +14,18 @@ case class RectLattice[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,(I
 
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], dims:(Int,Int) = (DEF_W,DEF_H))
+	(data : (Iterable[V], (Int,Int)))
 	(implicit edge:EdgeType = defEdge)
-	: Seq[V] =
+	: Seq[V] = {
+  	  val (iter,dims) = data
 	  rect(iter,dims) flatten	  
-	
+  	}
+  	
+  	override implicit def default
+    [V <: Vertex[EdgeType,V]]
+    (pIter: Iterable[V]) =
+      (pIter, (DEF_W,DEF_H))
+  	
   	def rect
   	[V <: Vertex[EdgeType,V]]
 	(iter : Iterable[V], dims:(Int,Int) = (DEF_W,DEF_H))
