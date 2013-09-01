@@ -2,9 +2,7 @@ package edu.cap10.app
 
 import edu.cap10.person._
 
-import edu.cap10.graph.generators.Clique
-import edu.cap10.graph.generators.BinomialMix
-import edu.cap10.graph.generators.CliqueHierarchy
+import edu.cap10.graph.generators._
 
 import edu.cap10.graph.io.igraph._
 
@@ -21,35 +19,28 @@ import scala.util.Random.shuffle
 import java.io._
 
 object Test {
-	def main(args: Array[String]) = {
-	  val (iterlim, simlim, popSize) = (1,10,500)
-	  val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.1, 0.5, 0.02, 0.5, 0.0)
-	  val cliqueSize = 3
-
-	   val cliquer = CliqueHierarchy(Community.Family)
-	   val hMeanK = 10
-	   val hConP = (hMeanK * cliqueSize).toDouble / popSize
-	   val (clusterCount,clusterSize) = (3,5)
-
-	for (iteration <- 0 until iterlim) {
-	  println("starting iteration "+iteration)
-	  val start = System.currentTimeMillis()
-		Logger.start(iteration)
-	   
-	   val factory = BackgroundFactory(pComm, pBadBack, 1)
-	   val people = factory.src.take(popSize).toSeq
-	   
-	   val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
-	   
-	   
-	   
-	   
-	   {
-	       implicit val edge = Community.Family
-		   val families = Clique(edge).all(shuffle(people), cliqueSize)
-		   for (family <- families if DoubleSrc.next < hConP) family.random <~> H
-		   BinomialMix(edge)(CliqueHierarchy(edge).grouped(families, cliqueSize),pBlend)
-	   }
+  def main(args: Array[String]) = {
+    val (iterlim, simlim, popSize) = (1,10,100)
+    val (pBadBack, pBadFore, pBadNormDiscount, pComm, pForeCommDiscount, pBlend) = (0.01, 0.1, 0.5, 0.02, 0.5, 0.0)
+    val cliqueSize = 3
+    val hMeanK = 10
+    val hConP = (hMeanK * cliqueSize).toDouble / popSize
+    val (clusterCount,clusterSize) = (3,5)
+    
+    for (iteration <- 0 until iterlim) {
+      println("starting iteration "+iteration)
+      val start = System.currentTimeMillis()
+      Logger.start(iteration)
+      val factory = BackgroundFactory(pComm, pBadBack, 1)
+      val people = factory.src.take(popSize).toSeq
+	  val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1)
+	  
+	  {
+        implicit val edge = Community.Family
+        val families = Clique(edge).all(shuffle(people), cliqueSize)
+        for (family <- families if DoubleSrc.next < hConP) family.random <~> H
+        BinomialMix(edge)(CliqueHierarchy(edge).grouped(families, cliqueSize),pBlend)
+      }
 	   
 	   {
 	       implicit val edge = Community.Work
@@ -58,12 +49,23 @@ object Test {
 		   BinomialMix(edge)(CliqueHierarchy(edge).grouped(businesses, cliqueSize),pBlend)
 	   }
 	   
-	   val terrorists : Iterable[PersonLike] = PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount)
-	   H.~>(Clique(Community.Plot).apply(terrorists))(Community.Plot);
-	  
-	   val output = ((cliquer.apply(people)) :+ H) ++ terrorists 
+	   {
+	       implicit val defEdge = Community.Religion
+	       val pd = ProportionalDistance(Community.Family,defEdge)
+		   pd( (people, (0.9, 0.3)) )
+	   }
+	   
+	   val terrorists : Iterable[PersonLike] = 
+	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize).take(clusterCount);
+	   
+	   {
+	     implicit val edge = Community.Plot     
+	     H <~> Clique(edge).apply(terrorists);
+	   }
+	   
+	   val output = (people :+ H) ++ terrorists 
 	   val (pwEL, pwVI) = (new PrintWriter("./"+(iteration+1)+"-EL.txt"), new PrintWriter("./"+(iteration+1)+"-VI.txt"))
-	   EdgeWriter.apply[Community.Value,PersonLike](output)(pwEL)
+	   PersonEdgeWriter.apply(output)(pwEL)
 	   VertexWriter.apply[Community.Value,PersonLike](output)(pwVI)
 
 	   output foreach { _ start }
