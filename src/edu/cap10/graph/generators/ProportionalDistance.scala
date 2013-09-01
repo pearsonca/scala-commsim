@@ -1,8 +1,8 @@
 package edu.cap10.graph.generators
 
 object ProportionalDistance {
-  val DEF_BASE = 0.5
-  val DEF_DISCOUNT = 0.9
+  val DEF_BASE = 0.9
+  val DEF_DISCOUNT = 0.5
 }
 
 import ProportionalDistance._
@@ -11,22 +11,31 @@ import collection.mutable.{Set=>MSet}
 import annotation.tailrec
 import scala.math.random
 
-case class ProportionalDistance[EdgeType](refEdge:EdgeType, defEdge:EdgeType) extends Generator[EdgeType,(Double,Double)] {
+case class ProportionalDistance[EdgeType]
+(refEdge:EdgeType, defEdge:EdgeType) 
+extends Generator[EdgeType,(Double,Double)] {
 
-  	override def apply[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], baseAndDiscount:(Double,Double) = (DEF_BASE,DEF_DISCOUNT))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
-  	  val (p,d) = baseAndDiscount
-  	  iter.scanLeft( Set[V]() )( (acc,v) => { 
-  	    levels( List[Set[V]](v(refEdge).toSet) ).reverse.scanLeft(p)( (lp,lvl)=> {
-  	      v <~> ((lvl &~ acc) filter (_ => random < p))
-  	      lp*d 
+  override implicit def default
+  [V <: Vertex[EdgeType,V]]
+  (pIter: Iterable[V]) =
+    (pIter, (DEF_BASE,DEF_DISCOUNT))
+
+  override def apply
+  [V <: Vertex[EdgeType,V]]
+  (data : (Iterable[V], (Double,Double)) )
+  (implicit edge:EdgeType = defEdge) :
+  Seq[V] = {
+    val (iter, bAndD) = data
+    val (p,d) = bAndD
+    iter.foldLeft( Set[V]() )( (acc,v) => {
+  	  levels( List[Set[V]](v(refEdge).toSet), Set(v) ++ v(refEdge).toSet).reverse.scanLeft(p)( (lp,lvl) => {
+  	      v <~> ((lvl &~ acc) filter (_ => random < lp ))
+  	      lp*d
   	    })
-  	    acc+v
-  	  })
-  	  iter.toSeq
-  	}
+  	    acc + v
+  	  }).toSeq
+  	  //iter.toSeq
+  }
 
   	@tailrec final def levels
   	[V <: Vertex[EdgeType,V]]

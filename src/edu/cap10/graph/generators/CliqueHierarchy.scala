@@ -17,13 +17,28 @@ import CliqueHierarchy._
 case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
   // TODO allow for flexible clique sizes by changing generator input
 
+  val cliquer = Clique(defEdge)
+  
   override def apply
   [V <: Vertex[EdgeType,V]]
-  (iter : Iterable[V], size:Int = DEF_SIZE)
+  (data : (Iterable[V], Int))
   (implicit edge:EdgeType = defEdge) :
   Seq[V] =
-    grouped(Clique(edge).all(iter, size),size)
+    grouped(cliquer.all(data)(edge),data._2)
   
+  override implicit def default
+  [V <: Vertex[EdgeType,V]]
+  (pIter: Iterable[V]) :
+  (Iterable[V],Int) =
+    (pIter,DEF_SIZE)
+    
+  implicit def seqSeqToSeqV
+  [V <: Vertex[EdgeType,V]]
+  (src:Seq[Seq[V]]) :
+  Seq[V] =
+    src.view.map { _.random }
+
+    
   @tailrec final def grouped
   [V <: Vertex[EdgeType,V]]
   (src: Seq[Seq[V]], size:Int = DEF_SIZE)
@@ -37,7 +52,8 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
         val div = s / size
         s % size match {
 	      case 0 =>
-	        grouped( cliqueGroupsEach(src,size) , size)
+	        val newGroups = for (group <- src.grouped(size).toSeq) yield { cliquer.groupApply(group, size) }
+	        grouped( newGroups , size)
 	      case rem if rem > div =>
 	        val (single, large) = src.splitAt(rem)
 	        grouped( cliqueGroups(single) +: cliqueGroupsEach(large, size) )
@@ -50,7 +66,7 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
   
   def cliqueGroups
   	[V <: Vertex[EdgeType,V]]
-  	(src: Iterable[Seq[V]], linkCount:Int = 1)
+  	(src: Seq[Seq[V]], linkCount:Int = 1)
   	(implicit edge:EdgeType = defEdge)
   	: Seq[V] = {
     for ( (leftGroup, rightGroup) <- src.uPairs )
@@ -61,11 +77,12 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
   
   private def cliqueGroupsEach
   	[V <: Vertex[EdgeType,V]]
-  	(src: Iterable[Seq[V]], size: Int, linkCount: Int = 1)
+  	(src: Seq[Seq[V]], size: Int, linkCount: Int = 1)
   	(implicit edge:EdgeType = defEdge)
-  	: Seq[Seq[V]] = { 
-	  for (subset <- src.grouped(size)) yield cliqueGroups(subset)
-  }.toSeq
+  	: Seq[Seq[V]] =
+  	  for (group <- src.grouped(size).toSeq) yield { 
+  	    cliquer.groupApply(group, size)
+  	  }
   
   def up[V <: Vertex[EdgeType,V]](src: Iterator[Seq[V]], size:Int = DEF_SIZE)
   (implicit edge:EdgeType = defEdge) : Seq[V] = {
