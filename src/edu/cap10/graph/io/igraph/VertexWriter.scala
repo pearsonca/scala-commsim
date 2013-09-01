@@ -5,7 +5,7 @@ import java.io._
 
 object VertexWriter {
   def apply[EdgeType, V <: Vertex[EdgeType,V]](vertices:Iterable[V])(implicit writer:PrintWriter) = {
-    for (vertex <- vertices) writer.println(vertex)
+    for (vertex <- vertices) writer.println(vertex.shortToString)
     writer.flush
     writer
   }

@@ -10,7 +10,7 @@ import Community.{Value => CValue}
 import scala.collection.mutable.SortedSet;
 
 case class Plotter(val id : Long) extends PersonLike {
-  override val toString = super.toString + " plotter"
+  override val name = "Plotter"
   override val edges = Map[CValue,SortedSet[PersonLike]]()	
   override def messages(commType:CValue) = Nil // actually do nothing but record received messages
 }
