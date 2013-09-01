@@ -1,22 +1,32 @@
 library(igraph)
-pree <- read.table("../1-EL.txt",col.names=c("sender_id","recipient_id","type"))
+pree <- read.table("./1-EL.txt",col.names=c("sender_id","recipient_id","type"))
 pree[which(pree[,1]<0),1] <- -pree[which(pree[,1]<0),1]
 pree[which(pree[,2]<0),2] <- -pree[which(pree[,2]<0),2]
 edgeinfo <- t(pree)
 workEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Work")])
 familyEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Family")])
+religionEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Religion")])
+gWhole <- graph(edgeinfo[-3,])
+E(gWhole)[which(edgeinfo[3,]=="Work")]$color <- "green"
+E(gWhole)[which(edgeinfo[3,]=="Family")]$color <- "blue"
+E(gWhole)[which(edgeinfo[3,]=="Religion")]$color <- "purple"
+E(gWhole)[which(edgeinfo[3,]=="Plot")]$color <- "red"
+plot(gWhole, vertex.size=2, edge.arrow.size=0.1, vertex.label=NA, vertex.frame.color=NA)  
+
+
 gWork <- graph(workEdges)
 gFamily <- graph(familyEdges)
+gReligious <- graph(religionEdges)
 
-vertexinfo <- read.table("../1-VI.txt",sep=" ", col.names=c("id","type"))
+vertexinfo <- read.table("./1-VI.txt",sep=" ", col.names=c("id","type"))
 g <- graph( edgeinfo )
 #degree(g,v=which(vertexinfo[2,] == "hub"))
 #mean(degree(g))
 
 #g2 <- graph(as.numeric(edgeinfo[-3,])+1)
-hubv <- which(vertexinfo[,"type"]=="hub")
-clustervs <- -vertexinfo[which(vertexinfo[,"type"]=="plotcluster"),"id"]
-plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"type"]=="plotter"),"id"])
+hubv <- which(vertexinfo[,"type"]=="Hub")
+clustervs <- -vertexinfo[which(vertexinfo[,"type"]=="PlotCluster"),"id"]
+plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"type"]=="Plotter"),"id"])
 
 plotG<-function(graph) {
   V(graph)$size <- 2
@@ -33,6 +43,8 @@ plotG<-function(graph) {
 V(gWork)$size <- 1
 colorG(g)
 plotG(gWork)
+plotG(gFamily)
+plotG(gReligious)
 colorG(gFamily)
 
 # low <- 0.001
