@@ -1,17 +1,35 @@
 library(igraph)
-pree <- read.table("./1-EL.txt",col.names=c("sender_id","recipient_id","type"))
+pree <- read.table("../1-EL.txt",col.names=c("sender_id","recipient_id","type"))
 pree[which(pree[,1]<0),1] <- -pree[which(pree[,1]<0),1]
 pree[which(pree[,2]<0),2] <- -pree[which(pree[,2]<0),2]
 edgeinfo <- t(pree)
-workEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Work")])
-familyEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Family")])
-religionEdges <- as.numeric(edgeinfo[-3,which(edgeinfo[3,]=="Religion")])
+# hack: doesn't seem reasonable to have sim output other vertex labels
+edgeinfo[1,which(edgeinfo[1,] == 107)] <- 103
+edgeinfo[2,which(edgeinfo[2,] == 107)] <- 103
+edgeinfo[1,which(edgeinfo[1,] == 112)] <- 104
+edgeinfo[2,which(edgeinfo[2,] == 112)] <- 104
+
 gWhole <- graph(edgeinfo[-3,])
+V(gWhole)$size<-2
+V(gWhole)[c(102,103,104)]$size<-6
 E(gWhole)[which(edgeinfo[3,]=="Work")]$color <- "green"
+E(gWhole)[which(edgeinfo[3,]=="Work")]$weight <- 0.1
 E(gWhole)[which(edgeinfo[3,]=="Family")]$color <- "blue"
+E(gWhole)[which(edgeinfo[3,]=="Family")]$weight <- 0.1
 E(gWhole)[which(edgeinfo[3,]=="Religion")]$color <- "purple"
 E(gWhole)[which(edgeinfo[3,]=="Plot")]$color <- "red"
-plot(gWhole, vertex.size=2, edge.arrow.size=0.1, vertex.label=NA, vertex.frame.color=NA)  
+#gAlt <- delete.vertices(gWhole, which(degree(gWhole) < 1)-1)
+l<-layout.auto(gWhole)
+plot(gWhole, edge.arrow.size=0.01, edge.color="grey", vertex.label=NA, vertex.frame.color=NA, layout=l)
+E(gWhole)[which(edgeinfo[3,]=="Work")]$color <- NA
+E(gWhole)[which(edgeinfo[3,]=="Family")]$color <- NA
+plot(gWhole, edge.arrow.size=0.01, vertex.label=NA, vertex.frame.color=NA, layout=l)
+E(gWhole)[which(edgeinfo[3,]=="Work")]$color <- "green"
+E(gWhole)[which(edgeinfo[3,]=="Religion")]$color <- NA
+plot(gWhole, edge.arrow.size=0.01, vertex.label=NA, vertex.frame.color=NA, layout=l)
+E(gWhole)[which(edgeinfo[3,]=="Family")]$color <- "blue"
+E(gWhole)[which(edgeinfo[3,]=="Work")]$color <- NA
+plot(gWhole, edge.arrow.size=0.01, vertex.label=NA, vertex.frame.color=NA, layout=l)
 
 
 gWork <- graph(workEdges)
@@ -70,12 +88,16 @@ dev.off()
 
 ###
 
-plotFiles <- sort(list.files(".","plot-\\d+\\.txt"))
-backFiles <- sort(list.files(".","back-\\d+\\.txt"))
-hubFiles <- sort(list.files(".","hub-\\d+\\.txt"))
-viFiles <- sort(list.files(".","\\d+-VI\\.txt"))
-elFiles <- sort(list.files(".","\\d+-EL\\.txt"))
+plotFiles <- sort(list.files(".","tree-plotter-\\d+\\.txt"))
+backFiles <- sort(list.files(".","tree-back-\\d+\\.txt"))
+hubFiles <- sort(list.files(".","tree-hub-\\d+\\.txt"))
+viFiles <- sort(list.files(".","\\d+-VI-alt\\.txt"))
+elFiles <- sort(list.files(".","\\d+-EL-alt\\.txt"))
 
+vertexinfo <- read.table(viFiles[1], sep=" ", col.names=c("id","type"))
+hubv <- which(vertexinfo[,"type"]=="Hub")
+plotter_ids <- c(hubv, vertexinfo[which(vertexinfo[,"type"]=="Plotter"),"id"])
+cols <- c("recipient_id","context","content","sender_id","timestep")
 # indegrees <- function(messages,maxid) {
 #   sapply(1:maxid, function(id) { dim(unique(subset(allmessages, allmessages$recipient_id == id, select = "sender_id")))[1] })
 # }
@@ -91,14 +113,13 @@ hasbad <- Vectorize(function(id,badmessages) {
   any(badmessages$recipient_id == id | badmessages$sender_id == id)
 }, vectorize.args = "id", SIMPLIFY="array")
 
-cols <- c("recipient_id","sender_id","timestep","content")
 mapply(function(p,b,h,vi,id) { 
   srcs<-lapply(list(plot=p,back=b,hub=h), read.table, sep=" ", 
-               col.names=c("recipient_id","sender_id","channel_type","content","timestep"))
+               col.names=c("recipient_id","context","content","sender_id","timestep"))
   vertexinfo <- read.table(vi, sep=" ", col.names=c("id","type"))
-  people <- subset(vertexinfo, vertexinfo$type=="person",select="id")$id
-  hubv <- subset(vertexinfo, vertexinfo$type=="hub",select="id")$id
-  plotter_ids <- subset(vertexinfo, vertexinfo$type=="plotter", select="id")$id
+  people <- subset(vertexinfo, vertexinfo$type=="Person",select="id")$id
+  hubv <- subset(vertexinfo, vertexinfo$type=="Hub",select="id")$id
+  plotter_ids <- subset(vertexinfo, vertexinfo$type=="Plotter", select="id")$id
   allplotters <- c(hubv, plotter_ids)
   max_id <- max(plotter_ids)
   hubData<-srcs$hub
@@ -106,7 +127,7 @@ mapply(function(p,b,h,vi,id) {
   plotData<-srcs$plot
   allData <- rbind( hubData[,cols], backData[,cols], plotData[,cols] )
   max_time <- max(allData$timestep)
-  fnames <- sapply(c("structure","content","sandc","bad"),function(head) { paste(head, "_", id,".txt", sep="",collapse="") })
+  fnames <- sapply(c("astructure","acontent","asandc","abad"),function(head) { paste(head, "_", id,".txt", sep="",collapse="") })
   files <- lapply(fnames, file, open="w")
   chuck<-sapply(1:max_time,function(t){
     submerge <- subset(allData, allData$timestep <= t)
@@ -137,10 +158,10 @@ mapply(function(p,b,h,vi,id) {
         (submerge$recipient_id %in% allplotters), 
         select="content")
       )[1]
-    write(c(sFPR,sTPR),files$structure,ncol=2,append=T)
-    write(c(cFPR,cTPR),files$content,ncol=2,append=T)
-    write(c(sandcFPR,sandcTPR),files$sandc,ncol=2,append=T)
-    write(bads,files$bad,ncol=1,append=T)
+    write(c(sFPR,sTPR),files$astructure,ncol=2,append=T)
+    write(c(cFPR,cTPR),files$acontent,ncol=2,append=T)
+    write(c(sandcFPR,sandcTPR),files$asandc,ncol=2,append=T)
+    write(bads,files$abad,ncol=1,append=T)
   })
   chuck<-lapply(files,flush)
   chuck<-lapply(files,close)
@@ -164,12 +185,12 @@ mapply(function(p,b,h,vi,id) {
 # 
 # urows <- row.names(unique(backInc[,c("recipient_id","sender_id")])) ## get the rows from source data for those
 
-structureFiles <- sort(list.files(".","structure_\\d+\\.txt"))
-contentFiles <- sort(list.files(".","content_\\d+\\.txt"))
-sandcFiles <- sort(list.files(".","sandc_\\d+\\.txt"))
-badFiles <- sort(list.files(".","bad_\\d+\\.txt"))
+structureFiles <- sort(list.files(".","astructure_\\d+\\.txt"))
+contentFiles <- sort(list.files(".","acontent_\\d+\\.txt"))
+sandcFiles <- sort(list.files(".","asandc_\\d+\\.txt"))
+badFiles <- sort(list.files(".","abad_\\d+\\.txt"))
 
-popsize <- 500
+popsize <- 100
 plotsize <- 16
 
 structureFPR<-sapply(structureFiles,function(fname) {
