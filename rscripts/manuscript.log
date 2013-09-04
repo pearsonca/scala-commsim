@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  4 SEP 2013 03:42
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  4 SEP 2013 18:07
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -754,96 +754,95 @@ File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 ) [1
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-
-LaTeX Warning: Citation `sageman' on page 2 undefined on input line 100.
-
-
-Overfull \hbox (60.97247pt too wide) in paragraph at lines 100--100
+Overfull \hbox (60.97247pt too wide) in paragraph at lines 92--92
 [][]
  []
 
 
-Overfull \hbox (60.97247pt too wide) in paragraph at lines 100--100
+Overfull \hbox (60.97247pt too wide) in paragraph at lines 92--92
 [][][] 
  []
 
+
+LaTeX Warning: Citation `sageman' on page 2 undefined on input line 100.
+
 [2]
 
-LaTeX Warning: Reference `grouping_init' on page 3 undefined on input line 119.
+LaTeX Warning: Reference `grouping_init' on page 3 undefined on input line 120.
 
 
 
-LaTeX Warning: Reference `grouping_end' on page 3 undefined on input line 119.
+LaTeX Warning: Reference `grouping_end' on page 3 undefined on input line 120.
 
-LaTeX Font Info:    Try loading font information for T1+aett on input line 122.
+LaTeX Font Info:    Try loading font information for T1+aett on input line 123.
 
 (/usr/local/texlive/2011/texmf-dist/tex/latex/ae/t1aett.fd
 File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
 ) [3]
 
-LaTeX Warning: Reference `religious_init' on page 4 undefined on input line 156
+LaTeX Warning: Reference `religious_init' on page 4 undefined on input line 157
 .
 
 
-LaTeX Warning: Reference `religious_end' on page 4 undefined on input line 156.
+LaTeX Warning: Reference `religious_end' on page 4 undefined on input line 157.
 
 
 
-LaTeX Warning: Reference `religious_end' on page 4 undefined on input line 156.
+LaTeX Warning: Reference `religious_end' on page 4 undefined on input line 157.
 
 
 <manuscript-all.pdf, id=25, 542.025pt x 433.62pt>
 File: manuscript-all.pdf Graphic file (type pdf)
  <use manuscript-all.pdf>
-Package pdftex.def Info: manuscript-all.pdf used on input line 161.
+Package pdftex.def Info: manuscript-all.pdf used on input line 162.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-religion.pdf, id=26, 542.025pt x 433.62pt>
 File: manuscript-religion.pdf Graphic file (type pdf)
 
 <use manuscript-religion.pdf>
-Package pdftex.def Info: manuscript-religion.pdf used on input line 166.
+Package pdftex.def Info: manuscript-religion.pdf used on input line 167.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-work.pdf, id=27, 542.025pt x 433.62pt>
 File: manuscript-work.pdf Graphic file (type pdf)
  <use manuscript-work.pdf>
-Package pdftex.def Info: manuscript-work.pdf used on input line 171.
+Package pdftex.def Info: manuscript-work.pdf used on input line 172.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-family.pdf, id=28, 542.025pt x 433.62pt>
 File: manuscript-family.pdf Graphic file (type pdf)
 
 <use manuscript-family.pdf>
-Package pdftex.def Info: manuscript-family.pdf used on input line 176.
+Package pdftex.def Info: manuscript-family.pdf used on input line 177.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-allAlt.pdf, id=29, 542.025pt x 433.62pt>
 File: manuscript-allAlt.pdf Graphic file (type pdf)
 
 <use manuscript-allAlt.pdf>
-Package pdftex.def Info: manuscript-allAlt.pdf used on input line 184.
+Package pdftex.def Info: manuscript-allAlt.pdf used on input line 185.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-religionAlt.pdf, id=30, 542.025pt x 433.62pt>
 File: manuscript-religionAlt.pdf Graphic file (type pdf)
 
 <use manuscript-religionAlt.pdf>
-Package pdftex.def Info: manuscript-religionAlt.pdf used on input line 189.
+Package pdftex.def Info: manuscript-religionAlt.pdf used on input line 190.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-workAlt.pdf, id=31, 542.025pt x 433.62pt>
 File: manuscript-workAlt.pdf Graphic file (type pdf)
 
 <use manuscript-workAlt.pdf>
-Package pdftex.def Info: manuscript-workAlt.pdf used on input line 194.
+Package pdftex.def Info: manuscript-workAlt.pdf used on input line 195.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-familyAlt.pdf, id=32, 542.025pt x 433.62pt>
 File: manuscript-familyAlt.pdf Graphic file (type pdf)
 
 <use manuscript-familyAlt.pdf>
-Package pdftex.def Info: manuscript-familyAlt.pdf used on input line 199.
+Package pdftex.def Info: manuscript-familyAlt.pdf used on input line 200.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
  [4] [5 <./manuscript-all.pdf> <./manuscript-religion.pdf>] [6 <./manuscript-wo
 rk.pdf> <./manuscript-family.pdf>] [7 <./manuscript-allAlt.pdf> <./manuscript-r
@@ -853,50 +852,50 @@ eligionAlt.pdf>] [8 <./manuscript-workAlt.pdf> <./manuscript-familyAlt.pdf>] [9
 File: manuscript-structure.pdf Graphic file (type pdf)
 
 <use manuscript-structure.pdf>
-Package pdftex.def Info: manuscript-structure.pdf used on input line 259.
+Package pdftex.def Info: manuscript-structure.pdf used on input line 260.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-astructure.pdf, id=82, 542.025pt x 433.62pt>
 File: manuscript-astructure.pdf Graphic file (type pdf)
 
 <use manuscript-astructure.pdf>
-Package pdftex.def Info: manuscript-astructure.pdf used on input line 264.
+Package pdftex.def Info: manuscript-astructure.pdf used on input line 265.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-content.pdf, id=83, 542.025pt x 433.62pt>
 File: manuscript-content.pdf Graphic file (type pdf)
 
 <use manuscript-content.pdf>
-Package pdftex.def Info: manuscript-content.pdf used on input line 269.
+Package pdftex.def Info: manuscript-content.pdf used on input line 270.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-acontent.pdf, id=84, 542.025pt x 433.62pt>
 File: manuscript-acontent.pdf Graphic file (type pdf)
 
 <use manuscript-acontent.pdf>
-Package pdftex.def Info: manuscript-acontent.pdf used on input line 274.
+Package pdftex.def Info: manuscript-acontent.pdf used on input line 275.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-sandcontent.pdf, id=85, 542.025pt x 433.62pt>
 File: manuscript-sandcontent.pdf Graphic file (type pdf)
 
 <use manuscript-sandcontent.pdf>
-Package pdftex.def Info: manuscript-sandcontent.pdf used on input line 279.
+Package pdftex.def Info: manuscript-sandcontent.pdf used on input line 280.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
 <manuscript-asandcontent.pdf, id=86, 542.025pt x 433.62pt>
 File: manuscript-asandcontent.pdf Graphic file (type pdf)
 
 <use manuscript-asandcontent.pdf>
-Package pdftex.def Info: manuscript-asandcontent.pdf used on input line 284.
+Package pdftex.def Info: manuscript-asandcontent.pdf used on input line 285.
 (pdftex.def)             Requested size: 346.89731pt x 277.52908pt.
 
-Overfull \hbox (60.97247pt too wide) in paragraph at lines 289--289
+Overfull \hbox (60.97247pt too wide) in paragraph at lines 290--290
 [][]
  []
 
 
-Overfull \hbox (60.97247pt too wide) in paragraph at lines 289--289
+Overfull \hbox (60.97247pt too wide) in paragraph at lines 290--290
 [][][] 
  []
 
@@ -913,7 +912,7 @@ LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 Here is how much of TeX's memory you used:
  15223 strings out of 493633
  271055 string characters out of 3143378
- 336653 words of memory out of 3000000
+ 336654 words of memory out of 3000000
  18166 multiletter control sequences out of 15000+200000
  27434 words of font info for 65 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
@@ -929,7 +928,7 @@ l/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local
 /texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/t
 exlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/te
 xlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on manuscript.pdf (14 pages, 935112 bytes).
+Output written on manuscript.pdf (14 pages, 944086 bytes).
 PDF statistics:
  167 PDF objects out of 1000 (max. 8388607)
  109 compressed objects within 2 object streams
