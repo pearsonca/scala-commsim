@@ -34,7 +34,7 @@ trait Vertex[EdgeType, Repr <: Vertex[EdgeType, Repr]] extends Ordered[Repr] wit
   def shortToString : String = id +" "+ name
   
   override def equals(other:Any) = other match {
-    case o:Vertex[EdgeType,Repr] => o.id == id
+    case o:Vertex[_,_] => o.id == id
     case _ => false
   }
 //  def <~>(implicit edge : EdgeType) : ((Repr,Repr)) => Unit = Vertex.<~>[EdgeType,Repr].tupled

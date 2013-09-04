@@ -1,9 +1,9 @@
 package edu.cap10.person
 
 object PlotClusters {
-  def apply(startId : Long, pInner: Double, pOuter : Double, size : Int) = loop(startId, pInner, pOuter, size)
-  private def loop(id : Long, pInner: Double, pOuter : Double, skip : Int) : Stream[PlotCluster] = {
-    new PlotCluster(id, pInner, pOuter, skip) #:: loop(id - skip, pInner, pOuter, skip)
+  def apply(startId : Long, pInner: Double, pOuter : Double, size : Int, plotterSubstrate : LoggerSubstrate) = loop(startId, pInner, pOuter, size, plotterSubstrate)
+  private def loop(id : Long, pInner: Double, pOuter : Double, skip : Int, plotterSubstrate : LoggerSubstrate) : Stream[PlotCluster] = {
+    PlotCluster(id, pInner, pOuter, skip, plotterSubstrate) #:: loop(id - skip, pInner, pOuter, skip, plotterSubstrate)
   }
 }
 
@@ -15,11 +15,15 @@ import Vocabulary.{Value => VValue, _}
 import edu.cap10.sim.EventType._
 import edu.cap10.sim.Event
 
-class PlotCluster(val id : Long, val pInner: Double, val pOuter : Double, size : Int) extends PersonLike {
+case class PlotCluster(id : Long, pInner: Double, pOuter : Double, size : Int, plotterSubstrate : LoggerSubstrate) extends PersonLike {
+  
+  override def substrate = NoOp
   
   override val name = "PlotCluster"
-  
-  val members = SortedSet(PlotterFactory(-id).src.take(size):_*) // these are a clique
+  override def shortToString = {
+    { members map { _.shortToString } } mkString "\n"
+  }
+  val members = SortedSet(PlotterFactory(-id, plotterSubstrate).src.take(size):_*) // these are a clique
   
   override def start = {
     members foreach { _ start }

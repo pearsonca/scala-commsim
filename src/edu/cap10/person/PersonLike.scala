@@ -14,14 +14,31 @@ import edu.cap10.sim.SimulationActor
 import edu.cap10.sim.Event
 import edu.cap10.graph.Vertex
 
+trait LoggerSubstrate {
+  def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) : Unit
+  def clean : Unit = Unit
+}
+
+object STDOut extends LoggerSubstrate {
+  override def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = 
+    System.out.println(v.id+" "+msg._1+" "+msg._2+" "+msg._3.id+" "+t)
+}
+
+object NoOp extends LoggerSubstrate {
+  override def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = Unit 
+}
+
 trait PersonLike extends Vertex[Community.Value,PersonLike] with SimulationActor[Long,(Community.Value, Vocabulary.Value, PersonLike)] {
     type Repr = PersonLike
   	
+    def substrate : LoggerSubstrate
+    
 	val logger = new Logger {
 	  def record(msg:MType, t:Int) = {
-	    // println(id+" "+msg+" ")
+	    substrate.println(self,msg,t)
 	    msg
 	  }
+	  def clean = substrate.clean
 	}
 	
 	/** 

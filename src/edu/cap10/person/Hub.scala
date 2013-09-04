@@ -8,11 +8,11 @@ import scala.collection.immutable.Stream.{continually => fill};
 import scala.collection.mutable.SortedSet;
 import scala.util.Random.shuffle
 
-class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int)
-extends Person(id, BinomialCache(pComm), pBadNorms) {
+case class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, override val id:Long, override val substrate:LoggerSubstrate)
+extends Person(id, BinomialCache(pComm), pBadNorms, substrate) {
   override val name = "Hub"
-  
-  override val edges = Seq(Religion, Work, Family, Plot).zip( fill(SortedSet[PersonLike]()) ).toMap
+      
+  override val edges = Seq(Religion, Work, Family, Plot).zip( edgeCollSrc ).toMap
   def clusters = edges(Plot)
   val badCache = BinomialCache(pBadSubs)
   override def messages(commType:CValue) = commType match {
@@ -23,9 +23,4 @@ extends Person(id, BinomialCache(pComm), pBadNorms) {
       }
     case _ => super.messages(commType)
   }
-}
-
-object Hub {
-  def apply(pBadSubs:Double, pBadNorms:Double, pComm:Double, id:Int) = 
-    new Hub(pBadSubs, pBadNorms, pComm, id)
 }
