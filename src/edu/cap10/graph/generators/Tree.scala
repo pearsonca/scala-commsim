@@ -12,13 +12,11 @@ import math.log
 import annotation.tailrec
 import math.pow
 
-case class Tree[EdgeType](defEdge:EdgeType) extends Generator[EdgeType, Int] {
+case class Tree[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType, Int] {
 
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], Int))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
+	(data : (Seq[V], Int)) = {
   	  val (iter, width) = data
   	  iter size match {
   	    case 0 => throw new IllegalArgumentException("Attempted to tree an empty src.")
@@ -35,23 +33,22 @@ case class Tree[EdgeType](defEdge:EdgeType) extends Generator[EdgeType, Int] {
   	          leaf <~> excessIter.next
   	    }
   	  }
-  	  iter.toSeq
+  	  iter
   	}
 
   	override implicit def default
 	[V <: Vertex[EdgeType,V]]
-	(pIter: Iterable[V]) :
-    (Iterable[V],Int) = 
+	(pIter: Seq[V]) = 
       (pIter,DEF_WIDTH)
 
   	
-  	private def bind[V <: Vertex[EdgeType,V]](implicit edge:EdgeType = defEdge) = 
+  	private def bind
+  	[V <: Vertex[EdgeType,V]] = 
   	  { (group:Iterable[V], head:V) => head <~> group }.tupled
   	
   	@tailrec private def pile
   	[V <: Vertex[EdgeType,V]]
   	(prevLvl : Iterable[V], unlinked : Iterable[V], width:Int = DEF_WIDTH)
-	(implicit edge:EdgeType = defEdge)
 	: Unit =
   	  prevLvl.size match {
   	    case 1 => Unit // done

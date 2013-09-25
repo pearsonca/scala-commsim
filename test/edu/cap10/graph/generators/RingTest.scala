@@ -4,7 +4,8 @@ import org.scalatest.FlatSpec
 import collection.mutable.Stack
 
 import edu.cap10.graph.MockVertexFactory
-import edu.cap10.graph.MockEdge.MOCKEDGE
+import edu.cap10.graph.MockEdge
+import edu.cap10.graph.MockEdge._
 import edu.cap10.graph.MockVertex
 
 import collection.mutable.SortedSet
@@ -13,7 +14,7 @@ class RingTest extends FlatSpec {
   
   val refSize = 5
   implicit val e = MOCKEDGE
-  val generator = Ring(e)
+  val generator = Ring[MockEdge.Value]
   def src = MockVertexFactory.take(refSize).toSeq
   
   "A Ring" should "return a Seq of its inputs" in {

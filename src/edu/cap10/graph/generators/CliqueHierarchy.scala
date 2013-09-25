@@ -14,22 +14,19 @@ object CliqueHierarchy {
 
 import CliqueHierarchy._
 
-case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
+case class CliqueHierarchy[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,Int] {
   // TODO allow for flexible clique sizes by changing generator input
 
-  val cliquer = Clique(defEdge)
+  val cliquer = Clique[EdgeType]
   
   override def apply
   [V <: Vertex[EdgeType,V]]
-  (data : (Iterable[V], Int))
-  (implicit edge:EdgeType = defEdge) :
-  Seq[V] =
-    grouped(cliquer.all(data)(edge),data._2)
+  (data : (Seq[V], Int)) =
+    grouped(cliquer.all(data),data._2)
   
   override implicit def default
   [V <: Vertex[EdgeType,V]]
-  (pIter: Iterable[V]) :
-  (Iterable[V],Int) =
+  (pIter: Seq[V]) =
     (pIter,DEF_SIZE)
     
   implicit def seqSeqToSeqV
@@ -41,8 +38,7 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
     
   @tailrec final def grouped
   [V <: Vertex[EdgeType,V]]
-  (src: Seq[Seq[V]], size:Int = DEF_SIZE)
-  (implicit edge:EdgeType = defEdge) :
+  (src: Seq[Seq[V]], size:Int = DEF_SIZE) :
   Seq[V] = {
     src.size match {
       case 1 => src(0)
@@ -67,7 +63,6 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
   def cliqueGroups
   	[V <: Vertex[EdgeType,V]]
   	(src: Seq[Seq[V]], linkCount:Int = 1)
-  	(implicit edge:EdgeType = defEdge)
   	: Seq[V] = {
     for ( (leftGroup, rightGroup) <- src.uPairs )
       // TODO take advantage of linkCount to allow for multiple edges between higher level components
@@ -78,14 +73,12 @@ case class CliqueHierarchy[EdgeType](defEdge:EdgeType) extends Generator[EdgeTyp
   private def cliqueGroupsEach
   	[V <: Vertex[EdgeType,V]]
   	(src: Seq[Seq[V]], size: Int, linkCount: Int = 1)
-  	(implicit edge:EdgeType = defEdge)
   	: Seq[Seq[V]] =
   	  for (group <- src.grouped(size).toSeq) yield { 
   	    cliquer.groupApply(group, size)
   	  }
   
-  def up[V <: Vertex[EdgeType,V]](src: Iterator[Seq[V]], size:Int = DEF_SIZE)
-  (implicit edge:EdgeType = defEdge) : Seq[V] = {
+  def up[V <: Vertex[EdgeType,V]](src: Iterator[Seq[V]], size:Int = DEF_SIZE) : Seq[V] = {
     val res = src.take(size).toSeq
 //    UniqueDirectedPairs(0 until res.length) foreach { (lr) => res(lr._1).random ~> res(lr._2).random }
     for (	srci <- 0 until res.size; 

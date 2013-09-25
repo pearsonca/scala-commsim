@@ -12,19 +12,17 @@ import annotation.tailrec
 import scala.math.random
 
 case class ProportionalDistance[EdgeType]
-(refEdge:EdgeType, defEdge:EdgeType) 
+(refEdge:EdgeType, implicit val e:EdgeType) 
 extends Generator[EdgeType,(Double,Double)] {
 
   override implicit def default
   [V <: Vertex[EdgeType,V]]
-  (pIter: Iterable[V]) =
+  (pIter: Seq[V]) =
     (pIter, (DEF_BASE,DEF_DISCOUNT))
 
   override def apply
   [V <: Vertex[EdgeType,V]]
-  (data : (Iterable[V], (Double,Double)) )
-  (implicit edge:EdgeType = defEdge) :
-  Seq[V] = {
+  (data : (Seq[V], (Double,Double)) ) = {
     val (iter, bAndD) = data
     val (p,d) = bAndD
     iter.foldLeft( Set[V]() )( (acc,v) => {

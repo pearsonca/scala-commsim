@@ -8,24 +8,20 @@ object Line {
 
 import Line._
 
-case class Line[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
+case class Line[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,Int] {
   override implicit def default
   [V <: Vertex[EdgeType,V]]
-  (pIter: Iterable[V]) :
-    (Iterable[V],Int) = (pIter,pIter.size)
+  (pIter: Seq[V]) =
+    (pIter,pIter.size)
       
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], Int))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] =
+	(data : (Seq[V], Int)) =
 	  line(data._1 take data._2)
 	  
 	def line
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V])
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] =
+	(iter : Seq[V]) =
 	  iter.head +: { for (pairs <- iter.iterator.sliding(2)) yield {
   	    pairs(1) <~> pairs(0)
   	  } }.toSeq

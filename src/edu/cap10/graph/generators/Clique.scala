@@ -17,33 +17,25 @@ import Clique._
  * @constructor must be provided an item to provide the default `edge` type
  * when constructing edges.
  */
-case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
-  
-    //def <~>[V <: Vertex[EdgeType,V]](implicit edge : EdgeType = defEdge) : ((V,V)) => Unit = Vertex.<~>[EdgeType,V].tupled
-    
-	override def apply
-	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], Int))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = 
-	  clique(data._1 take data._2)
-	
-	override implicit def default
-	[V <: Vertex[EdgeType,V]]
-	(pIter: Iterable[V]) :
-      (Iterable[V],Int) = (pIter,pIter.size)
+case class Clique[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,Int] {
 
-	  
-	def clique
-	  [V <: Vertex[EdgeType,V]]
-	  (iter : Iterable[V])
-	  (implicit edge:EdgeType = defEdge)
-	  : Seq[V] = {
-	    val vertices = iter.toSeq					// collect the vertices that will be returned
-	    for ( (left, right) <- vertices.uPairs )	// for each unique, unordered pair in that col.
-	      left <~> right							//   form a bidirectional edge between those
-	    vertices									// return the vertices
-	}
+  override def apply
+  [V <: Vertex[EdgeType,V]]
+  (data : (Seq[V], Int)) =
+    clique(data._1 take data._2)
+    
+  override implicit def default
+  [V <: Vertex[EdgeType,V]]
+  (pIter: Seq[V]) =
+    (pIter,pIter.size)
+  
+  def clique
+  [V <: Vertex[EdgeType,V]]
+  (vertices : Seq[V]) = {
+    for ( (left, right) <- vertices.uPairs )	// for each unique, unordered pair in that col.
+      left <~> right							//   form a bidirectional edge between those
+	vertices									// return the vertices
+  }
 	
 	def add
 	[V <: Vertex[EdgeType,V]]
@@ -54,8 +46,7 @@ case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 
 	def all
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], Int))
-	(implicit edge:EdgeType = defEdge)
+	(data : (Seq[V], Int))
 	: Seq[Seq[V]] = {
 	    val (iter, size) = data
 	  require(size > 0,"Clique size must be > 0.")
@@ -77,8 +68,7 @@ case class Clique[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
 	
 	private def each
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], size : Int)
-	(implicit edge:EdgeType = defEdge)
+	(iter : Seq[V], size : Int)
 	: Seq[Seq[V]] = {
 	  for (group <- iter.grouped(size)) yield clique(group) 
 	}.toSeq

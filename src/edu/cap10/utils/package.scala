@@ -17,10 +17,12 @@ package object utils {
   }
   
   implicit final class IterablePairable[T](src:Iterable[T]) {
-    def uPairs = inner(src)
-    @tailrec private final def inner(lsrc:Iterable[T], acc:Iterable[(T,T)] = Nil) : Iterable[(T,T)] =
+    def uPairs : Iterable[(T,T)] = {
+      @tailrec def inner(lsrc:Iterable[T] = src, acc:Iterable[(T,T)] = Nil) : Iterable[(T,T)] =
       if (lsrc.isEmpty) acc else
         inner(lsrc.tail, { for (t <- lsrc.tail) yield (lsrc.head, t) } ++ acc)
+      inner()
+    }
         
     def dPairs : Iterable[(T,T)] =
       for (left <- src; right <- src if right != left) 

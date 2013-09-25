@@ -4,7 +4,8 @@ import org.scalatest.FlatSpec
 import collection.mutable.Stack
 
 import edu.cap10.graph.MockVertexFactory
-import edu.cap10.graph.MockEdge.MOCKEDGE
+import edu.cap10.graph.MockEdge
+import edu.cap10.graph.MockEdge._
 import edu.cap10.graph.MockVertex
 
 import collection.mutable.SortedSet
@@ -19,7 +20,7 @@ class TreeTest extends FlatSpec {
   println(refSize)
   
   implicit val e = MOCKEDGE
-  val generator = Tree(e)
+  val generator = Tree[MockEdge.Value]
   def src = MockVertexFactory.take(refSize).toSeq
   
   

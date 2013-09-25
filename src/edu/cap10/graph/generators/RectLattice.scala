@@ -10,30 +10,26 @@ object RectLattice {
 import RectLattice._
 import math.sqrt
 
-case class RectLattice[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,(Int,Int)] {
+case class RectLattice[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,(Int,Int)] {
 
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], (Int,Int)))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
+	(data : (Seq[V], (Int,Int))) = {
   	  val (iter,dims) = data
 	  rect(iter,dims) flatten	  
   	}
   	
   	override implicit def default
     [V <: Vertex[EdgeType,V]]
-    (pIter: Iterable[V]) =
+    (pIter: Seq[V]) =
       (pIter, (DEF_W,DEF_H))
   	
   	def rect
   	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], dims:(Int,Int) = (DEF_W,DEF_H))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[Seq[V]] = {
+	(iter : Seq[V], dims:(Int,Int) = (DEF_W,DEF_H)) = {
   	  val (w,h) = dims
   	  val src = iter take (w*h)
-  	  val liner = Line(edge)
+  	  val liner = Line[EdgeType]
   	  val lines = src.iterator.grouped(w).map( liner.line ).toSeq
   	  for (linepair <- lines.iterator.sliding(2)) { 
   	    linepair(0).zip(linepair(1)).foreach( topBottom => {

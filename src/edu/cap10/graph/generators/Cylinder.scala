@@ -9,31 +9,28 @@ object Cylinder {
 
 import Cylinder._
 
-case class Cylinder[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,(Int,Int)] {
+case class Cylinder[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,(Int,Int)] {
 
     override def apply
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], (Int,Int)))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
+	(data : (Seq[V], (Int,Int))) = {
       val (iter, cAndH) = data
       cylinder(iter,cAndH) flatten
     }
 
     override implicit def default
     [V <: Vertex[EdgeType,V]]
-    (pIter: Iterable[V]) :
-    (Iterable[V],(Int,Int)) =
+    (pIter: Seq[V]) =
       (pIter, (DEF_CIRCUMFERENCE,DEF_HEIGHT))
     
+    val ringer = Ring[EdgeType]
+      
     def cylinder
 	[V <: Vertex[EdgeType,V]]
-	(iter : Iterable[V], circumferenceAndHeight:(Int,Int) = (DEF_CIRCUMFERENCE,DEF_HEIGHT))
-	(implicit edge:EdgeType = defEdge)
+	(iter : Seq[V], circumferenceAndHeight:(Int,Int) = (DEF_CIRCUMFERENCE,DEF_HEIGHT))
 	: Seq[Seq[V]] = {
       val (c, h) = circumferenceAndHeight
-      val ringer = Ring(edge)
-      val ringed = { for (ring <- iter.take(c*h).grouped(c)) yield { ringer(ring).toSeq } }.toSeq
+      val ringed = { for (ring <- iter.take(c*h).grouped(c)) yield { ringer(ring) } }.toSeq
       ringed.iterator.sliding(2) foreach {
         pair => {
           pair(0).iterator.zip(pair(1).iterator).foreach( tb => {

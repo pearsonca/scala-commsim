@@ -9,21 +9,18 @@ object SquareLattice {
 import SquareLattice._
 import math.sqrt
 
-case class SquareLattice[EdgeType](defEdge:EdgeType) extends Generator[EdgeType,Int] {
+case class SquareLattice[EdgeType](implicit val e:EdgeType) extends Generator[EdgeType,Int] {
 
   	override def apply
 	[V <: Vertex[EdgeType,V]]
-	(data : (Iterable[V], Int))
-	(implicit edge:EdgeType = defEdge)
-	: Seq[V] = {
+	(data : (Seq[V], Int))= {
   	  val (iter,side) = data
-  	  val rect = RectLattice(edge)
+  	  val rect = RectLattice[EdgeType]
   	  rect(iter,(side,side))
   	} 
   override implicit def default
   [V <: Vertex[EdgeType,V]]
-  (pIter: Iterable[V]) :
-  (Iterable[V],Int) =
+  (pIter: Seq[V]) =
     (pIter, math.sqrt(pIter.size).toInt)
 	  
 }

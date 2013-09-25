@@ -39,11 +39,11 @@ object Test {
       val factory = BackgroundFactory(pComm, pBadBack, 1, pLogger)
       val people = factory.src.take(popSize).toSeq
 	  val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1, hLogger)
-	  val terrorists : Iterable[PersonLike] = 
+	  val terrorists : Seq[PersonLike] = 
 	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).take(clusterCount);
 	   {
 	     implicit val edge = Community.Plot     
-	     H <~> Clique(edge).apply(terrorists);
+	     H <~> Clique[Community.Value].apply(terrorists);
 	   }
 
 	  
@@ -75,12 +75,12 @@ object Test {
 	  tree(people,H,hConP,cliqueSize,Community.Work,pBlend)
 	  getReligion(people)
 	   
-	   val terrorists : Iterable[PersonLike] = 
+	   val terrorists : Seq[PersonLike] = 
 	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).take(clusterCount);
 	   
 	   {
 	     implicit val edge = Community.Plot     
-	     H <~> Clique(edge).apply(terrorists);
+	     H <~> Clique[Community.Value].apply(terrorists);
 	   }
 	   
 	   val output = (people :+ H) ++ terrorists 
@@ -110,26 +110,26 @@ object Test {
 //    (people,H)
 //  }
   
-  def clique(people:Iterable[PersonLike], h:Hub, pHIntegration:Double, cliqueSize:Int, e:Community.Value, remixP:Double) : Unit = {
+  def clique(people:Seq[PersonLike], h:Hub, pHIntegration:Double, cliqueSize:Int, e:Community.Value, remixP:Double) : Unit = {
     implicit val edge = e
-    val src = Clique(edge).all(shuffle(people), cliqueSize)
+    val src = Clique[Community.Value].all(shuffle(people), cliqueSize)
 	for (group <- src if DoubleSrc.next < pHIntegration) {
 	  group.random <~> h
 	}
-	BinomialMix(edge)(CliqueHierarchy(edge).grouped(src, cliqueSize), remixP)
+	BinomialMix[Community.Value].apply((CliqueHierarchy[Community.Value].grouped(src, cliqueSize), remixP))
   }
   
-  def tree(people:Iterable[PersonLike], h:Hub, pHIntegration:Double, cliqueSize:Int, e:Community.Value, remixP:Double) : Unit = {
+  def tree(people:Seq[PersonLike], h:Hub, pHIntegration:Double, cliqueSize:Int, e:Community.Value, remixP:Double) : Unit = {
     implicit val edge = e
     val discount = pHIntegration / cliqueSize
-    val src = Tree(edge)(shuffle(people), cliqueSize)
+    val src = Tree[Community.Value].apply((shuffle(people), cliqueSize))
 	for (group <- src if DoubleSrc.next < discount) group <~> h
-	BinomialMix(edge)(src, remixP)
+	BinomialMix[Community.Value].apply((src, remixP))
   }
   
-  def getReligion(people:Iterable[PersonLike]) : Unit = {
+  def getReligion(people:Seq[PersonLike]) : Unit = {
     implicit val defEdge = Community.Religion
-	val pd = ProportionalDistance(Community.Family,defEdge)
+	val pd = ProportionalDistance[Community.Value](Community.Family, defEdge)
     pd( (people, (0.9, 0.3)) )
   }
   

@@ -4,7 +4,8 @@ import org.scalatest.FlatSpec
 import collection.mutable.Stack
 
 import edu.cap10.graph.MockVertexFactory
-import edu.cap10.graph.MockEdge.MOCKEDGE
+import edu.cap10.graph.MockEdge
+import edu.cap10.graph.MockEdge._
 import edu.cap10.graph.MockVertex
 
 import collection.mutable.SortedSet
@@ -16,7 +17,7 @@ class RectTest extends FlatSpec {
   val (refWidth,refHeight) = (5,4)
   
   implicit val e = MOCKEDGE
-  val generator = RectLattice(e)
+  val generator = RectLattice[MockEdge.Value]
   def src = MockVertexFactory.take(refWidth*refHeight).toSeq
   
   

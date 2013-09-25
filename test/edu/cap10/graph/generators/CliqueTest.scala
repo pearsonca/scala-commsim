@@ -3,7 +3,8 @@ package edu.cap10.graph.generators
 import org.scalatest.FlatSpec
 
 import edu.cap10.graph.MockVertexFactory
-import edu.cap10.graph.MockEdge.MOCKEDGE
+import edu.cap10.graph.MockEdge
+import edu.cap10.graph.MockEdge._
 import edu.cap10.graph.MockVertex
 
 import collection.mutable.SortedSet
@@ -12,7 +13,7 @@ class CliqueTest extends FlatSpec {
   
   val refSize = 5
   implicit val e = MOCKEDGE
-  val generator = Clique(e)
+  val generator = Clique[MockEdge.Value]
   def src = MockVertexFactory.take(refSize).toSeq
   
   
