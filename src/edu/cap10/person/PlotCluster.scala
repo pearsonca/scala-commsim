@@ -1,10 +1,13 @@
 package edu.cap10.person
 
-object PlotClusters {
-  def apply(startId : Long, pInner: Double, pOuter : Double, size : Int, plotterSubstrate : LoggerSubstrate) = loop(startId, pInner, pOuter, size, plotterSubstrate)
-  private def loop(id : Long, pInner: Double, pOuter : Double, skip : Int, plotterSubstrate : LoggerSubstrate) : Stream[PlotCluster] = {
-    PlotCluster(id, pInner, pOuter, skip, plotterSubstrate) #:: loop(id - skip, pInner, pOuter, skip, plotterSubstrate)
+import edu.cap10.sim.Logger
+
+case class PlotClusters(startId : Long, pInner: Double, pOuter : Double, size : Int, logger : Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike]) {
+  val src : Stream[PersonLike] = loop(startId)
+  private def loop(id : Long) : Stream[PlotCluster] = {
+    PlotCluster(id, pInner, pOuter, size, logger) #:: loop(id - size)
   }
+  
 }
 
 import scala.collection.mutable.SortedSet;
@@ -15,15 +18,16 @@ import Vocabulary.{Value => VValue, _}
 import edu.cap10.sim.EventType._
 import edu.cap10.sim.Event
 
-case class PlotCluster(id : Long, pInner: Double, pOuter : Double, size : Int, plotterSubstrate : LoggerSubstrate) extends PersonLike {
-  
-  override def substrate = NoOp
+case class PlotCluster(id : Long, pInner: Double, pOuter : Double, size : Int, 
+    passLogger : Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike]) extends PersonLike {
+    
+  override val logger = NoOp
   
   override val name = "PlotCluster"
   override def shortToString = {
     { members map { _.shortToString } } mkString "\n"
   }
-  val members = SortedSet(PlotterFactory(-id, plotterSubstrate).src.take(size):_*) // these are a clique
+  val members = SortedSet(PlotterFactory(-id, passLogger).src.take(size):_*) // these are a clique
   
   override def start = {
     members foreach { _ start }

@@ -8,8 +8,6 @@ import scala.collection.immutable.Stream.{continually => fill};
 import Community.{Value => CValue}
 import Vocabulary.{Value => VValue}
 
-import edu.cap10.app.Logger
-
 import edu.cap10.sim.SimulationActor
 import edu.cap10.sim.Event
 import edu.cap10.graph.Vertex
@@ -19,28 +17,22 @@ trait LoggerSubstrate {
   def clean : Unit = Unit
 }
 
-object STDOut extends LoggerSubstrate {
-  override def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = 
-    System.out.println(v.id+" "+msg._1+" "+msg._2+" "+msg._3.id+" "+t)
+import edu.cap10.sim.Logger
+
+object STDOut extends Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike] {
+  override def println(p:PersonLike, msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = {
+    System.out.println(p.id+" "+msg._1+" "+msg._2+" "+msg._3.id+" "+t)
+    msg
+  }
 }
 
-object NoOp extends LoggerSubstrate {
-  override def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = Unit 
+object NoOp extends Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike] {
+  override def println(p:PersonLike, msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = msg
 }
 
 trait PersonLike extends Vertex[Community.Value,PersonLike] with SimulationActor[Long,(Community.Value, Vocabulary.Value, PersonLike)] {
     type Repr = PersonLike
-  	
-    def substrate : LoggerSubstrate
-    
-	val logger = new Logger {
-	  def record(msg:MType, t:Int) = {
-	    substrate.println(self,msg,t)
-	    msg
-	  }
-	  def clean = substrate.clean
-	}
-	
+  		
 	/** 
 	 *  This is a hook for making any internal state changes to a person (which, e.g.,
 	 *  might affect messages()).  The default behavior clears the inbox
@@ -91,14 +83,3 @@ object Community extends Enumeration {
 object Vocabulary extends Enumeration {
   val Good, Bad = Value;
 }
-
-//object SimulationEvent extends Enumeration {
-//  val UPDATE, NEXT, DONE, TEST = Value
-//}
-//
-//case class SimulationCommand(e:SimulationEvent.Value = SimulationEvent.NEXT,t:Int)
-//
-//object SimulationCommand {
-//  def apply(e:SimulationEvent.Value) : (Int) => SimulationCommand =
-//    SimulationCommand(e,_)
-//}

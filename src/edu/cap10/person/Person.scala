@@ -8,16 +8,19 @@ import edu.cap10.distributions._
 import Community.{Value => CValue, _}
 import Vocabulary.{Value => VValue, _}
 
-case class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0, substrate:LoggerSubstrate) {
+import edu.cap10.sim.Logger
+
+case class BackgroundFactory(pComm:Double, pBad:Double, startId : Int = 0, logger:Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike]) {
   require(pComm >= 0 && pComm <= 1,"pComm is not a probability.")
   require(pBad >= 0 && pBad <= 1,"pBad is not a probability.")
   
   val binCache = BinomialCache(pComm) // set up a binomial distribution cache
-  private def loop(i:Int) : Stream[PersonLike] = new Person(i, binCache, pBad, substrate) #:: loop(i+1)
+  private def loop(i:Int) : Stream[PersonLike] = new Person(i, binCache, pBad, logger) #:: loop(i+1)
   val src : Stream[PersonLike] = loop(startId)
 }
 
-class Person(val id:Long, binCache: BinomialCache, pBad:Double, override val substrate:LoggerSubstrate) extends PersonLike {
+class Person(val id:Long, binCache: BinomialCache, pBad:Double,
+    override val logger:Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike]) extends PersonLike {
   
   override val name = "Person"
   

@@ -18,6 +18,20 @@ import scala.util.Random.shuffle
 
 import java.io._
 
+import edu.cap10.graph.Vertex
+import edu.cap10.sim.Logger
+case class PersonLikeLog(runname:String) extends Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike] {
+  private val pw = new PrintWriter("./"+runname+".txt")
+  override def println(p:PersonLike, msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) = {
+    pw.println(p.id+" "+msg._1+" "+msg._2+" "+msg._3.id+" "+t)
+    msg
+  }
+  override def clean = {
+    pw.flush;
+    pw.close;
+  }
+}
+
 object Test {
   def main(args: Array[String]) = {
     // specify various model parameters; obviously, these could be program arguments
@@ -40,7 +54,7 @@ object Test {
       val people = factory.src.take(popSize).toSeq
 	  val H = Hub(pBadFore,pBadBack*pBadNormDiscount, pForeCommDiscount*pComm, popSize+1, hLogger)
 	  val terrorists : Seq[PersonLike] = 
-	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).take(clusterCount);
+	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).src.take(clusterCount);
 	   {
 	     implicit val edge = Community.Plot     
 	     H <~> Clique[Community.Value].apply(terrorists);
@@ -76,7 +90,7 @@ object Test {
 	  getReligion(people)
 	   
 	   val terrorists : Seq[PersonLike] = 
-	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).take(clusterCount);
+	     PlotClusters(-(popSize+2), pForeCommDiscount*pComm, pForeCommDiscount*pBadFore, clusterSize, sLogger).src.take(clusterCount);
 	   
 	   {
 	     implicit val edge = Community.Plot     
@@ -145,46 +159,5 @@ object Test {
 	   }
 	   pop foreach { _ ! done }
   }
-  
-}
-
-import edu.cap10.graph.Vertex
-case class PersonLikeLog(runname:String) extends LoggerSubstrate {
-  private val pw = new PrintWriter("./"+runname+".txt")
-  override def println(v:Vertex[_,_], msg:(Community.Value, Vocabulary.Value, PersonLike), t:Int) {
-    pw.println(v.id+" "+msg._1+" "+msg._2+" "+msg._3.id+" "+t)
-  }
-  override def clean = {
-    pw.flush;
-    pw.close;
-  }
-}
-
-object Logger {
-  val runname = "4-1"
-  val filter = new FilenameFilter() {
-    def accept(f:File, name:String) = name.contains("current")
-  }
-  var pws : Seq[PrintWriter] = Seq()
-  def start(step:Int=0) = {
-    cleanup(step) 
-    pws = Seq("./"+runname+"-hub-current.txt","./"+runname+"-plot-current.txt","./"+runname+"-cluster-current.txt","./"+runname+"-back-current.txt") map ( s => new PrintWriter(s) )
-  }
-  def println(src:PersonLike,msg:String) = {
-    src match {
-      case h:Hub => pws(0).println(msg)
-      case pl:Plotter => pws(1).println(msg)
-      case cl:PlotCluster => pws(2).println(msg)
-      case b:Person => pws(3).println(msg)
-    }
-  }
-  def close = {
-    pws foreach { pw => pw.flush; pw.close; }
-  }
-  def cleanup(step:Int) = {
-    val others = (new File("./")).listFiles(filter)
-    val replace = step.toString
-    others.foreach( (file) => file.renameTo(new File(file.getPath.replace("current",replace) )) )
-  } 
   
 }

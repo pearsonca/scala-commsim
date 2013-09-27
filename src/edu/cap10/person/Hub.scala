@@ -8,8 +8,11 @@ import scala.collection.immutable.Stream.{continually => fill};
 import scala.collection.mutable.SortedSet;
 import scala.util.Random.shuffle
 
-case class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, override val id:Long, override val substrate:LoggerSubstrate)
-extends Person(id, BinomialCache(pComm), pBadNorms, substrate) {
+import edu.cap10.sim.Logger
+
+case class Hub(pBadSubs:Double, pBadNorms:Double, pComm:Double, override val id:Long, 
+    override val logger:Logger[(Community.Value, Vocabulary.Value, PersonLike),PersonLike])
+extends Person(id, BinomialCache(pComm), pBadNorms, logger) {
   override val name = "Hub"
       
   override val edges = Seq(Religion, Work, Family, Plot).zip( edgeCollSrc ).toMap
