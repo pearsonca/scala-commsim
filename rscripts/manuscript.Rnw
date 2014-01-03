@@ -60,12 +60,12 @@ showstringspaces=false,columns=flexible,basicstyle={\small\ttfamily}}
 \SweaveOpts{concordance=TRUE}
 \begin{flushleft}
 {\Large
-\textbf{Detecting Covert Groups Embedded in a Population}
+\textbf{Modeling Requirements for Simulating Covert Social Groups}
 }
 % Insert Author names, affiliations and corresponding author email.
 \\
 Carl A. B. Pearson$^{1,\ast}$, 
-Edo Airoldi$^{2}$, 
+Edo Airoldi$^{2}$,
 Edward Kao$^{2}$,
 Burton Singer$^{1}$, 
 \\
@@ -77,9 +77,13 @@ $\ast$ E-mail: cap10@ufl.edu
 \end{flushleft}
 % Please keep the abstract between 250 and 300 words
 \section*{Abstract}
-We outline the problem of characterizing strategies for detection and concealment of clandestine coordination within a broader population, in terms of network models.  Specifically, we present (i) means to accommodate the uncertainty about behavior and capability of both covert groups and survillience efforts, (ii) a general outline for developing models to describe to describe those entities and background populations, (iii) some best practices for model parameterization and data gathering, and (iv) finally some particularly pernicious pitfalls.
+Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  Moreover, increasing active observation would be expected to perturb these social systems.  However, these groups never have perfect cover, their secrecy may make them conspicuously absent from the everyday activity of the background population, and finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.
 
-As a practical, but mostly pedagogical demonstration, we specify a graph-based model of simple communication across a procedurally generated population, with an embedded, relatively small module representing a clandestine group, pitted against surveillance systems.  We discuss measuring performance of the opposing sides (e.g. Receiver Operator Characteristic), fitting the model against to real data, and finally indiciating how this model can be extended.
+This situation -- strong constraints on passively and actively obtained direct empirical data, overwhelming indirect data, and competing mechanical explanations -- recommends simulation.  However, because the of the censoring issues in the data, that simulation requires particular attention to characterizing uncertainty.
+
+Herein, we discuss these issues in terms of network models.  Specifically, we review (i) incorporating observation uncertainty, (ii) the need for both back- and foreground populations, (iii) avoiding over-fitting, and (iv) finally some philosophy relative to implementation.
+
+As part of that philosophical discussion, we walkthrough the exercise of procedurally generating back- and foreground populations, simulating communication among those individuals, and filtering those communications via an observation model.  We then address the issues of (i) fitting that model against data, and (ii) analyzing performance of the opposing sides (e.g. Receiver Operator Characteristic).  Finally, we also demonstrate a small extension.
 
 %\todoCP{{\em I think not for this round, but maybe:} Finally, we consider the implications of {\em forged} messages.  In the basic model, we consider incomplete information about the communications, but the available information is always accurate.  In this extension, we allow the Observer and the clandestine group to forge messages.  We again measure various Observer performance traits relative to properties of the observed network.}
 
