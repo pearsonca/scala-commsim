@@ -123,6 +123,20 @@ Individuals create modeled activity based on their internal state.  These action
 The covert group and background population should be different in their activity; either performing different activities or undertaking them at different rates or on different schedules.
 
 \subsection*{The Observation Model}
+Activity is understood by the observing entities by an imperfect process.  Depending on the situation modeled, that process might simply miss events.  Alternatively, the error could be misunderstanding the type or content of the activity, or between what individuals and interaction is occurring.  In general, the observing entities should be able to modify what is observed at what rates.  Also, the observation process may itself alter the state of the world -- i.e., the covert group may have the opportunity to respond to the observation process.
+
+\section*{A Language Matching the Simulation Requirements: Scala}
+Scala is an mixin inheritance object oriented, functional language, which is also includes an message-passing based model for parallel computing (which is transitioning from the initial implementation to that developed by the Akka project).  Indeed, Scala is used under the hood for the network simulation framework NetLogo.
+
+Why do these traits make Scala particularly effective for the simulation requirements described above?  
+
+First, the covert group members and the background population share behavior (in the real and simulation sense), but are not necessarily simple extensions, which makes a mixin inheritance object system a natural fit for the model subjects.
+
+Second, many interactions in an organization can be thought of as management directing labor to complete a task; in a functional paradigm, functions are themselves treated as objects.  This translates natural to sending a function object from one simulated individual (in a leadership position) to another (in a subordinate position).  Loosely adopting some of the other functional paradigms, as Scala does -- emphasis on immutability, principally -- provides practical advantages to concurrent programming, which is necessary for large scale simulations.
+
+Finally, the message-passing framework is an exact analogy to an individual / agent / actor - based model.  Having this baked into the language, makes it a feature more like control loops or collections, than a more complicated syntax available only advanced programmers (sometimes available on via library support) rather than more phenomena and model focused scientists.
+
+\section*{A Practical Demonstration}
 
 %To test strategies for either the covert group or survillience entity, one must have a model capable of representing their strategies.  That means modeling entities that take action, modeling how that action is observed (including if it is observed correctly, or at all), and modeling how those observations are digested into reactions.  Notably, the entities must include some sort of background -- if the only data being simulated is to do with the covert entities, they are hardly covert within that simulation.  Here, we will focus on network based models of these components.  Networks seem like a natural tool, given the role of individually-based action, discrete events, and the relatively small number of participants in these groups.  Though we do not do so in our example, the background population might be more tractably modeled with continuous phenomena, given its large size and potentially more homogeneous behavior.
 
