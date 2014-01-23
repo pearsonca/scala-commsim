@@ -1,12 +1,27 @@
 \documentclass{article}
 
-% PLOS One TEMPLATE
-\usepackage{amsmath,amssymb,graphicx,cite,setspace}
-\usepackage[textwidth=1.75in]{todonotes}
+\usepackage{amsmath,amssymb,graphicx,cite,setspace} % PLOS One TEMPLATE
+\usepackage{listings, url, color, appendix} % things I usually use
+% items to make todonotes useful
+\usepackage[textwidth=1.75in]{todonotes} 
 \usepackage[total={6in,9.5in},top=0.5in,left=0.5in,includefoot]{geometry}
-\usepackage{listings}
-\usepackage{url}
-\usepackage{color}
+\newcommand{\wantFig}[2]{
+  \begin{figure}[h]\centering
+    \missingfigure{}
+    \caption{#2}
+    \figlabel{#1}
+  \end{figure}
+}
+% alt layout formatting
+%\doublespacing
+
+% Text layout
+%\topmargin 0.0cm
+%\oddsidemargin 0.5cm
+%\evensidemargin 0.5cm
+%\textwidth 16cm 
+%\textheight 21cm
+
 
 % define Scala
 \lstdefinelanguage{scala}{morekeywords={class,object,trait,extends,with,new,if,while,for,def,val,var,this,case,->,=>},
@@ -38,23 +53,20 @@ showstringspaces=false,columns=flexible,basicstyle={\small\ttfamily}}
 
 \newenvironment{rnwfig}[0]{\begin{figure}\begin{center}}{\end{center}\end{figure}}
 
-%\renewcommand{\lstlistingname}{Scala Code}
-
-%\doublespacing
-
-% Text layout
-%\topmargin 0.0cm
-%\oddsidemargin 0.5cm
-%\evensidemargin 0.5cm
-%\textwidth 16cm 
-%\textheight 21cm
-
 \usepackage[labelfont=bf,labelsep=period,justification=raggedright]{caption}
 
 \newcommand{\Hub}[0]{\ensuremath{\mathbf{H}}}
 \newcommand{\C}[1]{\ensuremath{\mathbf{C}_{#1}}}
 \newcommand{\Obs}[0]{\ensuremath{\mathbf{O}}}
 \newcommand{\todoCP}[1]{\todo{CP, #1}}
+
+\newcommand{\figlabel}[1]{\label{fig_#1}}
+\newcommand{\figref}[1]{fig. \ref{fig_#1}}
+\newcommand{\Figref}[1]{Fig. \ref{fig_#1}}
+
+\newcommand{\applabel}[1]{\label{app_#1}}
+\newcommand{\appref}[1]{appendix \ref{app_#1}}
+\newcommand{\Appref}[1]{Appendix \ref{fig_#1}}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
@@ -73,32 +85,34 @@ Burton Singer$^{1}$,
 \\
 \bf{2} Statistics, Harvard University, Cambridge, MA, USA
 \\
-$\ast$ E-mail: cap10@ufl.edu
+$\ast$ E-mail: cap10 \{at\} ufl \{dot\} edu
 \end{flushleft}
 % Please keep the abstract between 250 and 300 words
 \section*{Abstract}
-Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  Moreover, increasing active observation would be expected to perturb these social systems.  However, these groups never have perfect cover, their secrecy may make them conspicuously absent from the everyday activity of the background population, and finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.
+Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  Moreover, increasing active observation would be expected to perturb these social systems.  However, these groups never have perfect cover.  Their secrecy may make them conspicuously absent from the everyday activity of the background population.  Finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.
 
-This situation -- strong constraints on passively and actively obtained direct empirical data, overwhelming indirect data, and competing mechanical explanations -- recommends simulation.  However, because the of the censoring issues in the data, that simulation requires particular attention to characterizing uncertainty and avoiding overfitting.
+The structure of covert networks is highly variable from one context to another, and they change composition and interaction patterns over time.  With any covert network, there are strong constraints on passively and actively obtainable direct empirical data, overwhelming amounts of indirect data, and competing mechanical explanations for what is observed.  Studying the detailed history of any one network, or set of them, will not necessarily provide insight about how to effectively detect such networks in the future.  This situation recommends simulation of a variety of scenarios with accompanying detection strategies. Because of the censoring issues in the data, simulation requires particular attention to characterizing uncertainty and avoiding overfitting.
 
-Herein, we discuss these issues in terms of network models.  Specifically, we review (i) incorporating observation uncertainty, (ii) the need for both back- and foreground populations, (iii) avoiding over-fitting, and (iv) finally some philosophy relative to implementation.
+Herein, we discuss these issues in terms of network models.  Specifically, we review (i) incorporating observation uncertainty, (ii) the need for both back- and foreground populations, (iii) avoiding over-fitting, and (iv) some philosophy relative to implementation.
 
-As part of that philosophical discussion, we walkthrough the exercise of procedurally generating back- and foreground populations, simulating communication among those individuals, and filtering those communications via an observation model.  We then address the issues of (i) fitting that model against data, and (ii) analyzing performance of the opposing sides (e.g. Receiver Operator Characteristic).  Finally, we also demonstrate a small extension.
+As part of that philosophical discussion, we walkthrough the exercise of procedurally generating back- and foreground populations, simulating communication among those individuals, and filtering those communications via an observation model.  We then address the issues of (i) fitting that model against data, and (ii) analyzing performance of the opposing sides (e.g. Receiver Operator Characteristic).  Finally, we also demonstrate a small model extensionand show how it affects the (unextended) detection performance.
 
 %\todoCP{{\em I think not for this round, but maybe:} Finally, we consider the implications of {\em forged} messages.  In the basic model, we consider incomplete information about the communications, but the available information is always accurate.  In this extension, we allow the Observer and the clandestine group to forge messages.  We again measure various Observer performance traits relative to properties of the observed network.}
 
 \newpage
 
 \section*{Introduction}
-For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  Of course that revealation of these activities has broadly sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
+For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  Of course the revealation of these activities has broadly sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
 
-The underlying drive for these opposed efforts is the implacably expanding byte trail.  Once, the recorded information of an entire life might amount only to a few bytes -- parish records on births and deaths, perhaps including morbidity -- but now information era tools produce a near endless supply or 1s and 0s.  In some cases, this production is a side effect of organized commercial instinct -- monetizing search through targetted advertisement, e.g.  In other cases, individuals are voluntarily advancing their own brand -- Instagram ``selfies'', e.g.  However, in many cases this bitwise production is an engineering consequence of the associated technology.  E.g., cellular phones transmit constant location data, financial systems are increasingly just data-based, and of course any use of the internet produces veritable bit contrails.  This rate of production far exceeds the personal processing capability of any practically-sized team of analysts.
+The underlying drive for these opposed efforts is the implacably expanding byte trail.  Once, the recorded information of an entire life might have amounted only to a few bytes -- e.g., parish records on births and deaths, perhaps including morbidity.  Now information era tools produce a near endless supply of 1s and 0s.  In some cases, this production is a side effect of organized commercial instinct -- Google monetizing search through targeted advertisement, for example.  In other cases, individuals are voluntarily advancing their own brand -- Instagram ``selfies'', e.g.  However, in many cases this bitwise production is an engineering consequence of the associated technology.  E.g., cellular phones transmit constant location data, financial systems are increasing just digital ledgers with almost no physical exchange, and of course any use of the internet produces veritable bit contrails.  This rate of production far exceeds the personal processing capability of any practically-sized team of analysts.
 
-Hence, these teams employ computer-based, heuristic filtration to decide which data to record, to review, and to obtain.  We avoid saying ``algorithmic'' at this point: ``algorithmic'' implies strong, logically inevitable conclusions from inputs.  Like ``algorithmic'' bubble prediction, we tend to side more with Fama than Shiller.
+Hence, these teams employ computer-based, heuristic filtration to decide which data to record, to review, and to obtain.  We avoid saying ``algorithmic'' at this point: ``algorithmic'' implies strong, logically inevitable conclusions from inputs.  Like ``algorithmic'' bubble prediction, we side more with Fama than Shiller.
 
-Given the real uncertainty, what these filters call for is testing and validation, but those present their own difficulties.  Calling field testing ``problematic'' seems like a gross understatement; reference ``truth'' ranges from incomplete to deceptive, and experiments could have dangerous side effects.  Even making use of intensely studied historical events is problematic: these offer no way to consider evolutionary behavior and technological innovation (without even further abstraction), even assuming the historical data are more than victor's embellishment.
+Many such filters are based on social network descriptions.  These social networks can be a compact way to represent measured relations in a population.  However, these approaches all boil down to measuring properties of mathematical representation, with those properties having a tenuous connection to a mechanistic explanation of those phenomena.
 
-Generating synthetic data seems like an obvious alternative.  It allows for comparison across both detection and masking strategies, consideration of multiple background contexts, forecasting of risks and tradeoffs in a way that allows uncertainties, and in general providing a framework for imaginative assessment.  Like all such flexible tools producing quantitative results, it has the subtle downside of the simulator's biases being validated by numerical gospel; if one believes a particular strategy is effective -- perhaps even with reasonable agreement for a particular time and situation -- there would be a natural tendency to ``adjust'' scenarios until they indicated the success of strategy.
+Given the real uncertainty, what these filters call for is testing and validation, but those present their own difficulties.  Calling field testing ``problematic'' seems like a gross understatement; reference ``truth'' ranges from incomplete to deceptive, and experiments could have dangerous side effects.  Even making use of intensely studied historical events is problematic: these offer no way to consider evolutionary behavior and technological innovation (without an additional layer of abstraction that would create an even more complex empirical challenge), even assuming the historical data are more than victor's embellishment.
+
+Generating synthetic data seems like an obvious alternative.  It allows for comparison across both detection and masking strategies, consideration of multiple background contexts, forecasting of risks and tradeoffs in a way that allows uncertainties, and in general providing a framework for imaginative assessment.  Like all such flexible tools producing quantitative results, it has the subtle downside of the simulator's biases being validated by numerical gospel; if one believes a particular strategy is effective -- perhaps even with reasonable agreement for a particular time and situation -- there would be a natural tendency to ``adjust'' scenarios until they indicated the success of strategy.  There have been other attempts at such an approach\cite{carley2003dynamic}.
 
 In the following sections, we lay out the uses and abuses of such a framework.  What makes for useful synthetic data sets?  What are the appropriate measures for detection strategies on them?  We motivate that discussion by inspiration from an over-simplified, network-based model of terrorism -- a sub-group of the Salafi jihad networks as described by Sageman {\em et al.}\cite{sageman} -- and community organization and communication.  Whether or not that work is an accurate description is not of particular concern.  Their qualitative properties are enough of a defensible testbed for modeling the communication patterns of one covert group.  We will point out where assumptions can be modified to identify different kinds of groups against a background population, since the behavior and structure of both the background and covert organizations are constantly evolving. 
 
@@ -110,12 +124,12 @@ Given that these aspects must be expressed in the model (with varying degrees of
 We can of course think in different terms.  For example, we are considering a network model of the population and covert group embedded within it, with edges representing relationships between people.  We might think of those relationships as being external state and correspondingly represent those relationships as external state in the simulation.  E.g., we might represent the population as a graph rather than a bag of individuals, and in the simulation the edges belong to the graph object rather than individuals.  As long as we recognize the translation between these perspectives, the choice boils down to what is most pragmatic relative to the science and simulation.  If most of the questions answered by the simulation relate to graph measures -- e.g., calculating various centrality measures -- then the simulation-as-graph rather than simulation-as-individuals probably makes more sense.
 
 \subsection*{Modeling the Covert Groups}
-Relative to the covert group, the simulation must model how the group members act and interact.  Typically, that further entails a modeling few moving pieces: (i) the members internal state (including what other members they know and communicate with), (ii) how that internal state evolves relative to external forces or states, and (iii) what actions those members undertake based on their internal state (possibly in response to some specific external event).
+Relative to the covert group, the simulation must model how the group members act and interact.  Typically, that further entails modeling a few moving pieces: (i) the members internal state (including what other members they know and communicate with), (ii) how that internal state evolves relative to external forces or states, and (iii) what actions those members undertake based on their internal state (possibly in response to some specific external event).
 
 \subsection*{Modeling the Background}
 Like the covert group, the background population is a (larger) group of individuals that act and interact.  They have the same basic modeling requirements as the covert group, but they behave differently.  This difference may be as simple as being distinct relative to observation process -- e.g., their communications are more likely to be recorded -- or it may be more noticeable like having fundamentally more diverse contacts, taking different kinds of actions, etc.
 
-An alternative representation for the background would be to model it as a continuous entity vice individuals in a network.  This could be used to reduce the simulation size.  However, this model would still need to create activity data that was consistent (in format) to that created by the covert group, because of the simulation requirements for observation.
+An alternative representation for the background would be to model it as a continuous entity instead of individuals in a network.  This could be used to reduce the simulation size.  However, this model would still need to create activity data that was consistent (in format) to that created by the covert group, because of the simulation requirements for observation.
 
 \subsection*{Modeling Activity}
 Individuals create modeled activity based on their internal state.  These actions correspond to (i) the observable events of specific interest (e.g., calls, financial transactions), (ii) generally observable events (e.g., travel, work, religious observations), and (iii) interactions that, while not externally observable, play a role in the evolution of internal state in other individuals either directly or by modifying the state of the world.  These actions should occur at specific times in the simulation, at whatever resolution is appropriate to the model.
@@ -126,48 +140,60 @@ The covert group and background population should be different in their activity
 Activity is understood by the observing entities by an imperfect process.  Depending on the situation modeled, that process might simply miss events.  Alternatively, the error could be misunderstanding the type or content of the activity, or between what individuals and interaction is occurring.  In general, the observing entities should be able to modify what is observed at what rates.  Also, the observation process may itself alter the state of the world -- i.e., the covert group may have the opportunity to respond to the observation process.
 
 \section*{A Language Matching the Simulation Requirements: Scala}
-Scala is an mixin inheritance object oriented, functional language, which is also includes an message-passing based model for parallel computing (which is transitioning from the initial implementation to that developed by the Akka project).  Indeed, Scala is used under the hood for the network simulation framework NetLogo.
+Scala\cite{odersky2004overview} is an mixin-inheritance\cite{bracha1990mixin}, object-oriented, functional language, which also includes an message-passing based model for parallel computing\footnote{The actor model is transitioning from the initial implementation to that developed by the Akka project\cite{akka}.  We base our discussion on the Akka model.  The most important difference is the notion of contexts and context switching: with context switching, an actor alters how it responds to events.  This is a useful abstraction for representing evolving individual state.}.  Indeed, Scala is used under the hood for the network simulation framework NetLogo.
 
 Why do these traits make Scala particularly effective for the simulation requirements described above?  
 
 First, the covert group members and the background population share behavior (in the real and simulation sense), but are not necessarily simple extensions, which makes a mixin inheritance object system a natural fit for the model subjects.
 
-Second, many interactions in an organization can be thought of as management directing labor to complete a task; in a functional paradigm, functions are themselves treated as objects.  This translates natural to sending a function object from one simulated individual (in a leadership position) to another (in a subordinate position).  Loosely adopting some of the other functional paradigms, as Scala does -- emphasis on immutability, principally -- provides practical advantages to concurrent programming, which is necessary for large scale simulations.
+Second, many interactions in an organization can be thought of as management directing labor to complete a task; in a functional paradigm, functions are themselves treated as objects.  This translates natural to sending a function object from one simulated individual (in a leadership position) to another (in a subordinate position).  Loosely adopting some of the other functional paradigms, as Scala does -- emphasis on immutability, principally -- provides practical advantages to concurrent programming, which is necessary for large scale simulations.  Additionally, the functional emphasis bakes in other programming constructs to do with collection processing (e.g., iteration, transformation, filtering) that are less convenient in earlier languages.
 
-Finally, the message-passing framework is an exact analogy to an individual / agent / actor - based model.  Having this baked into the language, makes it a feature more like control loops or collections, than a more complicated syntax available only advanced programmers (sometimes available on via library support) rather than more phenomena and model focused scientists.
+Finally, the message-passing framework is an exact analogy to an individual / agent / actor - based model.  Having this baked into the language makes it a feature more like control branches (e.g., \texttt{if}, \texttt{else}, \texttt{for}) or collections, than a more complicated syntax available only to advanced programmers (and often only via library support) rather than more phenomena- and model-focused scientists.
 
 \section*{Practical Application}
 The practical application of these ideas is -- for a simple simulation -- as straightforward as stated.
 
 Using the Scala actor framework, we simply define how each agent in the system responds to events, including the observing entities, and how they generate new events.  We accomplish the first by appropriately defining {\texttt receive} and the handling of different {\texttt case}s of messages.  We accomplish the second by having actors know about other actors, and having their internal state determine if they send events to these actors at any particular time.
 
-In considering the salafi network, we will observe a highly constrained set of activity: only communication, with all of that communication having been reduced to ``Good'' or ``Bad''.  The communication connections between individuals will be static, therefore we may set the social network at the outset of the simulation.
+In considering the salafi network (see \figref{salafi_network}), we will observe a highly constrained set of activity: only communication, with all of that communication having been reduced to \texttt{Good} or \texttt{Bad}.  The communication connections between individuals will be static, therefore we may set the social network at the outset of the simulation.
+
+\wantFig{salafi_network}{the salafi network}
 
 In the code, we could define different kinds of actors -- the covert leader, covert followers, background individuals -- as different classes of simulation object.  However, we instead take advantage of the context switching in the newer Scala actor framework.  By approaching the simulation this way, we lay a good foundation for observing the dynamics of individuals -- transitioning from background to covert member to covert leader -- as well as the dynamics of relationship and group formation and dissolution.
 
 One syntactical aside for the code the below sections: the Scala collections (like \texttt{Set}) define methods for adding and removing elements in terms of the natural mathematical operators (\texttt{+} and \texttt{-}) and for similar operations with groups of elements (\texttt{++} and \texttt{--}).  Similarly, the names for message senders (\texttt{sender}), changing context (\texttt{context become ...}), et cetera are all quite clear.  Given the informative, mixed-natural-and-mathematical-like syntax, we use actual code snippets instead of pseudo-code to illustrate.
 
 \subsection*{The Covert Group}
-First, we define the covert group context:
+First, we define the covert group \texttt{Receive} context:
 
 \begin{code}
   def plotter(
+    // a plotter has superiors, collaborators, and subordinates
+    // these groups are initially empty
     superiors:Set[Plotter] = Set.empty,
     collaborators:Set[Plotter] = Set.empty,
     subordinates:Set[Plotter] = Set.empty) : Receive = {
-      case _ => // do nothing with messages
+      // ... to-be-defined behavior
+      case _ => // ignore unmatched messages
   }
 \end{code}
 
-We need to define how they adopt and evolve this context.  Since we are not studying the organizational dynamics with this simulation, we can be phenomenologically loose for this part, though be taking this approach we have laid the ground for monitoring that activity as part of future detection scenarios.  The simulation runner will send a message \texttt{Radicalize} to the initial cabal, containing all its members:
+We need to define how they adopt and evolve this context.  Since we are not studying the organizational dynamics with this simulation, we can be phenomenologically loose for this part, though this approach means we can add monitoring that activity as part of future detection scenarios with minimal coding.  The simulation runner will send a \texttt{Radicalize} message to the initial cabal, then a \texttt{Collaboration} message to the same group:
 
 \begin{code}
-  case class Radicalize(id:Long, leaders:Set[Plotter])
+  case class Radicalize(id:Long)
+  case class Collaboration(id:Long, group:Set[Plotter])
 
   def receive = {
-    case Radicalize(_, cabal) =>
-      context become plotter(collaborators = (cabal - self))
-    case _ => // do nothing with other messages
+    case Radicalize(_) =>
+      context become plotter()
+    case _ => // ignore other messages
+  }
+  
+  def plotter(...) => {
+    case Collaboration(_, group) =>
+      context become plotter(collaborators = collaborators ++ (group - self))
+    // ...
   }
 \end{code}
 
@@ -196,57 +222,8 @@ These leaders then need to recruit subordinates.  In this particular simulation,
   }
 \end{code}
 
-Some of these new recruits might be introduced to others as collaborators, so we need to need to handle collaboration messages, again assuming that the simulation runner is setting the particular covert structure.
+At this point, we have all the necessary messages to construct the given network.  Those messages, based on the labels in Sageman et al. are covered in \Appref{sage_network}.  However, we still need to model how the plotters actually plot.  We will assume that all plotting (i) originates with leadership, (ii) when intermediates receive direction, they work with their \texttt{collaborators} as well as delegating work, (iii) that directions occasionally result in feedback to higher-ups, and finally (iv) all of the ``work'' and direction is captured as passing \texttt{Bad} messages.
 
-\begin{code}
-  case class Collaboration(id:Long, members:Set[Plotter])
-
-  def plotter(...) = {
-    case Collaboration(_, members) =>
-      context become plotter(superiors, collaborators ++ members, subordinates)
-    // ... other cases
-  }
-\end{code}
-
-
-
-Similarly, we can advise these recruits about other actors for them to recruit.
-
-Then we need to consider how these actors will know about each other in the simulation, how they will interact, etc.  In this example, we consider a static group, and as such the simulation could simply initialize the group.  However, we know that these groups do not really appear fully formed, and thus someday it will likely be desirable to include recruitment in the model.  We can anticipate that day by building our static initialization in those terms.
-
-We will represent recruitment activity with two messages, which we add to the definition of the Leader:
-
-\begin{code}[title=Covert Leader Helper Object]
-object Leader {
-  case class Recruit(id:Long) // try to recuit a member
-  case class RecruitAck(id:Long) // join the group
-}
-\end{code}
-
-We then modify the definitions of Leader and Member to respond to these messages:
-
-\begin{code}[title=Using Messages]
-class Leader extends Actor {
-  var recruits = Set.empty[Member]
-  
-  def receive = {
-    case RecruitAck(_) =>
-      recruits += sender
-    case _ =>
-  }
-}
-
-class Member extends Actor {
-  var leader;
-
-  def receive = {
-    case Recruit(id) =>
-      leader = sender
-    case _ =>
-  }
-  
-}
-\end{code}
 % // form a clique from a vertex collection, col:
 % def clique(col : Collection[V]) =
 %     for ( (left, right) <- undirectedPairs(col) ) // for each unique, undirected pair in col:
@@ -633,5 +610,16 @@ class Member extends Actor {
 
 \bibliography{manuscript}{}
 \bibliographystyle{plain}
+
+\begin{appendices}
+\section{Messages to Construct Salafi Network}\applabel{sage_network}
+\begin{code}
+  // ...TODO figure out these messages
+  val cabal = Set(``A'',``B'',``C'');
+  cabal foreach { _ ! Radicalize(...) }
+  cabal foreach { _ ! Collaboration(..., cabal) } 
+\end{code}
+
+\end{appendices}
 
 \end{document}
