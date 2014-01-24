@@ -224,9 +224,61 @@ These leaders then need to recruit subordinates.  In this particular simulation,
 
 At this point, we have all the necessary messages to construct the given network.  Those messages, based on the labels in Sageman et al. are covered in \Appref{sage_network}.  However, we still need to model how the plotters actually plot.  We will assume that all plotting (i) originates with leadership, (ii) when intermediates receive direction, they work with their \texttt{collaborators} as well as delegating work, (iii) that directions occasionally result in feedback to higher-ups, and finally (iv) all of the ``work'' and direction is captured as passing \texttt{Bad} messages.
 
-The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the simulation to indicate the march of time.  In general, during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
+The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the simulation to indicate the march of time (waiting for them to complete all their business for that step and reply with \texttt{TimeAck(t)}).  In general, during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
 
-Though those probabilities could be coded into the actors
+Though those probabilities could be coded into the actors as part of their initialization, if they are set and adjusted by events then the actors (i) more accurrately reflect real behavior and (ii) the evolution of individuals occurs via a consistent simulation mechanism.  The former provides a lever for expert insight and empirical study.  The latter makes it easier to produce real-alike data -- i.e., simulation data that has the form of real observations.
+
+In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us a wedge for later adjustment without frontloading too much model complexity.  This represents the final step (in our simulation) for how the plotters evolve in state, so the following repeats the previous snippets with some condensing modifications to the code
+
+\begin{code}
+object SimActor {
+// the companion object, where we define common elements for SimActors
+  case class Radicalize(id:Long)  // become a plotter
+  case class Collaboration(id:Long, group:Set[Plotter])
+                                  // link existing plotters
+  case class Subordinates(id:Long, recruits:Set[Plotter])
+                                  // tell a plotter to recruit subordinates
+  case class Recruit(id:Long)     // tell an actor to join plotters
+  case class RecruitAck(id:Long)  // acknowledge recruitment
+  type Plotter = SimActor
+  type Probability = Double
+}
+
+class SimActor extends Actor {
+
+  def plotter(
+    superiors:Set[Plotter] = Set.empty,
+    collaborators:Set[Plotter] = Set.empty,
+    subordinates:Set[Plotter] = Set.empty,
+    initiate:Probability = 0.0,     // prob. of starting plot comms
+    report:Probability = 0.0,       // prob. of reporting to superiors
+    collaborate:Probability = 0.0,  // prob. of working w/ peers
+    delegate:Probability = 0.0      // prob. of delegating work
+    ) = {
+      def update(
+        newSuperiors:Set[Plotter] = superiors,
+        newCollaborators:Set[Plotter] = collaborators,
+        newSubordinates:Set[Plotter] = subordinates,
+        newInitiate:Probability = initiate,
+        newReport:Probability = report,
+        newCollaborate:Probability = collaborate,
+        newDelegate:Probability = delegate
+        ) = {
+          context become plotter(newSuperiors, newCollaborators, newSubordinates,
+            newInitiate, newReport, newCollaborate, newDelegate)
+      }
+      
+      {
+        case Subordinates(_, recruits) =>
+          recruits foreach { recruit =>
+            recruit ! Recruit(0)
+          }
+        case RecruitAck(_) => update(newSubordinates = subordinates + sender)
+        // ... other cases
+      }
+  }
+}
+\end{code}
 
 % // form a clique from a vertex collection, col:
 % def clique(col : Collection[V]) =
