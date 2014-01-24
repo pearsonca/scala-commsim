@@ -11,3 +11,19 @@
 *.tex
 
 *.pdf
+
+*.v1_indexcache
+
+.classpath
+
+.metadata/*
+
+*.txt
+
+*.class
+
+*.png
+
+.project
+
+.cache
