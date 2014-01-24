@@ -224,6 +224,10 @@ These leaders then need to recruit subordinates.  In this particular simulation,
 
 At this point, we have all the necessary messages to construct the given network.  Those messages, based on the labels in Sageman et al. are covered in \Appref{sage_network}.  However, we still need to model how the plotters actually plot.  We will assume that all plotting (i) originates with leadership, (ii) when intermediates receive direction, they work with their \texttt{collaborators} as well as delegating work, (iii) that directions occasionally result in feedback to higher-ups, and finally (iv) all of the ``work'' and direction is captured as passing \texttt{Bad} messages.
 
+The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the simulation to indicate the march of time.  In general, during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
+
+Though those probabilities could be coded into the actors
+
 % // form a clique from a vertex collection, col:
 % def clique(col : Collection[V]) =
 %     for ( (left, right) <- undirectedPairs(col) ) // for each unique, undirected pair in col:
