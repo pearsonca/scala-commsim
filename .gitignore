@@ -27,3 +27,7 @@
 .project
 
 .cache
+
+*.prefs
+
+.buildpath
