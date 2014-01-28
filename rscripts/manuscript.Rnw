@@ -24,7 +24,7 @@
 
 
 % define Scala
-\lstdefinelanguage{scala}{morekeywords={class,object,trait,extends,with,new,if,while,for,def,val,var,this,case,->,=>},
+\lstdefinelanguage{scala}{morekeywords={package,class,object,trait,extends,with,new,if,while,for,def,val,var,this,case,import,type,->,=>},
 %otherkeywords={->,=>},
 %procnamekeys={def,.},
 sensitive=true,
@@ -102,7 +102,7 @@ As part of that philosophical discussion, we walkthrough the exercise of procedu
 \newpage
 
 \section*{Introduction}
-For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  Of course the revealation of these activities has broadly sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
+For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  The revealation of these activities has sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
 
 The underlying drive for these opposed efforts is the implacably expanding byte trail.  Once, the recorded information of an entire life might have amounted only to a few bytes -- e.g., parish records on births and deaths, perhaps including morbidity.  Now information era tools produce a near endless supply of 1s and 0s.  In some cases, this production is a side effect of organized commercial instinct -- Google monetizing search through targeted advertisement, for example.  In other cases, individuals are voluntarily advancing their own brand -- Instagram ``selfies'', e.g.  However, in many cases this bitwise production is an engineering consequence of the associated technology.  E.g., cellular phones transmit constant location data, financial systems are increasing just digital ledgers with almost no physical exchange, and of course any use of the internet produces veritable bit contrails.  This rate of production far exceeds the personal processing capability of any practically-sized team of analysts.
 
@@ -161,7 +161,7 @@ In considering the salafi network (see \figref{salafi_network}), we will observe
 
 In the code, we could define different kinds of actors -- the covert leader, covert followers, background individuals -- as different classes of simulation object.  However, we instead take advantage of the context switching in the newer Scala actor framework.  By approaching the simulation this way, we lay a good foundation for observing the dynamics of individuals -- transitioning from background to covert member to covert leader -- as well as the dynamics of relationship and group formation and dissolution.
 
-One syntactical aside for the code the below sections: the Scala collections (like \texttt{Set}) define methods for adding and removing elements in terms of the natural mathematical operators (\texttt{+}, \texttt{-}) and for similar operations with groups of elements (\texttt{++}, \texttt{--}).  Similarly, the names for message senders (\texttt{sender}), changing context (\texttt{context become ...}), et cetera are all quite clear.  Given the informative, mixed-natural-and-mathematical-like syntax, we prefer actual code snippets to pseudo-code to illustrate simulation steps.
+One syntactical aside for the code the below sections: the Scala collections (like \texttt{Set}) define methods for adding and removing elements in terms of the natural mathematical operators (\texttt{+}, \texttt{-}) and for similar operations with groups of elements (\texttt{++}, \texttt{--}).  Similarly, the names for message senders (\texttt{sender}), changing context (\texttt{context become ...}), et cetera are all quite clear.  Given the informative, mixed-natural-and-mathematical-like syntax, we prefer actual code snippets to pseudo-code to illustrate simulation steps.  However, we have elided some declarations that enable the more informative syntax from the initial appearance in code.
 
 \subsection*{The Covert Group}
 First, we define the covert group \texttt{Receive} context:
@@ -170,23 +170,24 @@ First, we define the covert group \texttt{Receive} context:
   def plotter(
     // a plotter has superiors, collaborators, and subordinates
     // these groups are initially empty
-    superiors:Set[Plotter] = Set.empty,
-    collaborators:Set[Plotter] = Set.empty,
-    subordinates:Set[Plotter] = Set.empty) : Receive = {
+    superiors:Plotters = empty,
+    collaborators:Plotters = empty,
+    subordinates:Plotters = empty
+    /*, ... other args */) : Receive = {
       // ... to-be-defined behavior
       case _ => // ignore unmatched messages
   }
 \end{code}
 
-We need to define how they adopt and evolve this context.  Since we are not studying the organizational dynamics with this simulation, we can be phenomenologically loose for this part, though this approach means we can add monitoring that activity as part of future detection scenarios with minimal coding.  The simulation runner will send a \texttt{Radicalize} message to the initial cabal, then a \texttt{Collaboration} message to the same group:
+We need to define how they adopt and evolve this context.  Since we are not studying the organizational dynamics with this simulation, we can be phenomenologically loose for this part, though this approach means we can add monitoring that activity as part of future detection scenarios with minimal coding.  The simulation runner will send a \texttt{Radicalize} message to the initial cabal, then a \texttt{Collaborate} message to the same group:
 
 \begin{code}
-  case class Radicalize(id:Long)
-  case class Collaboration(id:Long, group:Set[Plotter])
+  object Radicalize
+  case class Collaborate(group:Plotters)
 
   def receive = {
-    case Radicalize(_) =>
-      context become plotter()
+    case Radicalize =>
+      context become plotter
     case _ => // ignore other messages
   }
   
@@ -200,24 +201,20 @@ We need to define how they adopt and evolve this context.  Since we are not stud
 These leaders then need to recruit subordinates.  In this particular simulation, we are using exactly the network from Sageman et al., so we will have the simulation runner inform each plotter whom they are recruiting with a \texttt{Subordinates} message.  The leads will then send \texttt{Recruit} messages to those individuals and they will adopt the plotter context.
 
 \begin{code}
-  case class Subordinates(id:Long, recruits:Set[Plotter])
-  case class Recruit(id:Long)
-  case class RecruitAck(id:Long) // acknowledge recruitment
+  case class Subordinates(recruits:Plotters)
+  object Recruit
 
   def plotter(...) = {
     case Subordinates(_, recruits) =>
       recruits foreach { recruit =>
-        recruit ! Recruit(0)
+        recruit ! Recruit
       }
-    case RecruitAck(_) =>
-      context become plotter(superiors, collaborators, subordinates + sender)
     // ... other cases
   }
   
   def receive = {
-    case Recruit(id) =>
+    case Recruit =>
       context become plotter(superiors = Set(sender))
-      sender ! RecruitAck(id)
     // ... other cases
   }
 \end{code}
@@ -228,57 +225,82 @@ The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the 
 
 Though those probabilities could be coded into the actors as part of their initialization, if they are set and adjusted by events then the actors (i) more accurrately reflect real behavior and (ii) the evolution of individuals occurs via a consistent simulation mechanism.  The former provides a lever for expert insight and empirical study.  The latter makes it easier to produce real-alike data -- i.e., simulation data that has the form of real observations.
 
-In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us a wedge for later adjustment without frontloading too much model complexity.  This represents the final step (in our simulation) for how the plotters evolve in state, so the following repeats the previous snippets with some condensing modifications to the code
+In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us a wedge for later adjustment without frontloading too much model complexity.  This represents the final step for how the plotters evolve in this simulation, so the following repeats the previous snippets with some condensing modifications to the code.  The most notable one is making use of a \texttt{case class} to represent all of the parameters that form a plotter's state.
 
 \begin{code}
-object SimActor {
-// the companion object, where we define common elements for SimActors
-  case class Radicalize(id:Long)  // become a plotter
-  case class Collaboration(id:Long, group:Set[Plotter])
-                                  // link existing plotters
-  case class Subordinates(id:Long, recruits:Set[Plotter])
-                                  // tell a plotter to recruit subordinates
-  case class Recruit(id:Long)     // tell an actor to join plotters
-  case class RecruitAck(id:Long)  // acknowledge recruitment
-  type Plotter = SimActor
+package object simactor { // defs to make implementation more natural
+  type Plotters = Set[ActorRef]
+  def empty : Plotters = Set.empty
+  def group(list:ActorRef*) : Plotters = list.toSet
   type Probability = Double
 }
 
-class SimActor extends Actor {
+object SimActor { // defines common elements for SimActors
+  // MESSAGES ABOUT INTERNAL STATE
+  object Radicalize                           // become a plotter
+  object Recruit                              // work for a plotter
+  case class Collaborate(group:Plotters)      // work with other plotters
+  case class Subordinates(recruits:Plotters)  // recruit subordinates
+  
+  object PType extends Enumeration { // plotter behavior probabilites
+    type PType = Value
+    val Initiate, // prob. of starting plot comms
+        Report,   // prob. of reporting to superiors
+    	  Collab,	  // prob. of working w/ peers
+    	  Delegate  // prob. of delegating work
+    		  = Value
+  }
+  case class UpdateProb(changes:Map[PType.Value,Probability])
 
-  def plotter(
-    superiors:Set[Plotter] = Set.empty,
-    collaborators:Set[Plotter] = Set.empty,
-    subordinates:Set[Plotter] = Set.empty,
-    initiate:Probability = 0.0,     // prob. of starting plot comms
-    report:Probability = 0.0,       // prob. of reporting to superiors
-    collaborate:Probability = 0.0,  // prob. of working w/ peers
-    delegate:Probability = 0.0      // prob. of delegating work
-    ) = {
-      def update(
-        newSuperiors:Set[Plotter] = superiors,
-        newCollaborators:Set[Plotter] = collaborators,
-        newSubordinates:Set[Plotter] = subordinates,
-        newInitiate:Probability = initiate,
-        newReport:Probability = report,
-        newCollaborate:Probability = collaborate,
-        newDelegate:Probability = delegate
-        ) = {
-          context become plotter(newSuperiors, newCollaborators, newSubordinates,
-            newInitiate, newReport, newCollaborate, newDelegate)
-      }
-      
-      {
-        case Subordinates(_, recruits) =>
-          recruits foreach { recruit =>
-            recruit ! Recruit(0)
-          }
-        case RecruitAck(_) => update(newSubordinates = subordinates + sender)
-        // ... other cases
-      }
+  // MESSAGES ABOUT EXTERNAL ACTIVITY
+  object Bad
+  object Good
+
+  case class PlotterState( // the plotter state description
+    superiors:Plotters = empty,
+    collaborators:Plotters = empty,
+    subordinates:Plotters = empty,
+    probs:Map[PType.Value,Probability] = PType.values.map { (_, 0.0) } toMap
+    // default each plotting probability 0.0
+  )
+}
+
+class SimActor extends Actor {
+  import SimActor._
+  
+  def receive = {
+    case Radicalize =>
+      context become plotter()
+    case Recruit =>
+      context become plotter(PlotterState(superiors = group(sender)))
+    case _ => // ignore other messages
+  }
+  
+  def plotter(ps:PlotterState = PlotterState()) : Receive = {
+    import ps._
+    def update(newPs:PlotterState) = context become plotter(newPs)
+    
+    {
+       case Collaborate(group) =>
+         update(copy(collaborators = collaborators ++ (group - self)))
+       case Subordinates(recruits) =>
+         recruits foreach { recruit => recruit ! Recruit }
+         update(copy(subordinates = subordinates ++ recruits))
+       case Recruit =>
+         update(copy(superiors = superiors + sender))
+       case UpdateProb(changes) =>
+         update(copy(probs = probs ++ changes))
+       case _ => // ignore other messages
+    }
   }
 }
 \end{code}
+
+Now we address how the plotters plot: if they receive a \texttt{Bad} message from within the covert group, they have some probability of continuing plot activity with their peers, some probability of delegating some work to subordinates (if they have any), and some probability of reporting to their supervisors (again if they have any).  We will use this as the probability of {\em any} \texttt{Bad} interaction with those groups, and that in general their interaction with these groups is binomially distributed.  Therefore, if a particular plotter has $k$ collaborators (or supervisors, or subordinates), the probability of interacting with an individual in that group, $p_i$, is related to the probability of interacting with the group, $p_g$ -- which is the probability in the simulation state -- by:
+
+$$
+(1-p_i)^k = 1 - p_g \rightarrow p_i = 1-\sqrt[k]{1-p_g}
+$$
 
 % // form a clique from a vertex collection, col:
 % def clique(col : Collection[V]) =
