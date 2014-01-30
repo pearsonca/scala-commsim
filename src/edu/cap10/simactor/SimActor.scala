@@ -44,17 +44,15 @@ class SimActor extends Actor with BaseSimActor {
   import context._
   
   def receive = {
-    case Radicalize =>
-      context become plotter()
-    case Recruit =>
-      context become plotter(PlotterState(superiors = group(sender)))
+    case Radicalize => become( plotter() )
+    case Recruit => become( plotter(PlotterState(superiors = group(sender))) )
     case _ => // ignore other messages
   }
   
   def plotter(ps:PlotterState = PlotterState(), time:Long=0) : Receive = {
     import ps._
-    def update(newPs:PlotterState) = context become plotter(newPs, time)
-    def step = context become plotter(ps,time+1)
+    def update(newPs:PlotterState) = become( plotter(newPs, time) )
+    def step = become( plotter(ps,time+1) )
     
     val base : Receive = {
        case Collaborate(group) =>
