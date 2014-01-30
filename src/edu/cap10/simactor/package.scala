@@ -1,5 +1,6 @@
-
+package edu.cap10
 import akka.actor.ActorRef
+
 package object simactor {
   type Plotters = Set[ActorRef]
   type People = Set[ActorRef]
