@@ -27,6 +27,9 @@ object SimActor { // defines common elements for SimActors
   type RelationshipMap = Map[SocialContext,Map[Relationship,People]]
   type BehaviorMap = Map[SocialContext,Map[Relationship,Probability]]
   
+  case class UpdateRelationships(add:RelationshipMap = Map.empty,remove:RelationshipMap = Map.empty)
+  case class UpdateBehaviors(add:BehaviorMap = Map.empty, remove:BehaviorMap = Map.empty)
+  
   // CREATE RELATIONSHIPS IN PARTICULAR SOCIAL CONTEXTS                   
   case class Recruit(sc:SocialContext) // add a Supervisor relationship w/ sender
   case class Peer(peers:People, sc:SocialContext) // add Peer relationship w/ peers
