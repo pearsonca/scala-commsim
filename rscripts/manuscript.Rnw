@@ -221,11 +221,11 @@ These leaders then need to recruit subordinates.  In this particular simulation,
 
 At this point, we have all the necessary messages to construct the given network.  Those messages, based on the labels in Sageman et al. are covered in \Appref{sage_network}.  However, we still need to model how the plotters actually plot.  We will assume that all plotting (i) originates with leadership, (ii) when intermediates receive direction, they work with their \texttt{collaborators} as well as delegating work, (iii) that directions occasionally result in feedback to higher-ups, and finally (iv) all of the ``work'' and direction is captured as passing \texttt{Bad} messages.
 
-The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the simulation to indicate the march of time (waiting for them to complete all their business for that step and reply with \texttt{TimeAck(t)}).  In general, during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
+The simulation runs as a series of iterations, and during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
 
 Though those probabilities could be coded into the actors as part of their initialization, if they are set and adjusted by events then the actors (i) more accurrately reflect real behavior and (ii) the evolution of individuals occurs via a consistent simulation mechanism.  The former provides a lever for expert insight and empirical study.  The latter makes it easier to produce real-alike data -- i.e., simulation data that has the form of real observations.
 
-In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us a wedge for later adjustment without frontloading too much model complexity.  This represents the final step for how the plotters evolve in this simulation, so the following repeats the previous snippets with some condensing modifications to the code.  The most notable one is making use of a \texttt{case class} to represent all of the parameters that form a plotter's state.
+In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us an entry point for later adjustment without frontloading too much model complexity.  This represents the final step for how the plotters evolve in this simulation, so the following repeats the previous snippets with some condensing modifications to the code.  The most notable one is making use of a \texttt{case class} to represent all of the parameters that form a plotter's state.
 
 \begin{code}
 package object simactor { // defs to make implementation more natural
@@ -277,26 +277,30 @@ class SimActor extends Actor {
   }
   
   def plotter(ps:PlotterState = PlotterState()) : Receive = {
-    import ps._
-    def update(newPs:PlotterState) = context become plotter(newPs)
+    import ps.{copy => change, _}
+    def evolve(newPs:PlotterState) = context become plotter(newPs)
     
     {
        case Collaborate(group) =>
-         update(copy(collaborators = collaborators ++ (group - self)))
+         evolve(change(collaborators = collaborators ++ (group - self)))
        case Subordinates(recruits) =>
          recruits foreach { recruit => recruit ! Recruit }
-         update(copy(subordinates = subordinates ++ recruits))
+         evolve(change(subordinates = subordinates ++ recruits))
        case Recruit =>
-         update(copy(superiors = superiors + sender))
+         evolve(change(superiors = superiors + sender))
        case UpdateProb(changes) =>
-         update(copy(probs = probs ++ changes))
+         evolve(change(probs = probs ++ changes))
        case _ => // ignore other messages
     }
   }
 }
 \end{code}
 
-Now we address how the plotters plot: if they receive a \texttt{Bad} message from within the covert group, they have some probability of continuing plot activity with their peers, some probability of delegating some work to subordinates (if they have any), and some probability of reporting to their supervisors (again if they have any).  We will use this as the probability of {\em any} \texttt{Bad} interaction with those groups, and that in general their interaction with these groups is binomially distributed.  Therefore, if a particular plotter has $k$ collaborators (or supervisors, or subordinates), the probability of interacting with an individual in that group, $p_i$, is related to the probability of interacting with the group, $p_g$ -- which is the probability in the simulation state -- by:
+Now we address how the plotters plot: if they receive a \texttt{Bad} message from within the covert group, they have some probability of continuing plot activity with their peers, some probability of delegating some work to subordinates (if they have any), and some probability of reporting to their supervisors (again if they have any).  We will treat these activities as (i) independent, and (ii) the interactions with a particular group as a series of independent binomial trials.  We are not aware of any mechanical explanation justifying this model of interaction; indeed, it implies that, in a finite slice of time for an individual with finite resources, interactions that consume time and resources never interfere.  For a large interval of time, that might be reasonable -- but large intervals of time conflicts with assumption that actions stimulate responses in subsequent intervals.  Alternatively, we might infer that there is substantial variability in events (in terms of their duration and resource requirements) such that many interactions means small events, but this undermines the model assumption that these activities can be lumped together into a single category.
+
+The upside of this ``ideal gas'' model of social activity is ease of implementation.  However, we can circumscribe the appearance of this assumption in our simulation, so that some future Van der Waals can easily clean up our mess later with a more detailed interaction model.
+
+We will use this as the probability of {\em any} \texttt{Bad} interaction with those groups, and that in general their interaction with these groups is binomially distributed.  Therefore, if a particular plotter has $k$ collaborators (or supervisors, or subordinates), the probability of interacting with an individual in that group, $p_i$, is related to the probability of interacting with the group, $p_g$ -- which is the probability in the simulation state -- by:
 
 $$
 (1-p_i)^k = 1 - p_g \rightarrow p_i = 1-\sqrt[k]{1-p_g}
