@@ -24,26 +24,20 @@ object SimActor { // defines common elements for SimActors
   }
   import SocialContexts.{Value => SocialContext, _}
   
-  type RelationshipMap = Map[SocialContext,Map[Relationship,People]]
-  type BehaviorMap = Map[SocialContext,Map[Relationship,Probability]]
+  type RelationshipMap = Map[ (SocialContext, Relationship), People]
+  type BehaviorMap = Map[ (SocialContext, Relationship), Map[SimEvent, Probability]]
   
-  case class UpdateRelationships(add:RelationshipMap = Map.empty,remove:RelationshipMap = Map.empty)
-  case class UpdateBehaviors(add:BehaviorMap = Map.empty, remove:BehaviorMap = Map.empty)
+  case class UpdateRelationships(sc:SocialContext, rel:Relationship, add:People = empty, remove:People = empty)
+  case class UpdateBehavior(sc:SocialContext, rel:Relationship, event:SimEvent, p:Probability)
   
   // CREATE RELATIONSHIPS IN PARTICULAR SOCIAL CONTEXTS                   
   case class Recruit(sc:SocialContext) // add a Supervisor relationship w/ sender
   case class Peer(peers:People, sc:SocialContext) // add Peer relationship w/ peers
   case class Supervise(recruits:People, sc:SocialContext) // recruit subordinates
-
-  case class UpdateBehavior(changes:Map[Relationship,Probability], sc:SocialContext)
   
-  case class PlotterState( // the plotter state description
-    superiors:Plotters = empty,
-    collaborators:Plotters = empty,
-    subordinates:Plotters = empty,
-    probs:Map[PType.Value,Probability] = PType.values.map { (_, 0.0) } toMap,
-    heardBad:Boolean = false
-    // default each communication type to probability 0.0
+  case class PersonState( // the plotter state description
+    relationships : RelationshipMap = Map.empty,
+    behaviors : BehaviorMap = Map.empty
   )
 
 }
