@@ -13,16 +13,19 @@ object SimActor { // defines common elements for SimActors
     val Bad, Good = Value
   }
   import SimEvents.{Value => SimEvent, _}
-
+  def simEvents = SimEvents.values
+  
   object Relationships extends Enumeration {
     val Supervisor, Peer, Subordinate, All = Value
   }
   import Relationships.{Value => Relationship, _}
-    
+  def relationshipTypes = Relationships.values 
+  
   object SocialContexts extends Enumeration {
     val Familial, Economic, Religious, Covert = Value
   }
   import SocialContexts.{Value => SocialContext, _}
+  def socialContexts = SocialContexts.values
   
   type RelationshipMap = Map[ (SocialContext, Relationship), People]
   type BehaviorMap = Map[ (SocialContext, Relationship), Map[SimEvent, Probability]]
@@ -34,8 +37,14 @@ object SimActor { // defines common elements for SimActors
   
   case class PersonState( // the plotter state description
     relationships : RelationshipMap = Map.empty,
-    behaviors : BehaviorMap = Map.empty
-  )
+    behaviors : BehaviorMap = Map.empty,
+    time:Long = 0
+  ) {
+    def wholeSocialContextGroup(sc:SocialContext) : People =
+      relationshipTypes.foldLeft(empty[ActorRef])((group,rel) => relationships((Covert,rel)) ++ group)
+    def behaviorMapForSocialContext(sc:SocialContext) : Map[Relationship,Map[SimEvent, Probability]] =
+      relationshipTypes.foldLeft(Map.empty[Relationship,Map[SimEvent,Probability]])( (res, rel) => res + (rel -> behaviors((sc,rel)) ) )
+  }
 
 }
 
@@ -46,6 +55,9 @@ class SimActor extends Actor with BaseSimActor {
   
   def evolve : Receive => Unit = context become _
   
+  import SimActor.SimEvents.{Value => SimEvent, _}
+  import SimActor.SocialContexts.{Value => SocialContext, _}
+  
   def connections(ps:PersonState = PersonState())(implicit other : Receive) : Receive = {
     import ps.{copy => change, _}  
 	other orElse {
@@ -54,14 +66,36 @@ class SimActor extends Actor with BaseSimActor {
 	  case UpdateBehaviors(sc, rel, event, p) =>
 	    this evolve connections(change(behaviors = behaviors + ( (sc,rel) -> (behaviors((sc,rel)) + (event -> p)) )))
 	  case Radicalize =>
-	    this evolve connections(ps)(plotter)
+	    this evolve connections(ps)(plotter(ps))
+	  case _ : SimEvent => ack
 	}
   }
   
-  import SimActor.SimEvents.{Value => SimEvent, _}
-  def plotter : Receive = {
-    case Bad if =>
-    case Good =>
+  def plotter(implicit ps:PersonState) : Receive = {
+    import ps._
+    val cabal = wholeSocialContextGroup(Covert)
+    val plot = behaviorMapForSocialContext(Covert)
+    
+    {
+      case Bad if cabal contains sender =>
+        this evolve connections(ps)( plotting )
+        ack
+      case Time(t) if t == time =>
+        // might send some bad message if i have a non-zero initiate probability -> aka All rel
+    }
+  }
+  
+  def plotting(implicit ps:PersonState) : Receive = {
+    import ps._
+    val cabal = wholeSocialContextGroup(Covert)
+    val plot = behaviorMapForSocialContext(Covert)
+    
+    {
+      case Time(t) if t == time => // have received a plot message
+        val thing =
+          for (relation <- relationshipTypes;
+        		p = plot(relation)(Bad)) yield p
+    }
   }
   
 //  def receive = {

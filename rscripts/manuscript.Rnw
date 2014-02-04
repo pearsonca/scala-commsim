@@ -694,6 +694,8 @@ $$
 \bibliographystyle{plain}
 
 \begin{appendices}
+\section{Code for Base Simulation Actor}
+
 \section{Messages to Construct Salafi Network}\applabel{sage_network}
 \begin{code}
   // ...TODO figure out these messages
