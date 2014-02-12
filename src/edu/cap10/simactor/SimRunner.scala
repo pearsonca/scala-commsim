@@ -1,6 +1,7 @@
 package edu.cap10.simactor
 
 import akka.actor.Actor
+import akka.actor.Actor.Receive
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.ActorContext
@@ -13,16 +14,16 @@ object Simulation extends App {
 }
 
 object SimRunner {
-  case class Start(duration:Long)
-  case class Clock(left:Long,now:Long=0) {
+  case class Start(duration:Time)
+  case class Clock(left:Time, now:Time=0) {
     def unary_+ = Clock(left-1,now+1)
     lazy val done = left == 0
   }
   
-  case class Time(t:Long)
-  case class TimeAck(t:Long) {
-    lazy val next = Time(t+1)
-  }
+  case class Tick(t:Time) { lazy val done = TickAck(t) }
+  case class TickAck(t:Time) { lazy val next = Tick(t+1) }
+  val Go = Tick(0)
+  
   case class Create(props:Props, initMsgs:Seq[Any])
   case class CreateBlock(blocks:Map[Props,(Int,Seq[Any])])
   def props(): Props = Props(classOf[SimRunner])
@@ -32,15 +33,8 @@ class SimRunner extends Actor {
   import SimRunner._
   import context.{ become, actorOf => create }
   // 
-  
-  def init(c:Any) = {
-    become(initial())
-    self ! c
-  }
-  
-  def receive = {
-    case m => init(m)
-  }
+    
+  def receive = initial()
   
   def initial(members : Set[ActorRef] = Set.empty) : Receive = {
     case Create(props, msgs) =>
@@ -54,78 +48,62 @@ class SimRunner extends Actor {
       }
     case Start(duration) => 
       become(running(members)( members,Clock(duration)) )
-      val go = Time(0)
-      members foreach { _ ! go }
+      members foreach { _ ! Go }
   }
   
   def running(awaiting:Set[ActorRef] = Set.empty)(implicit members:Set[ActorRef], clock:Clock) : Receive = {
 	import clock._
     
     {
-      case time @ TimeAck(t) if t == now => 
+      case time @ TickAck(t) if t == now => 
         awaiting - sender match {
           case done if done.isEmpty =>
             become(running()(members,+clock))
             members foreach { _ ! time.next }
           case left => become(running(left))
         }
-      case Create(props, msgs) => 
-        val newMember = create(props)
-        msgs foreach { newMember ! _ }
-        become( running(awaiting)(members + newMember,clock) )
+      // not currently handling expanding membership as sim proceeds
+      // e.g., births
     }
   }
 
 }
 
-object AckHelp {
+trait Handler {
+  implicit val context : ActorContext
+  private val noop : Receive = { case _ => }
+  lazy val receive : Receive = handle()
+
+  def handlers : List[Receive] = Nil
+  def handle(chain: => List[Receive] = handlers) : Receive = {
+    case m => chain.find( _.isDefinedAt(m) ).getOrElse(noop).apply(m)
+  }
+  
+}
+
+trait AckHandler extends Handler {
+  import context._
+  import SimRunner._
+  
+  private var expecting : People = empty
+  private var t : Time = 0
+  
+  def timeStep = { t = t+1 }
+  def ack = sender ! Ack
+  
   case class ExpectFrom(senders:Set[ActorRef])
   object DoneAck
   object Ack
-  def props(): Props = Props(classOf[AckHelp])
-}
-
-class AckHelp extends Actor {
-  import AckHelp._
-  import context._
-  def receive = {
-    case ExpectFrom(senders) => become( expecting(senders) )
-    case _ => // do nothing
+  
+  private val expect : Receive = {
+    case Ack if expecting contains sender => 
+      expecting = expecting - sender
+      if (expecting.isEmpty) self ! DoneAck
+    case ExpectFrom(moreSenders) => expecting = expecting ++ moreSenders
+    case DoneAck =>
+      parent ! TickAck(t)
+      timeStep
   }
   
-  def expecting(senders:Set[ActorRef]) : Receive = {
-    case Ack if (senders(sender)) => 
-      senders - sender match {
-        case leftovers if leftovers.isEmpty => 
-          parent ! DoneAck
-          unbecome
-        case leftovers => become ( expecting(leftovers) )
-      }
-      
-    case ExpectFrom(moreSenders) =>
-      become ( expecting(senders ++ moreSenders) )
-  }
-  
-}
-
-trait BaseSimActor {
-  implicit val context : ActorContext
-  import context._
-  import AckHelp._
-  import Actor.Receive
-  import SimRunner._
-  
-  val ackHelper = actorOf(AckHelp.props)
-  
-  def simBase(step: =>Unit, time: =>Long) : Receive = {
-    case a @ Ack => ackHelper forward a
-    // ackHelper manages whether all my messages have been received
-  	case DoneAck =>
-  	// when it tells me they are, notify the simulation runner (parent)
-      parent ! TimeAck(time)
-      step
-  }
-  
-  def awaiting(who:Set[ActorRef]) = ackHelper ! ExpectFrom(who)
-  def ack = sender ! Ack
+  override def handlers = expect :: super.handlers
 }
