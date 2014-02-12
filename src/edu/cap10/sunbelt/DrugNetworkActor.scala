@@ -1,10 +1,9 @@
 package edu.cap10.sunbelt
 
-import edu.cap10.simactor.SimRunner._
-import edu.cap10.simactor.AckHandler
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Actor.Receive
+import akka.actor.Props
 
 // participants have a few basic characteristics
 //  - job queue size
@@ -14,90 +13,45 @@ import akka.actor.Actor.Receive
 
 import scala.collection.immutable.Queue
 
-case class Decline(want:Double)
-case class Accept(paid:Double)
+class GangActor extends Actor {
 
-sealed trait Task
+  case class Ack(msg:Any)
+  
+  object Resources extends Enumeration { val Cash, Precursor, Drugs = Value }
+  import Resources.{Value => Resource, _}
+  case class Exchange(give:(Resource,Double), get:(Resource,Double))
+  
+  case class GetPrecursor(paid:Double)
+  
+  var supplies = Map.empty[Resource, Double]
+  
+  case class World(precursorPerPaid:Double = 0) extends Receive {
+    override def apply : Receive = {
+      case ChangePrecursorPerPaid(newVal) => context become copy(precursorPerPaid = newVal)
+      case Exchange( (Cash,paid), (Precursor,want) ) =>
+        sender ! (Precursor, paid*precursorPerPaid)
+	}
+  } 
 
-case class Request(pay:Double, task:Task)
+  case class ChangePrecursorPerPaid(newVal:Double)
 
-class DrugNetworkActor extends Actor {
-
-  case class GetSupplies(amt:Double) extends Task {
-    def accumulate(rate:Double) = {
-      val acc = Math.min(amt, rate)
-      (Supplies(acc), GetSupplies(amt-acc))
-    }
-  }
-  case class Supplies(amt:Double) {
-    def +(add:Supplies) = Supplies(amt+add.amt)
-  }
-
-  var net : Double = 0
+  case class ExpectReplies(from:Set[ActorRef], time:Long)
   
-  case class Supplier(
-      Limit:Int = 1, // limit to working queue
-      queue:Queue[(ActorRef,GetSupplies)], // working queue
-      product:Supplies, // current production
-      charge:Double, // percent cut
-      efficiency:Double, // rate Supply input is converted into Supplies output
-      conversionRate:Double) extends Receive {
-    
-  	override def apply: (Any) => Unit = {
-  	  case Request(pay, GetSupplies(amt:Double)) if (queue.size >= Limit || pay < charge*amt) =>
-  	    sender ! Decline(charge*amt)
-  	  case Request(pay,s:GetSupplies) =>
-  	    net += pay
-  	    context become copy(queue = queue enqueue (sender,s) )
-  	    sender ! Accept
-  	  case t @ Tick(_) if !queue.isEmpty =>
-  	    val ((replyTo, request), left) = queue.dequeue
-  	    val (acc, todo) = request accumulate conversionRate
-  	    if (todo.amt == 0d) {
-  	      replyTo ! (product + supply*efficiency) // start on next job?
-  	      context become copy(queue = left, product = Supplies(0))
-  	    } else {
-  	      context become copy(
-  	          queue = (replyTo, supply - conversionRate) +: left, 
-  	          product = product + conversionRate*efficiency
-  	      )
-  	    }
-  	    sender ! t.done
-  	  case t @ Tick(time) =>
-  	    sender ! t.done
-  	    // maybe lower charge?
-  	}
-  	
-  	override def isDefinedAt : (Any) => Boolean = {
-  	  case Supply(_) => true
-  	  case Tick(_) => true
-  	  case _ => false
-  	}
-  }
+  var awaiting = Set.empty[ActorRef]
   
-  case class Cook()
-  
-  
-  case class Production(nu:Double) // these actors convert drugs into cash at a certain rate
-  case class Retail(nu:Double) // these actors convert drugs into cash at a certain rate
-  case class Wholesale(nu:Double) // these actors partition drugs to retailers
-  case class Middleman(rate:Double)
-  
-  case class Cash(amt:Double)
-  
-  def stack = context become handle(super.handlers)
-  def push(r:Receive) = context become(r, false)
-  
-  val init : Receive = {
-    case Supply(nu) =>
-      stack
-      push(supplier(nu))
-  }
-  
-  def handlers = init :: super.handlers
-  
-  def supplier(nu:Double) : Receive = {
-    case Cash(amt) =>
+  def receive = {
+    case world : World => context become(world,false)
+    case ExpectReplies(from, time) =>
+      awaiting ++= from
+      context become({
+        case Ack(msg) =>
+          awaiting -= sender
+          self forward msg
+          if (awaiting.isEmpty) {
+            context unbecome()
+            context.parent ! Ack(time)
+          }
+      }, false)
   }
   
 }
