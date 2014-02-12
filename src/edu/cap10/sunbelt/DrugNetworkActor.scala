@@ -24,7 +24,10 @@ case class Request(pay:Double, task:Task)
 class DrugNetworkActor extends Actor {
 
   case class GetSupplies(amt:Double) extends Task {
-    def accumulate(rate:Double) = (Supplies(rate),GetSupplies(amt-rate))
+    def accumulate(rate:Double) = {
+      val acc = Math.min(amt, rate)
+      (Supplies(acc), GetSupplies(amt-acc))
+    }
   }
   case class Supplies(amt:Double) {
     def +(add:Supplies) = Supplies(amt+add.amt)
@@ -48,8 +51,9 @@ class DrugNetworkActor extends Actor {
   	    context become copy(queue = queue enqueue (sender,s) )
   	    sender ! Accept
   	  case t @ Tick(_) if !queue.isEmpty =>
-  	    val ((replyTo, supply), left) = queue.dequeue
-  	    if (supply < conversionRate) {
+  	    val ((replyTo, request), left) = queue.dequeue
+  	    val (acc, todo) = request accumulate conversionRate
+  	    if (todo.amt == 0d) {
   	      replyTo ! (product + supply*efficiency) // start on next job?
   	      context become copy(queue = left, product = Supplies(0))
   	    } else {
