@@ -4,7 +4,6 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Actor.Receive
 import akka.actor.Props
-import akka.actor.ActorSystem
 import akka.actor.ActorContext
 
 // participants have a few basic characteristics
@@ -24,11 +23,17 @@ case class Exchange(give:(Resource,Double), get:(Resource,Double))
 case class ChangePrecursorPerPaid(newVal:Double)
 case class World(precursorPerPaid:Double = 0)(implicit context : ActorContext) extends Receive {
   import context.sender
-  override def apply : Receive = {
+  override def apply(msg:Any) : Unit = msg match {
     case ChangePrecursorPerPaid(newVal) => context become copy(precursorPerPaid = newVal)
     case Exchange( (Cash,paid), (Precursor,want) ) =>
       sender ! (Precursor, paid*precursorPerPaid)
     }
+  
+  override def isDefinedAt(msg:Any) : Boolean = msg match {
+    case Exchange( (Cash,_), (Precursor,_) ) => true
+    case _:ChangePrecursorPerPaid => true
+    case _ => false
+  }
 } 
 
 class GangActor extends Actor {
@@ -64,14 +69,18 @@ class GangActor extends Actor {
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration._
+import scala.concurrent.Await
 import scala.util.Success
+import akka.pattern.ask
 
-object Main extends App {
+class Runner extends Actor {
+  implicit val timeout = akka.util.Timeout(1000)
   
-  val sys = ActorSystem()
-  val world = sys.actorOf(Props[GangActor])
+  val world = context.actorOf(Props[GangActor])
   val future : Future[Any] = world ? World(2)
-  val Success(any:Any) = future.value.get
-  println(any)
   
+  println(Await.result(future,timeout.duration))
+  def receive = {
+    case "start" =>
+  }
 }

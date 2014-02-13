@@ -10,7 +10,7 @@ import akka.actor.ActorSystem
 object Simulation extends App {
   val system = ActorSystem()
   // TODO parse args
-  val runner = system.actorOf[SimRunner] 
+//  val runner = system.actorOf[SimRunner] 
 }
 
 object SimRunner {
