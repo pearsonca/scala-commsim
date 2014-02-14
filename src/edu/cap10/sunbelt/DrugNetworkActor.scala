@@ -129,14 +129,24 @@ case class Supplier(
   }
 }
 
+import scala.util.{Try, Failure, Success}
+
 class GangActor extends Actor {
 
   case class GetPrecursor(paid:Double)
   
-  var supplies = Map.empty[Resource, Double]
-
-
-
+  var have = Map.empty[Resource, Double]
+  def query(what:Resource) = have(what)
+  def withdraw(what:Resource, Amt:Double) : Try[(Resource,Double)] = {
+    have.getOrElse[Double](what, 0) match {
+      case amt if amt < Amt => Failure[(Resource,Double)](new IllegalStateException)
+      case amt =>
+        Success((what,Amt))
+    }
+  }
+  def deposit(what:Resource, amt:Double)
+  
+  
   case class ExpectReplies(from:Set[ActorRef], time:Long)
   
   var awaiting = Set.empty[ActorRef]
