@@ -16,64 +16,95 @@ import scala.collection.immutable.Queue
 
 case class Ack(msg:Any)
   
-object Resources extends Enumeration { val Cash, Precursor, Drugs = Value }
+object Resources extends Enumeration { val Precursor, Drugs = Value }
 import Resources.{Value => Resource, _}
-case class Exchange(give:(Resource,Double), get:(Resource,Double))
+
+case class Exchange(pay:Double, want:Resource) {
+  def deliver(charge:Double, amount:Double) = Ack(Deliver(want, amount, charge))
+}
+
+case class Deposit(reserves:Double, cut:Double)
+case class Withdraw(what:Resource)
+case class Deliver(what:Resource, amount:Double, paid:Double)
+
+import scala.collection.mutable.{Map => MMap}
+
+object GangMember {
+  case class Entry(bought:Double = 0, sold:Double = 0, paid:Double = 0, got:Double = 0) {
+    def buy(amt:Double, at:Double) = copy(bought = bought + amt, paid = paid + at)
+    def sell(amt:Double, at:Double) = copy(sold = sold + amt, got = got + at)
+    def margin(target:Double) = (got - paid)/(bought - sold)
+  }
+  type Ledger = MMap[Resource,Entry]
+  def initLedger : Ledger = MMap(Resources.values.toSeq.map({ _ -> Entry() }):_*)
+}
+
+import GangMember._
+
+case class init(l:Ledger)
 
 sealed trait GangMember extends Receive {
   val block : Receive
-  override def apply(msg:Any) : Unit = block(msg)
-  override def isDefinedAt(msg:Any) : Boolean = block.isDefinedAt(msg) // TODO probably way suboptimal
+  val rec : Receive = { 
+//    case init(altL) => 
+//      println("got it")
+//      println(this.toString + " " +(altL == ledger))
+    case s:String => println(s)
+  }
+  override def apply(msg:Any) : Unit = (rec orElse block)(msg)
+  override def isDefinedAt(msg:Any) : Boolean = (rec orElse block).isDefinedAt(msg) // TODO probably way suboptimal
+  def ledger : Ledger
 }
 
-case class init(c:ActorContext)
+//object Entities {
+//  def become(g:GangMember)(implicit context : ActorContext, ledger:Ledger) : Unit = g match {
+//    case e:World => become(e)
+//    case e:Middleman => become(e)
+//    case e:Wholesaler => become(e)
+//    case e:Cook => become(e)
+//    case e:Retailer => become(e)
+//    case e:Supplier => become(e)
+//  }
+//  def become(e:World)(implicit context : ActorContext, ledger:Ledger) : Unit = context become (e.copy(), false)
+//
+//  def become(e:Middleman)(implicit context : ActorContext, ledger:Ledger) : Middleman = {
+//    val cp = e.copy()
+//    context become (cp, false)
+//    cp
+//  }
+//  def become(e:Wholesaler)(implicit context : ActorContext, ledger:Ledger) : Wholesaler = {
+//    val cp = e.copy()
+//    context become (cp, false)
+//    cp
+//  }
+//  def become(e:Cook)(implicit context : ActorContext, ledger:Ledger) : Cook = {
+//    val cp = e.copy()
+//    context become (cp, false)
+//    cp
+//  }
+//  def become(e:Retailer)(implicit context : ActorContext, ledger:Ledger) : Retailer = {
+//    val cp = e.copy()
+//    context become (cp, false)
+//    cp
+//  }
+//  def become(e:Supplier)(implicit context : ActorContext, ledger:Ledger) : Supplier = {
+//    val cp = e.copy()
+//    context become (cp, false)
+//    cp
+//  }
+//}
 
-object Entities {
-  def become(g:GangMember)(implicit context : ActorContext) : GangMember = g match {
-    case e:World => become(e)
-    case e:Middleman => become(e)
-    case e:Wholesaler => become(e)
-    case e:Cook => become(e)
-    case e:Retailer => become(e)
-    case e:Supplier => become(e)
-  }
-  def become(e:World)(implicit context : ActorContext) : World = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-  def become(e:Middleman)(implicit context : ActorContext) : Middleman = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-  def become(e:Wholesaler)(implicit context : ActorContext) : Wholesaler = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-  def become(e:Cook)(implicit context : ActorContext) : Cook = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-  def become(e:Retailer)(implicit context : ActorContext) : Retailer = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-  def become(e:Supplier)(implicit context : ActorContext) : Supplier = {
-    val cp = e.copy()
-    context become (cp, false)
-    cp
-  }
-}
-
-case class World(precursorPerPaid:Double = 0, drugsWantedPerTime:Double)(implicit context : ActorContext) extends GangMember {
+case class World(
+    precursorPerPaid:Double = 0,
+    drugsWantedPerTime:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = MMap.empty) 
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash,paid), (Precursor, _) ) =>
-      sender ! (Precursor, paid*precursorPerPaid)
+    case Exchange( paid, Precursor ) =>
+      sender ! Ack(Deliver(Precursor, paid*precursorPerPaid, paid))
+      // the World has infinite Precursor, however
+    case "hw" => println("hello world")
     // case Tick(Time) =>
       // ask retailers for drugs
   }
@@ -83,81 +114,87 @@ case class Middleman(
     wholesaler:ActorRef, 
     cook:ActorRef,
     suppliers:Seq[ActorRef],
-    margin:Double)(implicit context : ActorContext) extends GangMember {
+    margin:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = initLedger)
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash, paid), (Precursor, want) ) =>
+    case Exchange( paid, Precursor ) =>
+      val Entry(available, cost, other, yetanother) = ledger(Precursor)
   }
 }
 
 case class Wholesaler(
     middleman:ActorRef, 
     retailers:Seq[ActorRef],
-    margin:Double)(implicit context : ActorContext) extends GangMember {
+    margin:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = initLedger)
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash,paid), (Precursor,want) ) =>    
+    case Exchange( pay, Drugs ) =>
+    case Deliver(Drugs, amt, paid) =>
   }
 }
 
 case class Cook(
     middleman:ActorRef,
-    margin:Double)(implicit context : ActorContext) extends GangMember {
+    margin:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = initLedger)
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash,paid), (Precursor,want) ) =>    
+    case Exchange( paid, Drugs ) =>
+    case Deliver( Precursor, amt, cashBack) =>
   }
 }
 
 case class Retailer(
     wholesaler:ActorRef, 
     world:ActorRef,
-    margin:Double)(implicit context : ActorContext) extends GangMember {
+    margin:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = initLedger)
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash,paid), (Precursor,want) ) =>    
+    case Exchange( Drugs, paid ) =>
+    case Deliver(Drugs, amt, cashBack) =>
   }
 }
 
 case class Supplier(
     wholesaler:ActorRef, 
     world:ActorRef,
-    margin:Double)(implicit context : ActorContext) extends GangMember {
+    margin:Double)
+    (implicit val context : ActorContext, val ledger: Ledger = initLedger)
+extends GangMember {
   import context.sender
   val block : Receive = {
-    case Exchange( (Cash,paid), (Precursor,want) ) =>    
+    case Exchange( paid, Precursor ) =>
+    case Deliver( Precursor, amt, cashBack ) =>
   }
 }
 
 import scala.util.{Try, Failure, Success}
 
 class GangActor extends Actor {
-
-  case class GetPrecursor(paid:Double)
-  
-  var have = Map.empty[Resource, Double]
-  def query(what:Resource) = have(what)
-  def withdraw(what:Resource, Amt:Double) : Try[(Resource,Double)] = {
-    have.getOrElse[Double](what, 0) match {
-      case amt if amt < Amt => Failure[(Resource,Double)](new IllegalStateException)
-      case amt =>
-        Success((what,Amt))
-    }
-  }
-  def deposit(what:Resource, amt:Double)
-  
-  
+   
+  implicit var cashOnHand : Double = 0L;
+  import GangMember.Ledger
+  implicit val ledger : Ledger = initLedger
+    
   case class ExpectReplies(from:Set[ActorRef], time:Long)
   
-  var awaiting = Set.empty[ActorRef]
   
-  import Entities._
+  
+//  import Entities._
   
   def receive = {
-    case g : GangMember =>
-      sender ! Ack(become(g))
+    case w : World =>
+      context become (w.copy(), false)
+    case init(_) => println("swalling init?")
     case ExpectReplies(from, time) =>
-      awaiting ++= from
+      var awaiting = from
       context become({
         case Ack(msg) =>
           awaiting -= sender
@@ -166,7 +203,13 @@ class GangActor extends Actor {
             context unbecome()
             context.parent ! Ack(time)
           }
+        case e:ExpectReplies => throw new UnsupportedOperationException   
       }, false)
+    case Deliver(what, amt, paid) =>
+      ledger(what) = ledger(what).buy(amt, paid)
+      cashOnHand -= paid
+    case m => println("wth "+m)
+    
   }
   
 }
@@ -189,7 +232,7 @@ class Runner extends Actor {
   val drugsWantedPerTime = 1000
   val precursorPerPaid = 10
   val middlemanMargin, wholesalerMargin, cookMargin, retailMargin, supplierMargin = 0.10
-   
+  
   // initialize the world
   world ! World(precursorPerPaid, drugsWantedPerTime)
   middleman ! Middleman(wholesaler, cook, suppliers, middlemanMargin)
@@ -205,6 +248,8 @@ class Runner extends Actor {
     case t @ Tick(time) => 
       all foreach { _ ! t }
       context become awaiting(all)(time)
+    case Ack(any) => println("acked "+any)
+    case m => println(m)
   }
   
   def awaiting(who:Set[ActorRef])(implicit Time : Long) : Receive = {
