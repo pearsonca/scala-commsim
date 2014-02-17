@@ -6,34 +6,33 @@ import akka.actor.Actor.Receive
 import akka.actor.Props
 import akka.actor.ActorContext
 
-// participants have a few basic characteristics
-//  - job queue size
-//  - price
-//  - quality of product
-//  - rate of work
-
-import scala.collection.immutable.Queue
-
 case class Ack(msg:Any)
   
 object Resources extends Enumeration { val Precursor, Drugs = Value }
 import Resources.{Value => Resource, _}
+
+case class Deliver(what:Resource, amount:Double, paid:Double) {
+  lazy val book = Book(what, amount, paid)
+}
 
 case class Exchange(pay:Double, want:Resource) {
   def deliver(charge:Double, amount:Double) = Ack(Deliver(want, amount, charge))
 }
 
 case class Deposit(reserves:Double, cut:Double)
-case class Withdraw(what:Resource)
-case class Deliver(what:Resource, amount:Double, paid:Double)
+case class Book(what:Resource, amount:Double, price:Double) {
+  lazy val deliver = Deliver(what, Math.abs(amount), price)
+}
+
 
 import scala.collection.mutable.{Map => MMap}
 
 object GangMember {
   case class Entry(bought:Double = 0, sold:Double = 0, paid:Double = 0, got:Double = 0) {
-    def buy(amt:Double, at:Double) = copy(bought = bought + amt, paid = paid + at)
-    def sell(amt:Double, at:Double) = copy(sold = sold + amt, got = got + at)
-    def margin(target:Double) = (got - paid)/(bought - sold)
+    def +(book:Book) = if (book.amount < 0) 
+        copy(sold = sold - book.amount, got = got + book.price)
+      else
+        copy(bought = bought + book.amount, paid = paid + book.price)
   }
   type Ledger = MMap[Resource,Entry]
   def initLedger : Ledger = MMap(Resources.values.toSeq.map({ _ -> Entry() }):_*)
@@ -99,11 +98,13 @@ case class World(
     drugsWantedPerTime:Double)
     (implicit val context : ActorContext, val ledger: Ledger = MMap.empty) 
 extends GangMember {
-  import context.sender
+  import context.{sender, self}
   val block : Receive = {
     case Exchange( paid, Precursor ) =>
-      sender ! Ack(Deliver(Precursor, paid*precursorPerPaid, paid))
-      // the World has infinite Precursor, however
+      val book = Book(Precursor, -paid*precursorPerPaid, paid)
+      self ! book
+      sender ! Ack(book.deliver)
+      // the World has infinite Precursor, however need to book it
     case "hw" => println("hello world")
     // case Tick(Time) =>
       // ask retailers for drugs
@@ -205,8 +206,8 @@ class GangActor extends Actor {
           }
         case e:ExpectReplies => throw new UnsupportedOperationException   
       }, false)
-    case Deliver(what, amt, paid) =>
-      ledger(what) = ledger(what).buy(amt, paid)
+    case d @ Deliver(what, amt, paid) =>
+      ledger(what) = ledger(what)+d.book
       cashOnHand -= paid
     case m => println("wth "+m)
     
