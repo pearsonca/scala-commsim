@@ -20,7 +20,7 @@ case class Exchange(pay:Double, want:Resource) {
   def deliver(charge:Double = pay, amount:Double) = Deliver(want, amount, charge)
 }
 
-case class Deposit(reserves:Double, cut:Double)
+case class Deposit(what:Resource, amount:Double, value:Double)
 case class Book(what:Resource, amount:Double, price:Double) {
   lazy val deliver = Deliver(what, Math.abs(amount), price)
 }
@@ -28,13 +28,17 @@ case class Book(what:Resource, amount:Double, price:Double) {
 
 import scala.collection.mutable.{Map => MMap}
 
+case class Entry(bought:Double = 0, sold:Double = 0, paid:Double = 0, got:Double = 0) {
+  def +(dep:Deposit) = copy(bought = dep.amount, paid = dep.value)
+  def +(book:Book) = 
+    if (book.amount < 0) 
+      copy(sold = sold - book.amount, got = got + book.price)
+    else
+      copy(bought = bought + book.amount, paid = paid + book.price)
+}
+
 object GangMember {
-  case class Entry(bought:Double = 0, sold:Double = 0, paid:Double = 0, got:Double = 0) {
-    def +(book:Book) = if (book.amount < 0) 
-        copy(sold = sold - book.amount, got = got + book.price)
-      else
-        copy(bought = bought + book.amount, paid = paid + book.price)
-  }
+
   type Ledger = MMap[Resource,Entry]
   def initLedger : Ledger = MMap(Resources.values.toSeq.map({ _ -> Entry() }):_*)
 }
@@ -57,18 +61,13 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
     retailers : Set[ActorRef]
   ) extends GangMember {
     def receive()(implicit context : ActorContext) : Receive = {
-      implicit def self : ActorRef = context.self
-      
+      implicit def self : ActorRef = context.self;  
       {
 	    case Tick(time) =>
-	      println(self+" is world at "+time)
 	      val averagePricePerDose = 10 //ledger(Drugs).bought / ledger(Drugs).paid
 	      val e = Exchange(averagePricePerDose/retailers.size, Drugs)
 	      self ! ExpectDeliveries(retailers)
 	      retailers foreach { _ ! e }
-//	      self ! "a string"
-	      // ask retailers for drugs
-	    // case ExpectReplies(_,_) => println("wth")
       }
 	}
   } 
@@ -84,7 +83,6 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
       
       {
         case Tick(time) =>
-          println(self+" is retailer at "+time)
           self ! ExpectDeliveries()
         case e @ Exchange( paid, Drugs ) =>
           sender ! e.deliver(amount=10)
@@ -149,16 +147,15 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
 	}
   }
 
-class GangActor extends Actor with Stash {
-   
+class GangActor extends Actor {
+    
   var cashOnHand : Double = 0d;
   var net : Double = 0L;
   var Time : Long = 0L;
   
   def advance = {
-    val send = Ack(Tick(Time))
-    //println(self+" sending "+send)
-    context.parent ! send
+    println(self.path.name + " " + ledger)
+    context.parent ! Ack(Tick(Time))
     Time += 1
   }
   
@@ -180,7 +177,7 @@ class GangActor extends Actor with Stash {
       ledger(what) = ledger(what)+d.book
       cashOnHand -= paid
       if (awaiting.isEmpty) advance
-    case d : Deliver => println("wth")
+    // case d : Deliver => println("wth")
     // case m => println("wth "+m)
     
   }
@@ -191,10 +188,9 @@ case class Tick(time:Long)
 
 class Runner extends Actor {
   //implicit val timeout = akka.util.Timeout(1000)
-    
-  val world, middleman, wholesaler, cook = context.actorOf(Props[GangActor])
-  val retailers = Iterable.fill(5)( context.actorOf(Props[GangActor]) ).toSet
-  val suppliers = Iterable.fill(5)( context.actorOf(Props[GangActor]) ).toSet
+  val world :: middleman :: wholesaler :: cook :: Nil = List("world","middleman","wholesaler","cook").map( name => context.actorOf(Props[GangActor], name))
+  val retailers = (1 to 5).map( i => context.actorOf(Props[GangActor],"retailer"+i) ).toSet
+  val suppliers = (1 to 5).map( i => context.actorOf(Props[GangActor],"supplier"+i) ).toSet
   
   val drugsWantedPerTime = 1000
   val precursorPerPaid = 10
