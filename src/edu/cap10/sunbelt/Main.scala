@@ -6,7 +6,7 @@ import akka.actor.Props
 object Main extends App {
   
   val sys = ActorSystem()
-  sys.actorOf(Props[Runner])
-
+  val runner = sys.actorOf(Props[Runner])
+  runner ! Tick(0)
   
 }
