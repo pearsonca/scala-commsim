@@ -5,6 +5,7 @@ import akka.actor.ActorRef
 import akka.actor.Actor.Receive
 import akka.actor.Props
 import akka.actor.ActorContext
+import akka.actor.Stash
 
 case class Ack(msg:Any)
   
@@ -16,7 +17,7 @@ case class Deliver(what:Resource, amount:Double, paid:Double) {
 }
 
 case class Exchange(pay:Double, want:Resource) {
-  def deliver(charge:Double = pay, amount:Double) = Ack(Deliver(want, amount, charge))
+  def deliver(charge:Double = pay, amount:Double) = Deliver(want, amount, charge)
 }
 
 case class Deposit(reserves:Double, cut:Double)
@@ -42,68 +43,53 @@ import GangMember._
 
 case class init(l:Ledger)
 
-sealed trait GangMember extends Receive {
-  val block : Receive
-//  val rec : Receive = { 
-////    case init(altL) => 
-////      println("got it")
-////      println(this.toString + " " +(altL == ledger))
-//    case s:String => println(s)
-//  }
-  override def apply(msg:Any) : Unit = block(msg)
-  override def isDefinedAt(msg:Any) : Boolean = msg match {
-    case s:String => println("got "+s); false
-    case _ => block.isDefinedAt(msg) // TODO probably way suboptimal
-  }
+sealed trait GangMember {
+  def receive()(implicit context : ActorContext) : Receive
 }
 
 import scala.util.{Try, Failure, Success}
 
-case class ExpectReplies(from:Set[ActorRef] = Set.empty, time:Long)
+case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
 
-class GangActor extends Actor {
-   
-  var cashOnHand : Double = 0d;
-  var net : Double = 0L;
-  var Time : Long = 0L;
-  
-  import GangMember.Ledger
-  val ledger : Ledger = initLedger
-  
-  final case class World (
+  case class World (
     precursorPerPaid:Double = 0,
     drugsWantedPerTime:Double,
     retailers : Set[ActorRef]
   ) extends GangMember {
-    val block : Receive = {
-//	    case Exchange( paid, Precursor ) =>
-//	      val book = Book(Precursor, -paid*precursorPerPaid, paid)
-//	      self ! book
-//	      sender ! Ack(book.deliver)
-//	      // the World has infinite Precursor, however need to book it
-	    case Tick(time) if time == Time =>
-	      println("world "+self+" at "+time)
+    def receive()(implicit context : ActorContext) : Receive = {
+      implicit def self : ActorRef = context.self
+      
+      {
+	    case Tick(time) =>
+	      println(self+" is world at "+time)
 	      val averagePricePerDose = 10 //ledger(Drugs).bought / ledger(Drugs).paid
-	      retailers foreach { _ ! Exchange(averagePricePerDose, Drugs) }
-	      self ! ExpectReplies(retailers, time)
-	      self ! "a string"
+	      val e = Exchange(averagePricePerDose/retailers.size, Drugs)
+	      self ! ExpectDeliveries(retailers)
+	      retailers foreach { _ ! e }
+//	      self ! "a string"
 	      // ask retailers for drugs
 	    // case ExpectReplies(_,_) => println("wth")
+      }
 	}
   } 
-  
-  final case class Retailer (
+
+  case class Retailer (
     wholesaler:ActorRef, 
     world:ActorRef,
     margin:Double
   ) extends GangMember {
-    val block : Receive = {
-      case Tick(time) if time == Time =>
-        println("retailer "+self+" at "+time)
-        self ! ExpectReplies(time=time)
-      case e @ Exchange( paid, Drugs ) =>
-        sender ! e.deliver(amount=10)
-      case Deliver(Drugs, amt, cashBack) =>
+    def receive()(implicit context : ActorContext) : Receive = {
+      import context.sender
+      implicit def self : ActorRef = context.self
+      
+      {
+        case Tick(time) =>
+          println(self+" is retailer at "+time)
+          self ! ExpectDeliveries()
+        case e @ Exchange( paid, Drugs ) =>
+          sender ! e.deliver(amount=10)
+        case Deliver(Drugs, amt, cashBack) =>
+      }
     }
   }
   
@@ -112,9 +98,12 @@ class GangActor extends Actor {
     world:ActorRef,
     margin:Double
   ) extends GangMember {
-    val block : Receive = {
-	  case Exchange( paid, Precursor ) =>
-	  case Deliver( Precursor, amt, cashBack ) =>
+    def receive()(implicit context : ActorContext) : Receive = {
+      import context._
+      {
+        case Exchange( paid, Precursor ) =>
+        case Deliver( Precursor, amt, cashBack ) =>
+      }
 	}
   }
   
@@ -124,9 +113,12 @@ class GangActor extends Actor {
     suppliers:Set[ActorRef],
     margin:Double
   ) extends GangMember {
-    val block : Receive = {
-      case Exchange( paid, Precursor ) =>
-        val Entry(available, cost, other, yetanother) = ledger(Precursor)
+    def receive()(implicit context : ActorContext) : Receive = {
+      import context._
+      {
+        case Exchange( paid, Precursor ) =>
+          //val Entry(available, cost, other, yetanother) = ledger(Precursor)
+      }
     }
   }
   
@@ -135,9 +127,12 @@ class GangActor extends Actor {
     retailers:Set[ActorRef],
     margin:Double
   ) extends GangMember {
-    val block : Receive = {
-      case Exchange( pay, Drugs ) =>
-      case Deliver(Drugs, amt, paid) =>
+    def receive()(implicit context : ActorContext) : Receive = {
+      import context._
+      {
+        case Exchange( pay, Drugs ) =>
+        case Deliver(Drugs, amt, paid) =>
+      }
     }
   }
   
@@ -145,67 +140,62 @@ class GangActor extends Actor {
     middleman:ActorRef,
     margin:Double
   ) extends GangMember {
-	val block : Receive = {
-	  case Exchange( paid, Drugs ) =>
-	  case Deliver( Precursor, amt, cashBack) =>
+	def receive()(implicit context : ActorContext) : Receive = {
+      import context._
+      {
+	    case Exchange( paid, Drugs ) =>
+	    case Deliver( Precursor, amt, cashBack) =>
+      }
 	}
   }
+
+class GangActor extends Actor with Stash {
+   
+  var cashOnHand : Double = 0d;
+  var net : Double = 0L;
+  var Time : Long = 0L;
+  
+  def advance = {
+    val send = Ack(Tick(Time))
+    //println(self+" sending "+send)
+    context.parent ! send
+    Time += 1
+  }
+  
+  import GangMember.Ledger
+  val ledger : Ledger = initLedger
+  
+
   
 //  import Entities._
-  
+  var awaiting = Set.empty[ActorRef]
   def receive = {
-    case w @ World(pp,dv,rs) =>
-      context become (World(pp,dv,rs), false)
-    case s @ Supplier(wo,wh,m) =>
-      context become (Supplier(wo,wh,m), false)
-    case r @ Retailer(mi,wh,m) =>
-      context become (Retailer(mi,wh,m), false)
-    case ExpectReplies(from, time) if from.isEmpty => 
-      println(self+" is awaiting nothing")
-      context.parent ! Ack(time)
-      Time += 1
-    case ExpectReplies(from, time) =>
-      println(self+" is awaiting "+from)
-      var awaiting = from
-      val Tick = Ack(time)
-      context become({
-        case Tick =>
-          awaiting -= sender
-          if (awaiting.isEmpty) {
-            context unbecome()
-            context.parent ! Tick
-            Time += 1
-          }
-        case Ack(msg) =>
-          self forward msg
-          self forward Tick
-        case e:ExpectReplies => println(self+" wth "+e)   
-      }, false)
-    case d @ Deliver(what, amt, paid) =>
-      println(sender +" delivered "+d)
+    case g : GangMember =>
+      context become (g.receive() orElse receive)
+    case ExpectDeliveries(from) if from.isEmpty => advance
+    case ExpectDeliveries(from) if awaiting.isEmpty =>
+      awaiting = from
+    case d @ Deliver(what, amt, paid) if awaiting contains sender =>
+      awaiting -= sender
       ledger(what) = ledger(what)+d.book
       cashOnHand -= paid
+      if (awaiting.isEmpty) advance
+    case d : Deliver => println("wth")
     // case m => println("wth "+m)
     
   }
   
 }
 
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration._
-import scala.concurrent.Await
-import scala.util.Success
-import akka.pattern.ask
-
 case class Tick(time:Long)
 
-class Runner extends GangActor {
+class Runner extends Actor {
   //implicit val timeout = akka.util.Timeout(1000)
-  
+    
   val world, middleman, wholesaler, cook = context.actorOf(Props[GangActor])
   val retailers = Iterable.fill(5)( context.actorOf(Props[GangActor]) ).toSet
   val suppliers = Iterable.fill(5)( context.actorOf(Props[GangActor]) ).toSet
-
+  
   val drugsWantedPerTime = 1000
   val precursorPerPaid = 10
   val middlemanMargin, wholesalerMargin, cookMargin, retailMargin, supplierMargin = 0.10
@@ -222,26 +212,25 @@ class Runner extends GangActor {
   //val all = (world +: middleman +: wholesaler +: cook +: (retailers ++ suppliers)).toSet
   val all : Set[ActorRef] = retailers + world
   
-  override def receive = {
-    case t @ Tick(10) => context.stop(self)
-    case t @ Tick(time) if time == Time =>
-      println("runner at "+time)
-      all foreach { _ ! t }
-      context become awaiting(all)
-    case Ack(any) => println("acked "+any)
-    case m => println(m)
+  def alerting(Time:Long = 0)(implicit group:Set[ActorRef]) : Receive = {
+    case t @ Tick(10) => context.system.shutdown
+    case t @ Tick(Time) =>
+      context become awaiting(group, Time)
+      group foreach { _ ! t }
+    case m => println("strange in runner: "+ m)
   }
   
-  def awaiting(who:Set[ActorRef]) : Receive = {
-    case Ack(Tick(time)) if (time == Time) && (who contains sender) =>
-      println("not awaiting "+sender)
-      who - sender match {
-        case s if s.isEmpty =>
-          context unbecome()
-          Time += 1
-          self ! Tick(Time)
-        case s => context become awaiting(s)
-      }
-    case e:ExpectReplies => println(self+" wth "+e)
+  override def receive = alerting(0)(all)
+  
+  def awaiting(who:Set[ActorRef], Time:Long)(implicit group:Set[ActorRef]) : Receive = {
+    { case Ack(Tick(Time)) if (who contains sender) =>
+	      who - sender match {
+	        case s if s.isEmpty =>
+	          context become alerting(Time+1)
+	          self ! Tick(Time+1)
+	        case s => context become awaiting(s,Time)
+	      }
+      case m => println("strange in runner awaiting: "+ m)
+    }
   }
 }
