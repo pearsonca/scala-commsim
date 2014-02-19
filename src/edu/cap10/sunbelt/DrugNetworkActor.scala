@@ -21,6 +21,9 @@ case class Exchange(pay:Double, want:Resource) {
 }
 
 case class Deposit(what:Resource, amount:Double, value:Double)
+case class Withdraw(what:Resource, amount:Double, value:Double) {
+  lazy val deliver = Deliver(what,amount,value)
+}
 case class Book(what:Resource, amount:Double, price:Double) {
   lazy val deliver = Deliver(what, Math.abs(amount), price)
 }
@@ -30,11 +33,15 @@ import scala.collection.mutable.{Map => MMap}
 
 case class Entry(bought:Double = 0, sold:Double = 0, paid:Double = 0, got:Double = 0) {
   def +(dep:Deposit) = copy(bought = dep.amount, paid = dep.value)
+  def +(wdw:Withdraw) = copy(sold = wdw.amount, got = wdw.value)
   def +(book:Book) = 
     if (book.amount < 0) 
       copy(sold = sold - book.amount, got = got + book.price)
     else
       copy(bought = bought + book.amount, paid = paid + book.price)
+
+  override def toString() = bought + " " + sold + " " + paid + " " + got
+
 }
 
 object GangMember {
@@ -61,7 +68,9 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
     retailers : Set[ActorRef]
   ) extends GangMember {
     def receive()(implicit context : ActorContext, ledger : Ledger) : Receive = {
-      implicit def self : ActorRef = context.self;  
+      import context.sender
+      implicit def self : ActorRef = context.self
+      
       {
 	    case Tick(time) =>
 	      val pay = ledger(Drugs).paid / ledger(Drugs).bought * drugsWantedPerTime
@@ -69,6 +78,8 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
 	      val e = Exchange(pay/retailers.size, Drugs)
 	      self ! ExpectDeliveries(retailers)
 	      retailers foreach { _ ! e }
+	    case Exchange( paid, Precursor) =>
+	      self ! Withdraw(Precursor, precursorPerPaid*paid, paid)->sender
       }
 	}
   } 
@@ -96,11 +107,12 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
           } else {
             self ! ExpectDeliveries()
           }
-        case e @ Exchange( paid, Drugs ) =>
+        case Exchange( paid, Drugs ) =>
+          self ! Net(paid*margin)
+          val left = paid*(1-margin)
           val paidRate = ledger(Drugs).bought / ledger(Drugs).paid
-          val amt = Math.min(ledger(Drugs).bought - ledger(Drugs).sold, paidRate*paid)
-          sender ! Deliver(Drugs, amt, amt/paidRate)
-        case Deliver(Drugs, amt, cashBack) =>
+          val amt = Math.min(ledger(Drugs).bought - ledger(Drugs).sold, paidRate*left)
+          self ! Withdraw(Drugs, amt, amt/paidRate)->sender
       }
     }
   }
@@ -116,25 +128,26 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
       
       {
         case Tick(time) =>
-          self ! ExpectDeliveries()
-        case e @ Exchange( paid, Drugs ) =>
-          sender ! e.deliver(amount=10)
+          val estimatedSale = (ledger(Drugs).sold / (time+1))
+          val estimatedLeft = ledger(Drugs).bought - ledger(Drugs).sold - estimatedSale
+          // after this periods anticipated sale
+          val estimatePurchase = estimatedSale - estimatedLeft
+          // how much will needed for next period
+          if (estimatePurchase > 0) {
+            self ! ExpectDeliveries(Set(middleman))
+            val pay = estimatePurchase * ledger(Drugs).paid / ledger(Drugs).bought
+            middleman ! Exchange(pay, Drugs)
+          } else {
+            self ! ExpectDeliveries()
+          }
+        case Exchange( paid, Drugs ) =>
+          self ! Net(paid*margin)
+          val left = paid*(1-margin)
+          val paidRate = ledger(Drugs).bought / ledger(Drugs).paid
+          val amt = Math.min(ledger(Drugs).bought - ledger(Drugs).sold, paidRate*left)
+          self ! Withdraw(Drugs, amt, amt/paidRate)->sender
       }
     }
-  }
-  
-  final case class Supplier (
-    wholesaler:ActorRef, 
-    world:ActorRef,
-    margin:Double
-  ) extends GangMember {
-    def receive()(implicit context : ActorContext, ledger : Ledger) : Receive = {
-      import context._
-      {
-        case Exchange( paid, Precursor ) =>
-        case Deliver( Precursor, amt, cashBack ) =>
-      }
-	}
   }
   
   final case class Middleman (
@@ -146,16 +159,53 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
     def receive()(implicit context : ActorContext, ledger : Ledger) : Receive = {
       import context._
       {
-        case Exchange( paid, Precursor ) =>
+        case Tick(time) =>
+          self ! ExpectDeliveries(suppliers+cook)
+//          val estimatedSale = (ledger(Drugs).sold / (time+1))
+//          val estimatedLeft = ledger(Drugs).bought - ledger(Drugs).sold - estimatedSale
+//          // after this periods anticipated sale
+//          val estimatePurchase = estimatedSale - estimatedLeft
+//          // how much will needed for next period
+//          if (estimatePurchase > 0) {
+//            self ! ExpectDeliveries(Set(middleman))
+//            val pay = estimatePurchase * ledger(Drugs).paid / ledger(Drugs).bought
+//            middleman ! Exchange(pay, Drugs)
+//          } else {
+//            self ! ExpectDeliveries()
+//          }
+        case Exchange( paid, Drugs ) =>
+          self ! Net(paid*margin)
+          val left = paid*(1-margin)
+          val paidRate = ledger(Drugs).bought / ledger(Drugs).paid
+          val amt = Math.min(ledger(Drugs).bought - ledger(Drugs).sold, paidRate*left)
+          self ! Withdraw(Drugs, amt, amt/paidRate)->sender
           //val Entry(available, cost, other, yetanother) = ledger(Precursor)
       }
     }
+  }
+  
+  final case class Supplier (
+    wholesaler:ActorRef, 
+    world:ActorRef,
+    margin:Double
+  ) extends GangMember {
+    def receive()(implicit context : ActorContext, ledger : Ledger) : Receive = {
+      import context._
+
+      {
+        case Exchange( paid, Precursor ) =>
+        case Deliver( Precursor, amt, cashBack ) =>
+      }
+	}
   }
   
   final case class Cook (
     middleman:ActorRef,
     margin:Double
   ) extends GangMember {
+    // precursor sold column == consumed for drugs
+    // drugs bought column == drugs produced from precursor
+    // every tick, convert available precursor (up to peak) into drugs
 	def receive()(implicit context : ActorContext, ledger : Ledger) : Receive = {
       import context._
       {
@@ -166,6 +216,7 @@ case class ExpectDeliveries(from:Set[ActorRef] = Set.empty)
   }
 
   case class Net(amount:Double)
+  case class Report(time:Long)
   
 class GangActor extends Actor {
     
@@ -173,12 +224,14 @@ class GangActor extends Actor {
   var Time : Long = 0L;
   
   def advance = {
-    println(self.path.name + " " + ledger)
+    println(self.path.name + " " + ledger(Drugs) + " " + ledger(Precursor))
     context.parent ! Ack(Tick(Time))
     Time += 1
   }
   
-  def net(amt:Double) = profit += amt
+  def net(amt:Double) = {
+    profit += amt
+  }
   
   import GangMember.Ledger
   implicit val ledger : Ledger = initLedger
@@ -199,8 +252,13 @@ class GangActor extends Actor {
       if (awaiting.isEmpty) advance
     case d @ Deposit(what,_,_) =>
       ledger(what) = ledger(what)+d
-    // case d : Deliver => println("wth")
-    // case m => println("wth "+m)
+    case w @ Withdraw(what,_,_) =>
+      ledger(what) = ledger(what)+w
+    case (w @ Withdraw(what,_,_), deliverTo:ActorRef) =>
+      ledger(what) = ledger(what)+w
+      deliverTo ! w.deliver
+    case Net(amt) => net(amt)
+    case Report(time) => println(time + " "+self.path.name + " net " + profit)
     
   }
   
@@ -214,22 +272,31 @@ class Runner extends Actor {
   val retailers = (1 to 1).map( i => context.actorOf(Props[GangActor],"retailer"+i) ).toSet
   val suppliers = (1 to 1).map( i => context.actorOf(Props[GangActor],"supplier"+i) ).toSet
   
-  val drugsWantedPerTime = 1000
-  val precursorPerPaid = 10
+  val drugsWantedPerTime = 18750 // assume one average medium lab, producing 625kg per day serve this slice of the world
+  val precursorPerPaid = 1000/10000
   val middlemanMargin, wholesalerMargin, cookMargin, retailMargin, supplierMargin = 0.10
   
   // initialize the world
   world ! World(precursorPerPaid, drugsWantedPerTime, retailers)
-  world ! Deposit(Drugs, 0.0001, 10)
-  
-  middleman ! Middleman(wholesaler, cook, suppliers, middlemanMargin)
-  wholesaler ! Wholesaler(middleman, retailers, wholesalerMargin)
-  cook ! Cook(middleman, cookMargin)
-  
+  world ! Deposit(Drugs, 1, 10*50)
+
   retailers foreach { r => 
     r ! Retailer(wholesaler,world,retailMargin)
-    r ! Deposit(Drugs, 1, 1000)
+    r ! Deposit(Drugs, 2*18750, 2*18750*200)
+    r ! Withdraw(Drugs, 18750, 18750*75*10)
   }
+  
+  wholesaler ! Wholesaler(middleman, retailers, wholesalerMargin)
+  wholesaler ! Deposit(Drugs, 2*18750, 2*18750*200/(1+wholesalerMargin))
+  wholesaler ! Withdraw(Drugs, 18750, 18750*200)
+  
+  middleman ! Middleman(wholesaler, cook, suppliers, middlemanMargin)
+  middleman ! Deposit(Drugs, 2*18750, 2*18750*200/(1+wholesalerMargin)/(1+middlemanMargin))
+  middleman ! Withdraw(Drugs, 18750, 18750*200/(1+wholesalerMargin))
+  
+  cook ! Cook(middleman, cookMargin)
+  
+
   suppliers foreach { _ ! Supplier(middleman,world,supplierMargin) }
   
   //val all = (world +: middleman +: wholesaler +: cook +: (retailers ++ suppliers)).toSet
@@ -239,6 +306,7 @@ class Runner extends Actor {
     case t @ Tick(10) => context.system.shutdown
     case t @ Tick(Time) =>
       context become awaiting(group, Time)
+      group.filter(_ != world) foreach { _ ! Report(Time) } 
       group foreach { _ ! t }
     case m => println("strange in runner: "+ m)
   }
