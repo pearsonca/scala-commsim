@@ -97,7 +97,7 @@ We close with discussion of how this framework might be used in a practical appl
 
 \newpage
 
-Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  They watch the watchers as well, and increasing effort to reveal them should be expected to encourage adaptation.  Yet, as impossible as it is for outsiders to perfectly see the covert group, it is equally impossible for these groups to perfectly hide and accomplish anything of note.
+% Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  They watch the watchers as well, and increasing effort to reveal them should be expected to encourage adaptation.  Yet, as impossible as it is for outsiders to perfectly see the covert group, it is equally impossible for these groups to perfectly hide and accomplish anything of note.
 
 
 % Their secrecy may make them conspicuously absent from the everyday activity of the background population.  Finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.

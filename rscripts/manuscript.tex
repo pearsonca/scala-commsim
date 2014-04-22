@@ -73,7 +73,7 @@ showstringspaces=false,columns=flexible,basicstyle={\small\ttfamily}}
 \input{manuscript-concordance}
 \begin{flushleft}
 {\Large
-\textbf{Modeling Requirements for Simulating Covert Social Groups}
+\textbf{Agent-Based Modeling of Covert Social Groups, Applying Software Engineering Patterns and Planning for Cluster Computation}
 }
 % Insert Author names, affiliations and corresponding author email.
 \\
@@ -90,30 +90,87 @@ $\ast$ E-mail: cap10 \{at\} ufl \{dot\} edu
 \end{flushleft}
 % Please keep the abstract between 250 and 300 words
 \section*{Abstract}
-Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  Moreover, increasing active observation would be expected to perturb these social systems.  However, these groups never have perfect cover.  Their secrecy may make them conspicuously absent from the everyday activity of the background population.  Finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.
+We discuss covert social network analysis (SNA) in the larger scientific context, highlight pitfalls, and propose what we view as necessary analysis that seems absent.  Because SNA typically occurs on aggregated observations (e.g., ties are across types and times), and furthermore covert SNA involves at least some (and often severe) censoring of those observations, it is critical that the implications of that aggregation and observation process be considered.
 
-The structure of covert networks is highly variable from one context to another, and they change composition and interaction patterns over time.  With any covert network, there are strong constraints on passively and actively obtainable direct empirical data, overwhelming amounts of indirect data, and competing mechanical explanations for what is observed.  Studying the detailed history of any one network, or set of them, will not necessarily provide insight about how to effectively detect such networks in the future.  This situation recommends simulation of a variety of scenarios with accompanying detection strategies. Because of the censoring issues in the data, simulation requires particular attention to characterizing uncertainty and avoiding overfitting.
+We demonstrate an implementation framework for performing that kind of analysis, based on a distributed, agent-based model.  We also apply past software engineering insights to show how they can make for more natural (and therefore comprehensible and compartmentally testable) agent-based models in this framework.
 
-Herein, we discuss these issues in terms of network models.  Specifically, we review (i) incorporating observation uncertainty, (ii) the need for both back- and foreground populations, (iii) avoiding over-fitting, and (iv) some philosophy relative to implementation.
-
-As part of that philosophical discussion, we walkthrough the exercise of procedurally generating back- and foreground populations, simulating communication among those individuals, and filtering those communications via an observation model.  We then address the issues of (i) fitting that model against data, and (ii) analyzing performance of the opposing sides (e.g. Receiver Operator Characteristic).  Finally, we also demonstrate a small model extensionand show how it affects the (unextended) detection performance.
-
-%\todoCP{{\em I think not for this round, but maybe:} Finally, we consider the implications of {\em forged} messages.  In the basic model, we consider incomplete information about the communications, but the available information is always accurate.  In this extension, we allow the Observer and the clandestine group to forge messages.  We again measure various Observer performance traits relative to properties of the observed network.}
+We close with discussion of how this framework might be used in a practical application, and how it is might be pieced together with other analytical tools.
 
 \newpage
 
+Covert social groups are difficult to observe directly, by definition: members either actively thwart discovery or leverage passive features of their surrounding population to avoid detection.  They watch the watchers as well, and increasing effort to reveal them should be expected to encourage adaptation.  Yet, as impossible as it is for outsiders to perfectly see the covert group, it is equally impossible for these groups to perfectly hide and accomplish anything of note.
+
+
+% Their secrecy may make them conspicuously absent from the everyday activity of the background population.  Finally there are potential mechanical charactericterizations -- their composition, goals, tactics, etc. -- that might predict their actions.
+% 
+% Often these mechanically characterizations are framed in terms of social networks.  Individuals and their ties are thought to have certain graph theoretic features based on their importance, and the observation of these features is then used to focus attention accordingly.  Yet, often these networks are little more than diverse shadows on the wall.  They are not the mechanisms or the phenomena, they are not even observation: they are mere representation.
+% 
+% The structure of covert networks is highly variable from one context to another, and they change composition and interaction patterns over time.  With any covert network, there are strong constraints on passively and actively obtainable direct empirical data, overwhelming amounts of indirect data, and competing mechanical explanations for what is observed.  Studying the detailed history of any one network, or set of them, will not necessarily provide insight about how to effectively detect such networks in the future.  This situation recommends simulation of a variety of scenarios with accompanying detection strategies. Because of the censoring issues in the data, simulation requires particular attention to characterizing uncertainty and avoiding overfitting.
+% 
+% Herein, we discuss these issues in terms of network models.  Specifically, we review (i) incorporating observation uncertainty, (ii) the need for both back- and foreground populations, (iii) avoiding over-fitting, and (iv) some philosophy relative to implementation.
+% 
+% As part of that philosophical discussion, we walkthrough the exercise of procedurally generating back- and foreground populations, simulating communication among those individuals, and filtering those communications via an observation model.  We then address the issues of (i) fitting that model against data, and (ii) analyzing performance of the opposing sides (e.g. Receiver Operator Characteristic).  Finally, we also demonstrate a small model extensionand show how it affects the (unextended) detection performance.
+
+
 \section*{Introduction}
-For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  Of course the revealation of these activities has broadly sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
+For investigators ranging from anthropologists to law enforcement, the desire to find, study, and modify the behavior of groups operating at the edge of the observable is a principle concern.  In the meta-theatre of the ironic, various media outlets have responded to public interest by applying this lens to the activities of intelligence organizations world-wide -- themselves desperate to undertake this very task against other clandestine actors.  The revealation of these activities has sparked the symmetric concern: being able to operate clandestinely in an age of ubiquitous monitoring.  Criminal organizations have long appreciated the value of operating in secret, as have groups subject to State-sponsored abuse or industrial espionage, and time will tell whether or not this spark catches fire in general behavior.
 
-The underlying drive for these opposed efforts is the implacably expanding byte trail.  Once, the recorded information of an entire life might have amounted only to a few bytes -- e.g., parish records on births and deaths, perhaps including morbidity.  Now information era tools produce a near endless supply of 1s and 0s.  In some cases, this production is a side effect of organized commercial instinct -- Google monetizing search through targeted advertisement, for example.  In other cases, individuals are voluntarily advancing their own brand -- Instagram ``selfies'', e.g.  However, in many cases this bitwise production is an engineering consequence of the associated technology.  E.g., cellular phones transmit constant location data, financial systems are increasing just digital ledgers with almost no physical exchange, and of course any use of the internet produces veritable bit contrails.  This rate of production far exceeds the personal processing capability of any practically-sized team of analysts.
+The underlying drive for these opposed efforts is the implacably expanding byte trail.  Once, the recorded information of an entire life might have amounted only to a few bytes -- e.g., parish records on births and deaths, perhaps including morbidity.  Now information era tools produce a near endless supply of 1s and 0s.  In some cases, this production is a side effect of organized commercial instinct -- Google monetizing search through targeted advertisement, for example.  In other cases, individuals are voluntarily advancing their own brand -- Instagram ``selfies'', e.g.  However, in many cases this bitwise production is an engineering consequence of the associated technology.  E.g., cellular phones transmit constant location data, financial systems are increasing just digital ledgers substituting the certainty of physical exchange with sophisticated book-keeping to ensure accounts are square, and of course any use of the internet produces veritable bit contrails.  This rate of production far exceeds the personal processing capability of any practically-sized team of analysts.
 
-Hence, these teams employ computer-based, heuristic filtration to decide which data to record, to review, and to obtain.  We avoid saying ``algorithmic'' at this point: ``algorithmic'' implies strong, logically inevitable conclusions from inputs.  Like ``algorithmic'' bubble prediction, we side more with Fama than Shiller.
+Hence, these teams employ computer-based, heuristic filtration to decide which data to record, to review, and to obtain.  We avoid saying ``algorithmic'' at this point: ``algorithmic'' implies strong, logically inevitable conclusions from inputs.  Like ``algorithmic'' economic bubble prediction, we side more with Fama than Shiller.
 
-Many such filters are based on social network descriptions.  These social networks can be a compact way to represent measured relations in a population.  However, these approaches all boil down to measuring properties of mathematical representation, with those properties having a tenuous connection to a mechanistic explanation of those phenomena.
+Many such filters are based on social network descriptions.  Social networks are a compact way to represent measured relations in a population.  That compression, however, often involves irreversible aggregations: in strength -- e.g., co-employment as measured by working at the same university versus the same department versus in same the laboratory; in type -- e.g., engaging in commerce versus attending the same church versus having married relations; and in time -- e.g., co-appearance at a coffeeshop months ago versus attending classes together on a weekly schedule versus living together.
+
+The mathematics may provide a formally guaranteed result from some particular input, but the more aggregation that occurs translating observations -- themselves imperfect snapshots of actual phenomena -- to representation, the more convincing evidence that must be provided before we should accept that those representations (and subsequent results from manipulating them) have meaning.
 
 Given the real uncertainty, what these filters call for is testing and validation, but those present their own difficulties.  Calling field testing ``problematic'' seems like a gross understatement; reference ``truth'' ranges from incomplete to deceptive, and experiments could have dangerous side effects.  Even making use of intensely studied historical events is problematic: these offer no way to consider evolutionary behavior and technological innovation (without an additional layer of abstraction that would create an even more complex empirical challenge), even assuming the historical data are more than victor's embellishment.
 
-Generating synthetic data seems like an obvious alternative.  It allows for comparison across both detection and masking strategies, consideration of multiple background contexts, forecasting of risks and tradeoffs in a way that allows uncertainties, and in general providing a framework for imaginative assessment.  Like all such flexible tools producing quantitative results, it has the subtle downside of the simulator's biases being validated by numerical gospel; if one believes a particular strategy is effective -- perhaps even with reasonable agreement for a particular time and situation -- there would be a natural tendency to ``adjust'' scenarios until they indicated the success of strategy.  There have been other attempts at such an approach\cite{carley2003dynamic}.
+Generating synthetic data seems like an obvious alternative.  It allows for comparison across both detection and masking strategies, consideration of multiple background contexts, forecasting of risks and tradeoffs in a way that allows uncertainties, and in general providing a framework for imaginative assessment.  Like all such flexible tools producing quantitative results, it has the subtle downside of the simulator's biases being validated by numerical gospel; if one believes a particular strategy is effective -- perhaps even with reasonable agreement for a particular time and situation -- there would be a natural tendency to ``adjust'' scenario parameters until they indicated the success of strategy.  Simple models are equally problematic, as they replace the parameter fudge-factor with the complementary assumptions fudge-factors.  Thus, we must always be skeptical - of hordes of purely fitted parameters that do not have an attached mechanism we can validate the resulting numbers against, and of the assumptions buried simple models that may in fact be driving model outcomes.
+
+A messy business all around, and we have not even gotten to the technically hard details.
+
+\section*{Skeptical Simulation}
+If, as we believe, generating synthetic data for the purpose of testing covert SNA methods is the only pragmatic option, how should one proceed in light of all the obstacles?
+
+As the point is to assess the conclusions of those methods against what is ``actually'' happening ({\em in silico}), on one end the process must obviously produce output that can be ultimately represented as a social network.  Since any the subject SNA method should include the process of converting real observations to the represention, the output should be in the form of those observations.  That part is conceptually straightforward, if not necessarily technically so.
+
+The other end -- what is ``actually'' happening, at least in simulation -- is less conceptually straightforward, the problem being that we do not know all of what is actually happening.  We propose here that researchers adopt a modeling philosophy that makes them open to criticism.  That is, the model meets the following criteria:
+\begin{itemize}
+\item it is clear which parts are explicit (subject to fitting -- e.g., rate constants) versus implicit (assumptions -- e.g., interaction forms)
+\item it is clear what those explicit and implicit processes are doing
+\item it is clear where parts interact
+\item it is clear how the observation process interacts with the modeled system
+\end{itemize}
+
+Consider the covert SNA described by Bright, et al. of the social networks created by judge's sentencing comments indicating personal association in methamphetamine production enterprises.  They provide the key components for the proposed modeling philosophy:
+\begin{itemize}
+\item a description of the subject process - e.g., acquisition of precursor, production in clandestine laboratory, distribution, as well as necessity of specialists
+\item a description of how that process is observed - e.g., law enforcement investigation and subsequent prosecution
+\item how the observations are flattened into a network representation - translation of judge's sentencing comments
+\item the specific SNA methods applied and desired inferences - e.g., various centralities and applications to intervention
+\end{itemize}
+
+With the exception of the actual SNA, however, these are ``talking'' models.  We assert that to genuinely assess if the SNA based on judicial sentencing notes, we must explicitly understand how gang activity ultimately percolates into that ink.  That it is necessary to turn the descriptive models into computational ones, while preserving (and hopefully enhancing) our ability to argue with each piece of that story and all the between-the-lines implications.
+
+\section*{Features of Good Computational Model}
+What makes a good computational model?  Modellers in the traditional hard sciences (physics, chemistry, biology, and assorted sub disciplines) have historically emphasized purely computational concerns, which is quite sensible for problems that have simpler conceptual models (i.e., those that are mathematically formalizable) but relatively intense numerical tasks.  On the other hand, many non-academic software products deal with a quite sophisticated conceptual model with relatively simple numerical tasks, and that demand tends to push their development more towards programming and engineering concerns.  We assert this domain -- software engineering -- is the better reference for social science modeling, and that the lessons of that discipline are more keenly relevant (though they are certainly relevant to the natural sciences, especially as the biological sciences deal with more of the heterogeniety intrinsics to that domain).
+
+We will emphasize a few key lessons, some ``ancient'' wisdom (two plus decades old) and some a bit more recent.  Good modeling is quite like good (scientific) story telling, with the exception that the story must be told by the code (though we include in ``code'' more than just what runs a particular simulation).
+
+The overall goal is to make implementation choices that make the model itself communicate with other researchers.  This means the right level of dividing up the model.  Too little, and the rest of us have to comprehend the whole thing to comprehend a single atom of the story.  Too much, and instead we have to go to quarks to understand an atom of the story.
+
+This begins with choosing a setup (language, libraries, frameworks, etc.) that make this possible.
+
+
+\begin{itemize}
+\item literate programming
+\item design patterns - particularly emphasis on composition, decoration, adaptation over inheritance + achieving that with chain of responsibility 
+\end{itemize}
+
+
+They provide a descriptive model of drugs production that appears nearly identical to most industrial enterprises: acquisition of materials, production, retailing, wholesaling, and regulatory ``compliance'' (bribing officials).  Notably, the detail of this description and its quite reasonable analogy to regular enterprise.
+
+There have been other attempts at such an approach\cite{carley2003dynamic}.
 
 In the following sections, we lay out the uses and abuses of such a framework.  What makes for useful synthetic data sets?  What are the appropriate measures for detection strategies on them?  We motivate that discussion by inspiration from an over-simplified, network-based model of terrorism -- a sub-group of the Salafi jihad networks as described by Sageman {\em et al.}\cite{sageman} -- and community organization and communication.  Whether or not that work is an accurate description is not of particular concern.  Their qualitative properties are enough of a defensible testbed for modeling the communication patterns of one covert group.  We will point out where assumptions can be modified to identify different kinds of groups against a background population, since the behavior and structure of both the background and covert organizations are constantly evolving. 
 
@@ -141,7 +198,7 @@ The covert group and background population should be different in their activity
 Activity is understood by the observing entities by an imperfect process.  Depending on the situation modeled, that process might simply miss events.  Alternatively, the error could be misunderstanding the type or content of the activity, or between what individuals and interaction is occurring.  In general, the observing entities should be able to modify what is observed at what rates.  Also, the observation process may itself alter the state of the world -- i.e., the covert group may have the opportunity to respond to the observation process.
 
 \section*{A Language Matching the Simulation Requirements: Scala}
-Scala\cite{odersky2004overview} is an mixin-inheritance\cite{bracha1990mixin}, object-oriented, functional language, which also includes an message-passing based model for parallel computing\footnote{The actor model is transitioning from the initial implementation to that developed by the Akka project\cite{akka}.  We base our discussion on the Akka model.  The most important difference is the notion of contexts and context switching: with context switching, an actor alters how it responds to events.  This is a useful abstraction for representing evolving individual state.}.  Indeed, Scala is used under the hood for the network simulation framework NetLogo.
+Scala\cite{odersky2004overview} is an mixin-inheritance\cite{bracha1990mixin}, object-oriented, functional language, which also includes an message-passing based model for parallel computing\footnote{The actor model is transitioning from the initial implementation to that developed by the Akka project\cite{akka}.  We base our discussion on the Akka model.  The most important difference is the notion of contexts and their switching and stacking: with a switching and stacking, an actor alters how it responds to events.  This is a useful abstraction for representing evolving individual state.}.  Indeed, Scala is used under the hood for the network simulation framework NetLogo.
 
 Why do these traits make Scala particularly effective for the simulation requirements described above?  
 
@@ -222,11 +279,11 @@ These leaders then need to recruit subordinates.  In this particular simulation,
 
 At this point, we have all the necessary messages to construct the given network.  Those messages, based on the labels in Sageman et al. are covered in \Appref{sage_network}.  However, we still need to model how the plotters actually plot.  We will assume that all plotting (i) originates with leadership, (ii) when intermediates receive direction, they work with their \texttt{collaborators} as well as delegating work, (iii) that directions occasionally result in feedback to higher-ups, and finally (iv) all of the ``work'' and direction is captured as passing \texttt{Bad} messages.
 
-The simulation runner sends \texttt{Time(t:Long)} messages to all actors in the simulation to indicate the march of time (waiting for them to complete all their business for that step and reply with \texttt{TimeAck(t)}).  In general, during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
+The simulation runs as a series of iterations, and during each time step a leader may initiate a new \texttt{Bad} message.  Other members of the covert group circulate \texttt{Bad} messages subsequent to receiving a \texttt{Bad} message themselves, with different probabilities for sending messages to superiors, collaborators, and subordinates.  Those probabilities do not depend on the origin of the received message (though this could be a useful mechanical tweak to the model).
 
 Though those probabilities could be coded into the actors as part of their initialization, if they are set and adjusted by events then the actors (i) more accurrately reflect real behavior and (ii) the evolution of individuals occurs via a consistent simulation mechanism.  The former provides a lever for expert insight and empirical study.  The latter makes it easier to produce real-alike data -- i.e., simulation data that has the form of real observations.
 
-In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us a wedge for later adjustment without frontloading too much model complexity.  This represents the final step for how the plotters evolve in this simulation, so the following repeats the previous snippets with some condensing modifications to the code.  The most notable one is making use of a \texttt{case class} to represent all of the parameters that form a plotter's state.
+In our simplified example, we do not consider how ``real'' events would translate into adjusting a covert member's behavior.  Instead, the simulation runner sends a message, giving us an entry point for later adjustment without frontloading too much model complexity.  This represents the final step for how the plotters evolve in this simulation, so the following repeats the previous snippets with some condensing modifications to the code.  The most notable one is making use of a \texttt{case class} to represent all of the parameters that form a plotter's state.
 
 \begin{code}
 package object simactor { // defs to make implementation more natural
@@ -278,26 +335,30 @@ class SimActor extends Actor {
   }
   
   def plotter(ps:PlotterState = PlotterState()) : Receive = {
-    import ps._
-    def update(newPs:PlotterState) = context become plotter(newPs)
+    import ps.{copy => change, _}
+    def evolve(newPs:PlotterState) = context become plotter(newPs)
     
     {
        case Collaborate(group) =>
-         update(copy(collaborators = collaborators ++ (group - self)))
+         evolve(change(collaborators = collaborators ++ (group - self)))
        case Subordinates(recruits) =>
          recruits foreach { recruit => recruit ! Recruit }
-         update(copy(subordinates = subordinates ++ recruits))
+         evolve(change(subordinates = subordinates ++ recruits))
        case Recruit =>
-         update(copy(superiors = superiors + sender))
+         evolve(change(superiors = superiors + sender))
        case UpdateProb(changes) =>
-         update(copy(probs = probs ++ changes))
+         evolve(change(probs = probs ++ changes))
        case _ => // ignore other messages
     }
   }
 }
 \end{code}
 
-Now we address how the plotters plot: if they receive a \texttt{Bad} message from within the covert group, they have some probability of continuing plot activity with their peers, some probability of delegating some work to subordinates (if they have any), and some probability of reporting to their supervisors (again if they have any).  We will use this as the probability of {\em any} \texttt{Bad} interaction with those groups, and that in general their interaction with these groups is binomially distributed.  Therefore, if a particular plotter has $k$ collaborators (or supervisors, or subordinates), the probability of interacting with an individual in that group, $p_i$, is related to the probability of interacting with the group, $p_g$ -- which is the probability in the simulation state -- by:
+Now we address how the plotters plot: if they receive a \texttt{Bad} message from within the covert group, they have some probability of continuing plot activity with their peers, some probability of delegating some work to subordinates (if they have any), and some probability of reporting to their supervisors (again if they have any).  We will treat these activities as (i) independent, and (ii) the interactions with a particular group as a series of independent binomial trials.  We are not aware of any mechanical explanation justifying this model of interaction; indeed, it implies that, in a finite slice of time for an individual with finite resources, interactions that consume time and resources never interfere.  For a large interval of time, that might be reasonable -- but large intervals of time conflicts with assumption that actions stimulate responses in subsequent intervals.  Alternatively, we might infer that there is substantial variability in events (in terms of their duration and resource requirements) such that many interactions means small events, but this undermines the model assumption that these activities can be lumped together into a single category.
+
+The upside of this ``ideal gas'' model of social activity is ease of implementation.  However, we can circumscribe the appearance of this assumption in our simulation, so that some future Van der Waals can easily clean up our mess later with a more detailed interaction model.
+
+We will use this as the probability of {\em any} \texttt{Bad} interaction with those groups, and that in general their interaction with these groups is binomially distributed.  Therefore, if a particular plotter has $k$ collaborators (or supervisors, or subordinates), the probability of interacting with an individual in that group, $p_i$, is related to the probability of interacting with the group, $p_g$ -- which is the probability in the simulation state -- by:
 
 $$
 (1-p_i)^k = 1 - p_g \rightarrow p_i = 1-\sqrt[k]{1-p_g}
@@ -691,6 +752,8 @@ $$
 \bibliographystyle{plain}
 
 \begin{appendices}
+\section{Code for Base Simulation Actor}
+
 \section{Messages to Construct Salafi Network}\applabel{sage_network}
 \begin{code}
   // ...TODO figure out these messages
