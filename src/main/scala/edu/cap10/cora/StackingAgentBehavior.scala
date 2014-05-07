@@ -11,6 +11,8 @@ object Ack extends Reply
 case class Error(msg:String) extends Reply
 
 trait StackingAgentBehavior {
+  protected implicit def executionContext = TypedActor.context.dispatcher
+  
   def tick(implicit when:Int) : Future[Reply] = Future.successful(Ack)
   /* for any traits that respond to ticks
    * override def tick(implicit when:Int) = {
