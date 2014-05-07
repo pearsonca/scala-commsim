@@ -1,10 +1,41 @@
-scala-commsim
-=============
+##SCALA-COMMSIM - A Scala-Based Social Simulator
+###Abstract
+Network science approaches to social phenomena often reduce to comparing various centrality
+measures: between groups, between times, aggregating on different interactions, *et cetera*.
+The network, however, is only a representation.  Unless that network explains
+(and preferrably, predicts) some phenomena, it has no meaning, and those centrality metrics
+must recognized to be similarly meaningless.
 
-a Scala based simulation of communication on social networks
+Sans meaning, our work is mathematics at best, and bookkeeping at worst.
 
-LICENSE
-=======
+We have developed a tool to start with meaning -- a framework for simulating phenomena that
+are not explicitly network based -- which records events and observations.  The observations
+provide a synthetic data source for assessment of network science conclusions.  Particularly,
+we address false positive and negative rates trying to distinguish a group from a background
+population purely on network metrics.
+
+###Introduction
+
+###Methods
+We demonstate using the framework to create individual-based models, incrementally composed
+from different phenomena.
+
+####Family Demographics
+Given basic population information -- e.g., age of reproduction, typical number of children,
+life expectancy -- we can simulate models of family life, undertake careful inference
+work to fit our model parameters, and then select a particular model using model comparison
+techniques.  If our models of family life are phenomenological -- we describe some
+process by which families are formed, grow, and die, rather than a simply formula with
+coefficients to fit -- then we are assigning meaning.  Perhaps not well, and certainly only
+as well as our data allow, but our results draw phenomenological conclusions, not just
+mathematic ones.
+
+If those models are individual-based, then we may capture interactions and subject them to
+network-based analyses.
+
+####Economic Interactions
+
+##LICENSE
 
 Create Commons, Non-Commercial, Share-alike
 
