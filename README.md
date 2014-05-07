@@ -4,15 +4,14 @@ Network science approaches to social phenomena often reduce to comparing various
 measures: between groups, between times, aggregating on different interactions, *et cetera*.
 The network, however, is only a representation.  Unless that network explains
 (and preferrably, predicts) some phenomena, it has no meaning, and those centrality metrics
-must recognized to be similarly meaningless.
+must recognized to be similarly meaningless.  Sans meaning, our work is mathematics at best,
+and bookkeeping at worst.
 
-Sans meaning, our work is mathematics at best, and bookkeeping at worst.
-
-We have developed a tool to start with meaning -- a framework for simulating phenomena that
-are not explicitly network based -- which records events and observations.  The observations
-provide a synthetic data source for assessment of network science conclusions.  Particularly,
-we address false positive and negative rates trying to distinguish a group from a background
-population purely on network metrics.
+We discuss two complementary perspectives, with the goal of exhorting reader to avoid network
+accounting, one generally from physical sciences traditions and one specifically from
+Partially Observed Markov Process modeling.  We discuss how lessons from software engineering
+culture can provide a practical means to implement these perspectives, and close with a
+demonstration.
 
 ###Introduction
 
