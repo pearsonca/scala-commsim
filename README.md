@@ -7,11 +7,16 @@ network effects.  That may be true.
 These network representations, however, are a remarkably simple description, and
 simple models of all but the most trivial phenomena must make very strong
 assumptions.  We have little basis to assume anything: we accurately gauge our
-knowledge by calling them *dark* networks.
+knowledge by calling them *dark*.
 
-We may, however, combine approaches that have demonstrated performance in the
-natural sciences -- namely explicit inclusion of the observation model -- with a
-recognition of the appropriate formal language for the social sciences.
+We may, however, use approaches that have demonstrated performance in the
+natural sciences -- namely explicit inclusion of the observation process, and
+iterated parameter fitting and assumption relaxation.  Natural science phenomena are often close enough to
+physical science phenomena for largely numerical approaches, but we argue that
+the complexity of social science phenomena demand a formal expression more in
+the vein of general purpose programming.
+
+We close with a practical demonstration.
 
 Network science approaches to social phenomena often reduce to comparing various
 centrality measures: between groups, between times, aggregating on different
