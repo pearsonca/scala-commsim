@@ -310,9 +310,6 @@ Attribute source to
 
 Carl A. B. Pearson, github/pearsonca
 
-[janzen2005test]:
-http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac ""
-[barabasi1999]:
-http://dx.doi.org/10.1126/science.286.5439.509 ""
-[atlas2012]:
-http://www.sciencedirect.com/science/article/pii/S0370269312001852
+[janzen2005test]: http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac ""
+[barabasi1999]: http://dx.doi.org/10.1126/science.286.5439.509 ""
+[atlas2012]: http://www.sciencedirect.com/science/article/pii/S0370269312001852 ""
