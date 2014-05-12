@@ -1,0 +1,3 @@
+baseurl: "http://pearsonca.github.io/scala-commsim"
+markdown: kramdown
+highlighter: pygments
