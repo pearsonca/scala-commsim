@@ -36,3 +36,5 @@
 target/*
 
 project/target/*
+
+_site/*
