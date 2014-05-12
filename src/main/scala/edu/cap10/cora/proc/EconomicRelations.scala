@@ -6,14 +6,14 @@ import scala.concurrent.duration._
 
 import edu.cap10.cora._
 
-trait Customer extends StackingAgentBehavior {
+trait Customer extends TimeResponse {
 
 }
 
-trait BusinessOwner extends StackingAgentBehavior {
+trait BusinessOwner extends TimeResponse {
   
 }
 
-trait Employee extends StackingAgentBehavior {
+trait Employee extends TimeResponse {
   
 }

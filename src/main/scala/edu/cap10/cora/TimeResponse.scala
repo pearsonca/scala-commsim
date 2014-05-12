@@ -1,26 +1,19 @@
 package edu.cap10.cora
 
-import scala.concurrent.Future
+import scala.concurrent.Future.successful
 import akka.actor.TypedActor
-import akka.actor.TypedProps
-import akka.actor.ActorRef
 
-trait Reply
+trait TimeResponse {
+  protected implicit final def executionContext = TypedActor.context.dispatcher
 
-object Ack extends Reply
-case class Error(msg:String) extends Reply
-
-trait StackingAgentBehavior {
-  protected implicit def executionContext = TypedActor.context.dispatcher
-  
-  def tick(implicit when:Int) : Future[Reply] = Future.successful(Ack)
+  def tick(implicit when:Int) = successful(Ack)
   /* for any traits that respond to ticks
    * override def tick(implicit when:Int) = {
    *   ... trait specific behavior ...
    *   super.tick
    * }
    **/
-  
+
 }
 
 /* TODO: allow developers to just write:

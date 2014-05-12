@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.actor.TypedActor
 import akka.actor.TypedProps
 
-import edu.cap10.cora.StackingAgentBehavior
+import edu.cap10.cora.TimeResponse
 import edu.cap10.cora.Reply
 
 import scala.concurrent.Future
@@ -59,7 +59,7 @@ class FiveSeven(override val toString:String) extends FifthTickThanker with Seve
 case class Greeting(override val toString: String)
 case class Salutation(override val toString: String)
 
-trait SeventhTickHelloer extends StackingAgentBehavior {
+trait SeventhTickHelloer extends TimeResponse {
   override def tick(implicit when:Int) = {
     if (when % 7 == 0) say(when, Greeting("Hello"))
     super.tick
@@ -68,7 +68,7 @@ trait SeventhTickHelloer extends StackingAgentBehavior {
   def say(on:Int, h:Greeting) = println(f"Day $on : $h World, I'm the SeventhTickHelloer Trait!")
 }
 
-trait FifthTickThanker extends StackingAgentBehavior {
+trait FifthTickThanker extends TimeResponse {
   override def tick(implicit when:Int) = {
     if (when % 5 == 0) say(when, Salutation("Thanks"))
     super.tick

@@ -6,7 +6,7 @@ import scala.concurrent.duration._
 
 import edu.cap10.cora._
 
-trait FamilyRelations extends StackingAgentBehavior {
+trait FamilyRelations extends TimeResponse {
   
   private[this] var parents  : Set[FamilyRelations] = Set()
   private[this] var children : Set[FamilyRelations] = Set()

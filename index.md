@@ -59,15 +59,15 @@ publications on networks by scientists from that background often adopt this
 assumption implicitly.  Sometimes, this assumption is generally reasonable (e.g.,
 Ising models of phase transitions), and sometimes it's acceptable given the
 specific question (e.g., the growth of the world wide web or citation networks).
-Sometimes [posterior analyses][barabasi1999] may indicate this assumption
-is not obviously precluded, though that's scant indication the assumption is
-reasonable.
+Sometimes [posterior analyses][barabasi1999] find this assumption is not
+obviously precluded (though they may argue a stronger conclusion), but that's
+scant indication the assumption is reasonable.
 
 This homogeneity in kinds, however, seems suspect for many questions in social
-science.  Several of the other chapters in these proceedings highlight those and
-discuss ways to reduce these assumptions in network models.  We approach the
-question from the complementary direction, by treating the network as the
-observation rather than the phenomena.  More on that in a moment.
+science.  Several of the other chapters in these proceedings highlight such
+questions and discuss ways to reduce these assumptions in network models.  We
+approach the problem from the complementary direction, by treating the network
+as the observation rather than the phenomena.  More on that in a moment.
 
 Another subtle advantage of homogeneity in kinds is the ability to smooth over
 observation difficulties.  Can't find the Higgs boson?  Get another 300 trillion
@@ -257,7 +257,41 @@ affiliation
 third trait for covert group membership -- all agents have it, only active in
 some (recruits)
 
+all use a generic base agent trait to cover tracking through time:
+
+~~~ scala
+import scala.concurrent.Future.successful
+import akka.actors.TypedActor
+
+trait TimeResponse {
+  protected implicit final def executionContext = TypedActor.context.dispatcher
+  def tick(implicit when:Int) = successful(Ack)
+}
+~~~
+
+###`ReligiousAffiliation`
+
+~~~ scala
+trait ReligiousAffiliation extends TimeResponse {
+
+}
+~~~
+
+
+- institution
+- attendence generator on tick
+- probability of attendence
+
+note assumptions, like weekly service model, uniform probability of attendance.
+options for higher attendance on holidays, longer religious observations, etc
+
 ###`FamilyRelations`
+
+~~~ scala
+trait FamilyRelations extends TimeResponse {
+
+}
+~~~
 
 - parents
 - partner
@@ -266,15 +300,6 @@ some (recruits)
 
 note how assumptions can be highlighted: monogamous, permanent partnerships
 no gender in model
-
-###`ReligiousAffiliation`
-
-- institution
-- attendence generator on tick
-- probability of attendence
-
-note assumptions, like weekly service model, uniform probability of attendance.
-options for higher attendance on holidays, longer religious observations, etc
 
 ###`CovertAffiliation`
 
@@ -305,3 +330,4 @@ ties
 [janzen2005test]: <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac> "optional title"
 [barabasi1999]: <http://dx.doi.org/10.1126/science.286.5439.509> "optional title"
 [atlas2012]: <http://www.sciencedirect.com/science/article/pii/S0370269312001852> "optional title"
+[biernacki1981snowball]: <http://smr.sagepub.com/content/10/2/141.full.pdf> "optional title"
