@@ -259,7 +259,7 @@ some (recruits)
 
 all use a generic base agent trait to cover tracking through time:
 
-~~~ scala
+{% highlight scala %}
 import scala.concurrent.Future.successful
 import akka.actors.TypedActor
 
@@ -267,15 +267,15 @@ trait TimeResponse {
   protected implicit final def executionContext = TypedActor.context.dispatcher
   def tick(implicit when:Int) = successful(Ack)
 }
-~~~
+{% endhighlight %}
 
 ###`ReligiousAffiliation`
 
-~~~ scala
+{% highlight scala %}
 trait ReligiousAffiliation extends TimeResponse {
 
 }
-~~~
+{% endhighlight %}
 
 
 - institution
