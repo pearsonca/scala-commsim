@@ -1,3 +1,4 @@
-baseurl: "http://pearsonca.github.io/scala-commsim"
+absoluteurl: http://pearsonca.github.io
+baseurl: /scala-commsim
 markdown: kramdown
 highlighter: pygments

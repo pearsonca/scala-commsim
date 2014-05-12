@@ -11,7 +11,7 @@ authors:
 ##Abstract
 
 Implicit in the label *dark network* is a suggestion that the activity of covert
-groups is driven by -- and therefore, may be understood in terms of -- network
+groups is driven by - and therefore, may be understood in terms of - network
 measures like degree distributions and centralities.  That may be true.
 
 Network representations, however, are a remarkably simple description, and
@@ -75,17 +75,17 @@ observation difficulties.  Can't find the Higgs boson?  Get another 300 trillion
 terrorist cells, let alone a trillion times that, but the few samples we do have
 are further fraught with observation issues.
 
-For certain flavors of covert groups -- e.g., consumers and distributors of
-illegal substances, persons with persecuted sexual preferences -- snowball
+For certain flavors of covert groups - e.g., consumers and distributors of
+illegal substances, persons with persecuted sexual preferences - snowball
 sampling can make [reasonable in-roads][biernacki1981snowball].  However, the
 elements of successful snowball sampling are conspicuously untenable for certain
 classes of covert groups, such as violent terrorist organizations or state
 espionage apparati.  In some cases, these groups may even be structured in a way
--- high compartmentalization, with multiple layers of indirection -- such that
+- high compartmentalization, with multiple layers of indirection - such that
 fundamental assumptions of snowball sampling about the relationship structure
 are violated.
 
-These problems -- heterogeneity and stringent observation limits -- are shared
+These problems - heterogeneity and stringent observation limits - are shared
 by the natural sciences.  Recent work has begun to tackle these problems in
 network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
 some history of broader adoption of this perspective via concepts like
@@ -93,7 +93,7 @@ some history of broader adoption of this perspective via concepts like
 
 This work may still enjoy more homogeneity in the atomic pieces of the model
 than the social sciences, and many of the pertinent observations are the same
-sort of properties that concern the physical sciences -- temperatures, chemical
+sort of properties that concern the physical sciences - temperatures, chemical
 concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
 formal representation remains quite powerful.
 
@@ -114,7 +114,7 @@ Prominent articles in the social sciences have previously argue this position,
 though perhaps less specifically, by observing that agent-based
 modeling is the more natural and powerful means to explore representations of
 social phenomena.  Yet, some still insist on using networks as a fundamental
-element of [those models][Snijders201044].  We propose a different lens -- the
+element of [those models][Snijders201044].  We propose a different lens - the
 transient *events* are what should be modeled, not the ties.  The events are
 then filtered through a model observation process which translates those events
 into a network; this is where we have the opportunity to explicitly state how we
@@ -183,7 +183,7 @@ phenomena can be separately modeled and tested (for code quality) and validated
 (for parameter fitting), then assembled iteratively (flow + heat exchange) with
 corrections made at each step.
 
-this is consistent with good modeling habits -- start small, then relax assumptions
+this is consistent with good modeling habits - start small, then relax assumptions
 (aka combine models).
 
 it is possible to implement these by implementing many small models first, then
@@ -195,7 +195,7 @@ be the subject of rigorous testing (itself a way to improve the formal
 expression of a model beyond the syntactic constraints of a language) and
 independent pre-parameterization, and of course reuse.
 
-> want to code in a way the minimizes rework -- not just for practical reasons,
+> want to code in a way the minimizes rework - not just for practical reasons,
 but so that we may be confident of the foundation.  Reuse means we gain all the
 confidence in the past work that has accrued, but also in revisiting the old
 code we may fix bugs, etc.  if we've been working in the open, repeatable
@@ -203,7 +203,7 @@ science mode, then we should be able to easily revisit past work that may have
 been effected by the bug.
 
 > how do we encourage reuse?  by building pieces in a modular way.  this has a
-number of advantages -- easier to test, easier to get domain experts to reason
+number of advantages - easier to test, easier to get domain experts to reason
 about their piece, easier to upgrade pieces (both computationally and
 representationally). The principle disadvantage appears when we want those
 pieces to talk to each other.
@@ -254,7 +254,7 @@ providing benefit of compiled, strongly typed language.
 two basic social traits - family relationships, religious affiliation
 affiliation
 
-third trait for covert group membership -- all agents have it, only active in
+third trait for covert group membership - all agents have it, only active in
 some (recruits)
 
 all use a generic base agent trait to cover tracking through time:
@@ -287,11 +287,11 @@ options for higher attendance on holidays, longer religious observations, etc
 
 ###`FamilyRelations`
 
-~~~ scala
+{% highlight scala %}
 trait FamilyRelations extends TimeResponse {
 
 }
-~~~
+{% endhighlight %}
 
 - parents
 - partner
