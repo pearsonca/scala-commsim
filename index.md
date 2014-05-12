@@ -1,9 +1,13 @@
 ---
 layout: paper
 title: Challenges to Understanding Covert Groups
+authors:
+ - name: Carl A. B. Pearson
+   email: cap10@ufl.edu
+   corresponding: 1
+ - name: Burton H. Singer
+   email: bhsinger@ufl.edu
 ---
-#{{ page.title }}
-
 ##Abstract
 
 Implicit in the label *dark network* is a suggestion that the activity of covert
