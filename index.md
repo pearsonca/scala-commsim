@@ -300,15 +300,7 @@ same org.).  Show religious affiliation modifying family generation
 (partnership formation).  show covert recruitment based on familial / religious
 ties
 
-##LICENSE
-
-Create Commons, Non-Commercial, Share-alike
-
-http://creativecommons.org/licenses/by-nc-sa/3.0/
-
-Attribute source to
-
-Carl A. B. Pearson, github/pearsonca
+##Afterthoughts
 
 [janzen2005test]: http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac ""
 [barabasi1999]: http://dx.doi.org/10.1126/science.286.5439.509 ""
