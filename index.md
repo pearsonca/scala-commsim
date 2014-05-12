@@ -1,4 +1,5 @@
 ---
+layout: paper
 ---
 #Challenges to Understanding Clandestine Groups
 
