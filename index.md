@@ -1,7 +1,8 @@
 ---
 layout: paper
+title: Challenges to Understanding Covert Groups
 ---
-#Challenges to Understanding Clandestine Groups
+#{{ page.title }}
 
 ##Abstract
 
