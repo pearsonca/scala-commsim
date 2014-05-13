@@ -2,3 +2,10 @@ absoluteurl: http://pearsonca.github.io
 baseurl: /scala-commsim
 markdown: kramdown
 highlighter: pygments
+exclude:
+  - 'rscripts'
+  - 'src'
+  - 'target'
+  - 'project'
+  - '*.sh'
+  - '*.sbt'

@@ -1,2 +1,2 @@
 #!/bin/bash
-jekyll serve -w --baseurl='' --config _locconfig.yml
+jekyll serve -w --baseurl='' --config=_config.yml,_locconfig.yml

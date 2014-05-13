@@ -1,4 +1,2 @@
 absoluteurl: http://localhost:4000
 baseurl: ''
-markdown: kramdown
-highlighter: pygments
