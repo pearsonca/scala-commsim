@@ -6,11 +6,11 @@ import scala.concurrent.duration._
 
 import edu.cap10.cora._
 
-trait FamilyRelations extends TimeResponse {
+trait FamilyRelations extends Agent with TimeResponse {
   
-  private[this] var parents  : Set[FamilyRelations] = Set()
-  private[this] var children : Set[FamilyRelations] = Set()
-  private[this] var partners : Set[FamilyRelations] = Set()
+  protected var parents  : Set[FamilyRelations] = Set()
+  protected var children : Set[FamilyRelations] = Set()
+  protected var partner : Option[FamilyRelations] = None
   
   private[this] def nbSiblings = {
     val kids = parents.map { _.getChildren }

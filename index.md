@@ -78,12 +78,12 @@ are further fraught with observation issues.
 For certain flavors of covert groups - e.g., consumers and distributors of
 illegal substances, persons with persecuted sexual preferences - snowball
 sampling can make [reasonable in-roads][biernacki1981snowball].  However, the
-elements of successful snowball sampling are conspicuously untenable for certain
-classes of covert groups, such as violent terrorist organizations or state
-espionage apparati.  In some cases, these groups may even be structured in a way
-- high compartmentalization, with multiple layers of indirection - such that
-fundamental assumptions of snowball sampling about the relationship structure
-are violated.
+techniques required for successful snowball sampling are conspicuously untenable
+for certain classes of covert groups, such as violent terrorist organizations or
+state espionage apparati.  In some cases, these groups may even be structured in
+a way - high compartmentalization, with multiple layers of indirection - such
+that fundamental assumptions of snowball sampling about the relationship
+structure are violated.
 
 These problems - heterogeneity and stringent observation limits - are shared
 by the natural sciences.  Recent work has begun to tackle these problems in
@@ -146,36 +146,27 @@ model to the phenomena.
 These traits have analogies in code, though the first two were difficult to put into
 practice until recently.  Historically, most general purpose languages reflected
 what actually occurred in memory with the syntax improvements limited to
-numerical abstractions and flow control.  The advent of object-oriented concepts
-changed how we reasoned about programs, leading to languages and libraries
-designed for those concepts.  Recent language developments bring more-natural
-language syntax while maintaining the precision necessary to direct a computer.
-We may now precisely represent complex models with little deviation (when read)
-from natural language.
+numerical abstractions and flow control.  The development and promulgation of object-oriented concepts
+shifted how we reasoned about programs, leading to languages and libraries
+designed for those concepts.  Modern programming languages bring even-more-natural
+language syntax while maintaining the precision necessary to direct a computer,
+allowing us to represent complex models with [literate code][knuth1984literate].
+We will demonstrate this shortly using Scala.
 
-> TODO blah blah scala, some mv'd material below
+First, there are some other practical considerations to modeling in code, also
+analogous to features of modeling in equations.
 
-> Software engineering has acknowledged this for several decades now: the formal
-construct of a word processor have naught to do with linear algebra, and thus
-the notation, naming, and implementation language has evolved to best serve the
-problem.  Social scientists may find valuable philosophical perspective from the
-physical and natural sciences, but as to practical tools to use, they would be
-better served heeding the development techniques of, say, the videogame
-industry.
+- equations relatively easy to check
+- often clear where exactly assumptions are being made (e.g., explicitly dropping
+particular order)
+- equations are there for re-use, re-mixing
 
-> In keeping with those challenges, that discipline has developed languages which
-can be written and read much more naturally, while still maintaining sufficient
-precision to unambiguously instruct a computer.  Traditionally, domain specific
-languages had more natural-language like syntax, but restricted to their
-particular domains, and these languages were typically not flexible enough to be
-practical for general purpose programming.  However, there is now a language
-which is general purpose, is cross-compatible with an existing widely used
-language, has agents built into the standard library, and was designed with the
-explicit goal being a more natural language: Scala.
-
-> We will not dwell on Scala's syntactic details, because we feel that the code
-snippets in our demonstration section will adequately convey how natural it is
-to write.
+should expect the same for any code model - pseudo-code, preferably the
+actual code itself (depending on how critical performance is - high performance
+languages are not known for code clarity).  Non-trivial equation
+models typically consistent of several equations of different kinds, each
+representing some aspect of the system.  That set forms the basis for some particular
+study, yet those equations are independently re-usable.
 
 engineering numerical models often involve many different phenomena (eg a flow
 model, a heat exchange model, a power generation model).  those
@@ -264,7 +255,6 @@ import scala.concurrent.Future.successful
 import akka.actors.TypedActor
 
 trait TimeResponse {
-  protected implicit final def executionContext = TypedActor.context.dispatcher
   def tick(implicit when:Int) = successful(Ack)
 }
 {% endhighlight %}
@@ -331,3 +321,4 @@ ties
 [barabasi1999]: <http://dx.doi.org/10.1126/science.286.5439.509> "optional title"
 [atlas2012]: <http://www.sciencedirect.com/science/article/pii/S0370269312001852> "optional title"
 [biernacki1981snowball]: <http://smr.sagepub.com/content/10/2/141.full.pdf> "optional title"
+[knuth1984literate]: <http://dx.doi.org/10.1093/comjnl/27.2.97> "optional title"
