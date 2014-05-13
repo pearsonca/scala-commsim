@@ -15,7 +15,7 @@ import edu.cap10.cora.Ack
 
 object Demo {
 
-  def main(args:Array[String]) = {
+  def main(args:Array[String]) : Unit = {
     val as = ActorSystem("Demo")
     val system = TypedActor(as)
     implicit val ec = as.dispatcher
@@ -25,8 +25,8 @@ object Demo {
     
     range.foldLeft(Future.successful[Reply](Ack))( 
         (last, i) => {
-          val thing = last.map( _ => seven.tick(i) )
-          thing
+          val res = for (ack <- last; next <- seven.tick(i)) yield next
+          res
         }
     )
     

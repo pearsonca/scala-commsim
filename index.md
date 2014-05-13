@@ -239,8 +239,6 @@ of bite size bits rather than the whole pie, reuse, etc).  Other languages can
 do composition, though authors not aware of any that do so as easily while still
 providing benefit of compiled, strongly typed language.
 
-######
-
 ##Demonstration Model
 two basic social traits - family relationships, religious affiliation
 affiliation
