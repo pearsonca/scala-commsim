@@ -324,3 +324,4 @@ ties
 [knuth1984literate]: <http://dx.doi.org/10.1093/comjnl/27.2.97> "optional title"
 [Ionides05122006]: <http://dx.doi.org/10.1073/pnas.0603181103> "optional title"
 [volz2013inferring]: <http://dx.doi.org/10.1371/journal.pcbi.1003397> "optional title"
+[Snijders201044]: <http://dx.doi.org/10.1016/j.socnet.2009.02.004> "optional title"
