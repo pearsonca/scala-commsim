@@ -322,3 +322,5 @@ ties
 [atlas2012]: <http://www.sciencedirect.com/science/article/pii/S0370269312001852> "optional title"
 [biernacki1981snowball]: <http://smr.sagepub.com/content/10/2/141.full.pdf> "optional title"
 [knuth1984literate]: <http://dx.doi.org/10.1093/comjnl/27.2.97> "optional title"
+[Ionides05122006]: <http://dx.doi.org/10.1073/pnas.0603181103> "optional title"
+[volz2013inferring]: <http://dx.doi.org/10.1371/journal.pcbi.1003397> "optional title"
