@@ -156,30 +156,61 @@ allowing us to represent complex models with [literate code][knuth1984literate].
 We will demonstrate this shortly using Scala.
 
 First, there are some other practical considerations to modeling in code, also
-analogous to features of modeling in equations.
+analogous to features of good modeling with equations.
 
-- equations relatively easy to check
-- often clear where exactly assumptions are being made (e.g., explicitly dropping
-particular order)
-- equations are there for re-use, re-mixing
+Equation-based models tend to relate a few parameters at a time, despite
+attempting to model many different interacting phenomena.  Consider recent work
+on addressing disease risk as a consequence of [mosquito ecology response to climate change][morincomrie2010].
+In that model, many relevant ecological phenomena are included, each by an equation
+linking a few variables at a time.  This general approach affords many advantages:
 
-should expect the same for any code model - pseudo-code, preferably the
-actual code itself (depending on how critical performance is - high performance
-languages are not known for code clarity).  Non-trivial equation
-models typically consistent of several equations of different kinds, each
-representing some aspect of the system.  That set forms the basis for some particular
-study, yet those equations are independently re-usable.
+- each relation can be individually considered (for comprehension, for evaluation
+of reasonableness, for experimental validation, *et cetera*)
+- the model can be constructed incrementally; i.e., relationships can begin as
+simple constant parameters and then later capture more sophisticated covariates
+- generally, alternative relationships can be proposed and substituted into the model
+- relationships are individually portable to other modeling contexts
+- use of general forms (where accurate) allows leveraging analytical results for
+those general forms (e.g., integrals, standard approximations, transformations)
 
-engineering numerical models often involve many different phenomena (eg a flow
-model, a heat exchange model, a power generation model).  those
-phenomena can be separately modeled and tested (for code quality) and validated
-(for parameter fitting), then assembled iteratively (flow + heat exchange) with
-corrections made at each step.
+The [Morin-Comrie model][morincomrie2010] also illustrates many bad
+habits related to equation based modeling.  Many equations have atypical syntax
+(e.g., functional relationships expressed as $f_T$ instead of $f(T)$, piece-wise
+defined functions are discontinuous and expressed with the domains first).  Many
+constants are expressed simply as numerical values rather than the fitted
+parameters that they are, though this problem is inconsistent, contributing even
+further to the confusion about which numbers of which variety.  Most of the
+equations are from other sources, but
+there is no effort to argue that application context is consistent with the source
+context.
 
-this is consistent with good modeling habits - start small, then relax assumptions
-(aka combine models).
+You can find many similar examples throughout scientific and engineering
+literature, and while the balance of good and bad will vary, these general
+themes persist.  They have analogies in code-based models, even when those
+models go beyond representing equation-based models, and these analogies are
+well-captured by general software engineering patterns and principles developed
+over many years in that industry.
 
-it is possible to implement these by implementing many small models first, then
+Providing a complete overview of that discipline is best left to other venues.
+We will instead focus on few lessons from a [seminal work in this area][gofbook],
+a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
+
+The principle lessons of the [Design Patterns book][gofbook] are that we should
+build objects - in this case, Agents - by composing capabilities and that we
+should couple those capabilities as loosely as possible.  That work, and
+subsequent innovation built upon it, describes many ways to achieve that end.
+In our demonstration, we will focus on a few: *Delegate*, *State*, and
+*Chain of Responsibility*.
+
+We will also highlight how the perspective of
+test-driven design is a natural fit for scientific modeling - in addition to
+providing confidence in implementation details, the test-based approach provides
+additional specification of what the model component does.
+
+Finally, Our Scala implementation also suggests a broader scientific opportunity
+for re-use.
+
+> it is possible to implement these by implementing many small models first, then
 copy pasting that code into a bigger models, and so on.  copy-pasting and making
 things play nice takes a lot of effort.  using object oriented concepts, we can
 avoid copy-pasta.  there are several other advantages: partitioning work allows
@@ -210,7 +241,7 @@ tinkering to get up and running.  It does not preclude some problems (e.g.,
 namespace collisions), but the sort of modeling care needed to avoid those is
 far lower than the sort of care to properly apply the design patterns.
 
-> Test Driven Design [TDD][janzen2005test] = looks exactly like Koopman's modeling
+> [Test Driven Design (TDD)][janzen2005test] = looks exactly like Koopman's modeling
 loop
 
 There are several approaches to achieve this.
@@ -325,3 +356,5 @@ ties
 [Ionides05122006]: <http://dx.doi.org/10.1073/pnas.0603181103> "optional title"
 [volz2013inferring]: <http://dx.doi.org/10.1371/journal.pcbi.1003397> "optional title"
 [Snijders201044]: <http://dx.doi.org/10.1016/j.socnet.2009.02.004> "optional title"
+[morincomrie2010]: <http://dx.doi.org/10.1007/s00484-010-0349-6> "optional title"
+[gofbook]: <> "Design Patterns"
