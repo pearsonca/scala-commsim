@@ -199,16 +199,30 @@ The principle lessons of the [Design Patterns book][gofbook] are that we should
 build objects - in this case, Agents - by composing capabilities and that we
 should couple those capabilities as loosely as possible.  That work, and
 subsequent innovation built upon it, describes many ways to achieve that end.
-In our demonstration, we will focus on a few: *Delegate*, *State*, and
-*Chain of Responsibility*.
+In our demonstration, we will focus on a few -- *Delegate*, *State*, and
+*Chain of Responsibility* -- which reflect the way scientific models acheive
+reuse.
 
-We will also highlight how the perspective of
-test-driven design is a natural fit for scientific modeling - in addition to
+delegate - agent has some capability, executes it by plugging in some module then handing off
+queries / method calls to that module.
+
+state - response sets are driven by historical exposure.  allows agents to have different
+responses to the same events without model having to create entirely new objects
+
+chain of responsibility concept allows single event to trigger many responses from different
+aspects of agent behavior.
+
+Test-driven design is also a natural fit for scientific modeling.  As [Janzen and Saiedian highlight in their review][janzen2005test], test driven design encourages incremental development of
+narrow, independent behaviors.  as new behavior added to a module, or modules integrated,
+can use test infrastructure to verify that model still obeys constraints / context
+expressed by tests.  This looks quite similar to good modeling practice: develop
+simplest conceivable alternative models (which has many, many simplifying assumptions baked in).
+those model results will suggest two routes: either experiments to distinguish models,
+or that it is time to relax the assumptions and see if results hold.
+
+in addition to
 providing confidence in implementation details, the test-based approach provides
 additional specification of what the model component does.
-
-Finally, Our Scala implementation also suggests a broader scientific opportunity
-for re-use.
 
 > it is possible to implement these by implementing many small models first, then
 copy pasting that code into a bigger models, and so on.  copy-pasting and making
@@ -241,10 +255,9 @@ tinkering to get up and running.  It does not preclude some problems (e.g.,
 namespace collisions), but the sort of modeling care needed to avoid those is
 far lower than the sort of care to properly apply the design patterns.
 
-> [Test Driven Design (TDD)][janzen2005test] = looks exactly like Koopman's modeling
-loop
 
-There are several approaches to achieve this.
+##Scala Demonstration Model
+There are several approaches to achieve the aforementioned design patterns.
 
 inheritance is one option.  However, traditional linear
 inheritance is problematic for reusability if we want to have different kinds.
@@ -272,7 +285,6 @@ of bite size bits rather than the whole pie, reuse, etc).  Other languages can
 do composition, though authors not aware of any that do so as easily while still
 providing benefit of compiled, strongly typed language.
 
-##Demonstration Model
 two basic social traits - family relationships, religious affiliation
 affiliation
 
