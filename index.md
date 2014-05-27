@@ -99,20 +99,21 @@ sort of properties that concern the physical sciences - temperatures, chemical
 concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
 formal representation remains quite powerful.
 
-We contend that the notion of adopting the equation-based formalism for social
-science problems as the go-to for modeling is fundamentally flawed.  Yes,
-there are plenty of important numerical quantities.  Yes, quantitative statistical
-analysis of the models is still important.
+However, given the extreme heterogeneity in kinds for most social science
+questions, we contend that adopting the equation-based formalism to model those
+problems is fundamentally flawed.  Yes, there are plenty of important numerical
+quantities.  Yes, quantitative statistical analysis of the models is still
+important.
 
 But we should accept that many social science models are most naturally expressed
 with the tools of mathematical logic, which are today most practically
-implemented in general purpose programming languages.  And while the physical
+implemented in general purpose programming languages.  While the physical
 and natural sciences have a successful history with numerical models, and
 certainly a tradition of model selection worth consideration, the best source of
 practical model insight looks more like the videogame industry than physicists
 working on statistical mechanics.
 
-Prominent articles in the social sciences have previously argue this position,
+Prominent articles in the social sciences have previously argued this position,
 though perhaps less specifically, by observing that agent-based
 modeling is the more natural and powerful means to explore representations of
 social phenomena.  Yet, some still insist on using networks as a fundamental
@@ -128,10 +129,26 @@ outcomes of that philosophy when realized in general purpose programming, and
 close with an implementation that reflects those values in a simulation of
 covert groups.
 
+One aside before we proceed: there have been great strides in non-model based
+approaches to prediction, such as neural networks and classification trees, and
+those alternatives are both powerful and avoid many problems associated
+[with models][breiman2001statistical].  But to use them effectively, we
+carefully attend to the distinction between [explanation and prediction][shmueli2010explain].
+We do not address these approaches here, but we do wish to highlight what
+"thinking carefully" means for covert groups.  These approaches are largely
+interpolative: the product is at most what is in the training data.  There may be
+quite a bit in the training set, indeed enough beyond what is readily apparent to
+any researcher to make the process look capable of extrapolation.
+For covert groups, however, training data is sparse and what
+is present may be mischaracterized.  Researchers attempting to apply non-model
+based approaches to covert groups should be especially skeptical, disbelieving
+any results that do not explicitly address substantial input censoring and
+error.
+
 ##Principles of Modeling with Code
 
 Scientific results are not measured by some idealized ability to explain and
-predict, but by their use them to those ends.  Regardless of their power,
+predict, but by their use to those ends.  Regardless of their power,
 if poorly communicated, they will remain idle.  Which is to say, great stories
 and great storytelling are not one and the same.  Our common language
 description of scientific ideas contributes to their effective communication,
@@ -148,12 +165,13 @@ model to the phenomena.
 These traits have analogies in code, though the first two were difficult to put into
 practice until recently.  Historically, most general purpose languages reflected
 what actually occurred in memory with the syntax improvements limited to
-numerical abstractions and flow control.  The development and promulgation of object-oriented concepts
+abstractions for convenient creation and manipulation of numerical types, and
+for flow control.  The development and promulgation of object-oriented concepts
 shifted how we reasoned about programs, leading to languages and libraries
 designed for those concepts.  Modern programming languages bring even-more-natural
 language syntax while maintaining the precision necessary to direct a computer,
 allowing us to represent complex models with [literate code][knuth1984literate].
-We will demonstrate this shortly using Scala.
+We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
 First, there are some other practical considerations to modeling in code, also
 analogous to features of good modeling with equations.
@@ -170,7 +188,7 @@ of reasonableness, for experimental validation, *et cetera*)
 simple constant parameters and then later capture more sophisticated covariates
 - generally, alternative relationships can be proposed and substituted into the model
 - relationships are individually portable to other modeling contexts
-- use of general forms (where accurate) allows leveraging analytical results for
+- use of general equation forms (where accurate) allows leveraging analytical results for
 those general forms (e.g., integrals, standard approximations, transformations)
 
 The [Morin-Comrie model][morincomrie2010] also illustrates many bad
@@ -370,3 +388,5 @@ ties
 [Snijders201044]: <http://dx.doi.org/10.1016/j.socnet.2009.02.004> "optional title"
 [morincomrie2010]: <http://dx.doi.org/10.1007/s00484-010-0349-6> "optional title"
 [gofbook]: <> "Design Patterns"
+[breiman2001statistical]: <http://projecteuclid.org/download/pdf_1/euclid.ss/1009213726> "optional title"
+[shmueli2010explain]: <http://projecteuclid.org/download/pdfview_1/euclid.ss/1294167961> "optional title"
