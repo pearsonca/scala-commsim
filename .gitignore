@@ -38,3 +38,5 @@ target/*
 project/target/*
 
 _site/*
+
+token.txt

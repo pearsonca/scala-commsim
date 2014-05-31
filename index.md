@@ -303,8 +303,22 @@ of bite size bits rather than the whole pie, reuse, etc).  Other languages can
 do composition, though authors not aware of any that do so as easily while still
 providing benefit of compiled, strongly typed language.
 
+basic approach: agents mixin in traits (in this approach, all agents mixin the
+  same traits, but those traits have state which make them inactive)
+
+one *Universe* agent which handles agent interaction with outside world
+
+*Universe* controls progress of time, logs external interactions
+
+individuals log their interactions
+
+in response to each tick, individuals issue interaction events to other
+individuals.  in this simulation, people have homogenous distribution of
+their probability to contact a family member (p to issue a message), and
+homogenous lamba for number of hops for message (nuclear = parents, siblings, children all
+  1 hop)
+
 two basic social traits - family relationships, religious affiliation
-affiliation
 
 third trait for covert group membership - all agents have it, only active in
 some (recruits)
