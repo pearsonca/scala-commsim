@@ -49,14 +49,23 @@ centrality measures, *et cetera* between scenarios.
 A network, however, is a *very* simple model of a group, and simple models (of
 all but the most trivial phenomena) are only obtained by making strong
 assumptions.  Such assumptions can be reasonable, and when they are, a very
-small general description can usefully cover a broad array of phenomena.  This
+compact general description can usefully cover a broad array of phenomena.  This
 is the case for traditional problems in the physical sciences, loosely speaking.
 
-These assumptions seem less tenable in the natural sciences, and suspicious in
-the social sciences.  Our focus is how this applies to the network measures, but
-it also seems pertinent to the microsimulation we are advocating people adopt.
+These assumptions seem less tenable in the natural sciences, and bordering on
+suspicious in the social sciences.  Our focus is how that skepticism might be
+formally applied to the network measures on representations of covert groups
+embedded in a population.  Throughout this chapter, we will refer to dataset and
+its interpretations to illustrate that skepticism, using shorthand like *the
+Montreal data* or *the Montreal network*.  The work that introduces the data
+focuses on a theoretical epidemiological question - whether or not a unique
+network structure could explain a specific kind of epidemic dynamic.  The
+relationship between the data and that network model, however, is ideal for
+exploring many of the issues present in attempting to represent covert social
+groups with so-called dark networks. We will refer back to this *Montreal Model*
+as a practical touchstone for issues we highlight with typical approaches.
 
->###The Montreal Municipal WiFi Service Data & Model
+>###The Montreal Municipal WiFi Service Data & A Basic Model
 >
 >In a [forthcoming publication][montreal], epidemiological modelers use data on
 access to the Montreal Municipal WiFi service to build a contact network and
@@ -64,17 +73,21 @@ then consider the spread of flu-like pathogens on that network.
 >
 >The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
-are translated into a network is also very clear: in the epidemiological
-analysis, users that logged into the same location at the same time are joined
+are translated into a network for the epidemiological
+analysis is also simple: users that logged into the same location at the same time are joined
 by an edge.  Those edges are then aggregated into a contact network, removing
 duplicates and self loops.
 >
->That work focuses on a theoretical question - whether or not a unique network structure
-could explain a specific kind of epidemic dynamic.  The relationship between the data and
-that network model, however, is ideal for exploring many of the issues present
-in attempting to represent covert social groups with so-called dark networks.
-We will refer back to this *Montreal Model* as a practical touchstone for issues
-we highlight with typical approaches.
+>The data spans roughly five years, a few hundred thousand entries of login data
+with X users and Y hotspot locations.
+
+The strongest assumptions in most network analyses concern homogeneity and
+observational accuracy.
+
+##Homogeniety
+
+##Observation
+
 
 ###Aggregation
 
