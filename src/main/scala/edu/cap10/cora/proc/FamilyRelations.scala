@@ -1,12 +1,13 @@
 package edu.cap10.cora.proc
 
+import scala.language.postfixOps
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import edu.cap10.cora._
 
-trait FamilyRelations extends Agent with TimeResponse {
+trait FamilyRelations extends Agent with TimeSensitive {
   
   protected var parents  : Set[FamilyRelations] = Set()
   protected var children : Set[FamilyRelations] = Set()

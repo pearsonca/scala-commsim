@@ -4,12 +4,14 @@ import akka.actor.ActorSystem
 import akka.actor.TypedActor
 import akka.actor.TypedProps
 
-import edu.cap10.cora.TimeResponse
+import edu.cap10.cora.TimeSensitive
 import edu.cap10.cora.Reply
 
-import scala.concurrent.Future
-import scala.concurrent.Await
+import scala.concurrent._
 import scala.concurrent.duration._
+import ExecutionContext.Implicits.global
+
+import scala.util.{Success, Failure}
 
 import edu.cap10.cora.Ack
 
@@ -23,12 +25,12 @@ object Demo {
     val range = start to end
     val seven : SeventhTickHelloer = system typedActorOf(TypedProps[Seven](), "Seven")
     
-    range.foldLeft(Future.successful[Reply](Ack))( 
-        (last, i) => {
-          val res = for (ack <- last; next <- seven.tick(i)) yield next
-          res
-        }
-    )
+    for (i <- range) {
+      Await.result(seven.tick(i), 2 seconds) match {
+        case Success(r) => println(r+" on "+i)
+        case Failure(_) => println("ruh-roh")
+      }
+    }
     
 //    val five : FifthTickThanker = system typedActorOf(TypedProps[Five](), "Five")
 //    val sevenfive : SeventhTickHelloer with FifthTickThanker = system typedActorOf(TypedProps[SevenFive](), "75")
@@ -50,6 +52,7 @@ object Demo {
 //      println("wtf?")
 //      as.shutdown
 //    }
+    as.shutdown
   }
 }
 
@@ -72,13 +75,23 @@ case class Salutation(override val toString: String)
 import scala.util.{ Try, Success }
 import scala.concurrent.Promise
 
-trait SeventhTickHelloer extends TimeResponse {
-  override def resolve(when:Int, reply:Try[Reply] = Success(Ack))(implicit promise:Promise[Reply]) = {
-    if (when % 7 == 0) say(when, Greeting("Hello"))
-    super.resolve(when, reply)
+trait SeventhTickHelloer extends TimeSensitive {
+  override def resolve(when:Int) = {
+    val base = super.resolve(when) 
+    if (when % 7 == 0) {
+      Future {
+            val evens = (1 to Integer.MAX_VALUE/(1000*when)).map { i => i / 2 }
+            say(when, Greeting("Hello"))
+          }
+    }
+    base
+    
   }
   
-  def say(on:Int, h:Greeting) = println(f"Day $on : $h World, I'm the SeventhTickHelloer Trait!")
+  def say(on:Int, h:Greeting) = {
+    
+    println(f"Day $on : $h World, I'm the SeventhTickHelloer Trait!")
+  }
 }
 
 //trait FifthTickThanker extends TimeResponse {

@@ -6,14 +6,14 @@ import scala.concurrent.duration._
 
 import edu.cap10.cora._
 
-trait Customer extends TimeResponse {
+trait Customer extends TimeSensitive {
 
 }
 
-trait BusinessOwner extends TimeResponse {
+trait BusinessOwner extends TimeSensitive {
   
 }
 
-trait Employee extends TimeResponse {
+trait Employee extends TimeSensitive {
   
 }

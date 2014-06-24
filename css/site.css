@@ -6,3 +6,11 @@
   color: black;
   background-color: white;
 }
+
+.main blockquote {
+  background: #D3D3D3;
+  border-left: solid 0.2em #A9A9A9;
+  padding-left: 1em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}

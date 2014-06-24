@@ -20,6 +20,9 @@
   {% for author in page.authors %}
   <a href="mailto:{{ author.email }}">{{ author.name }}</a>{% unless forloop.last %}, {% endunless %}
   {% endfor %}
+<script>
+  console.log('make ToC here?  make it something that lives in the side bar?');
+</script>
 {{ content }}
 </div>
 </body>

@@ -14,45 +14,112 @@ authors:
 
 Implicit in the label *dark network* is a suggestion that the activity of covert
 groups is driven by - and therefore, may be understood in terms of - network
-measures like degree distributions and centralities.  That may be true.
+measures like degree distributions, paths, centralities, and so on.
+
+That may be true.
 
 Network representations, however, are a remarkably simple description, and
 simple models of all but the most trivial phenomena must make very strong
-assumptions.  Alas, we have little basis to assume anything: we accurately gauge
-our knowledge by calling these groups *dark*.
+assumptions.  We have little basis to assume anything in the case of covert
+groups: the *dark* label is an accurate gauge of our knowledge.
 
-Modelers in the natural sciences have recently tackled similar problems
-by modeling both the system and observation process, with subsequent
-formal relaxation of simplifying assumptions (if model parameters are
-identifiable) and directed data collection (if they are not).  They still
-enjoy many of the same simplifying advantages as the physical sciences, and thus
-their models may be largely numerical.
+Thus, to genuinely characterize the performance of these assorted network criteria, we
+must acknowledge they are applied to shadows of the true phenomena.  And unlike
+the more measurements typifying physical sciences, we do not yet have centuries
+of argument to provide context and meaning to what exactly these networks mean.
 
-We argue that social science phenomena require a more-than-numerical formal
-expression, and extend previous arguments for agent-based modeling to embrace
-the lessons of software engineering.  In this form, a model with observation
-explicitly incorporated is a suitable platform for evaluating network science
-results.  We close with a practical demonstration.
+Fortunately, we can leverage developments in natural sciences that explicitly
+incorporate observation into the modeling process.  We demonstrate these, with
+particular emphasis on agent-based models and a development approach the
+encourages reuse, replication, and refutation.
+
+This approach acknowledges the lessons of traditional equation-based models (the
+primary approach of physical and natural sciences), while also embracing ideas
+from software engineering that are a more appropriate perspective for this kind
+of modeling.
+
+* * *
 
 ##Introduction
 
-Network science approaches to social phenomena often reduce to comparing degree
-structures and centrality measures: between groups, between times, aggregating
-on different interactions, *et cetera*.  A network, however, is a very simple
-model of a group, and simple models (of all but the most trivial phenomena) are
-only obtained by making strong assumptions.  One flavor of strong assumption is
-treating different relations as a single kind of tie, either via data massage
-(e.g., co-enrollment in an introductory course being equal to co-enrollment in a
-small seminar course) or as a consequence of the data source (co-arrest of two
-people assaulting a third versus co-arrest for assaulting each other).
-Indeed, static ties are themselves a quite strong assumption.
+Some network science approaches to social phenomena seem to amount to looking
+for statistically significant differences on degree distributions, paths,
+centrality measures, *et cetera* between scenarios.
+
+A network, however, is a *very* simple model of a group, and simple models (of
+all but the most trivial phenomena) are only obtained by making strong
+assumptions.  Such assumptions can be reasonable, and when they are, a very
+small general description can usefully cover a broad array of phenomena.  This
+is the case for traditional problems in the physical sciences, loosely speaking.
+
+These assumptions seem less tenable in the natural sciences, and suspicious in
+the social sciences.  Our focus is how this applies to the network measures, but
+it also seems pertinent to the microsimulation we are advocating people adopt.
+
+>###The Montreal Municipal WiFi Service Data & Model
+>
+>In a [forthcoming publication][montreal], epidemiological modelers use data on
+access to the Montreal Municipal WiFi service to build a contact network and
+then consider the spread of flu-like pathogens on that network.
+>
+>The anonymized raw data is straightforward to understand.  Users have log on
+and log off times at WiFi hotspots associated with the service.  How the data
+are translated into a network is also very clear: in the epidemiological
+analysis, users that logged into the same location at the same time are joined
+by an edge.  Those edges are then aggregated into a contact network, removing
+duplicates and self loops.
+>
+>That work focuses on a theoretical question - whether or not a unique network structure
+could explain a specific kind of epidemic dynamic.  The relationship between the data and
+that network model, however, is ideal for exploring many of the issues present
+in attempting to represent covert social groups with so-called dark networks.
+We will refer back to this *Montreal Model* as a practical touchstone for issues
+we highlight with typical approaches.
+
+###Aggregation
+
+One flavor of strong assumption is treating different relations as
+a single kind of tie, often driven by data aggregation by the researcher or as
+a consequence of the data source.  Indeed, having static ties at all is a quite strong assumption.
+
+Let's highlight this issue by considering a real data set, which we will refer
+back to throughout the chapter.
+
+
+First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
+connection data tells substantially different stories depending how it is
+sliced.  The network extracted from the data for their theoretical work is
+used for a single epidemic season simulation, but that data is over several years.
+Careful review of the users and hotspot locations indicates a high rate of
+turnover in both.  Using a similar model for the spread of infection, changes in
+tie aggregation windows result in very different disease outcomes.
+
+###Homogenuous Kinds
+
+> observe interaction events, but also observe state changes: a person has supplies
+when they did not before.  they no longer have supplies they once had.  if the view
+is only the network, then who cares.  if the view is the process, then...where did
+these supplies come from?  go to?  if you see them with network associates, then
+you simply missed an exchange events.  if you do not see them, then what contacts
+might you be missing?
+
+##Network Problems
 
 Another very strong, but problematically often unacknowledged, assumption is
 that the individuals are of the same kind.  Extreme differences in contact
 distributions for flight attendants versus theoretical mathematicians become
 artificially interesting when we treat those people as the same kind of thing.
-Bipartite networks can be used to address this problem, but they are just as
-vulnerable.
+Bipartite networks may appear to address this problem, but they are just as
+vulnerable.  Having two kinds of interactions still homogenizes those
+interactions -- *e.g.*, a white collar worker visiting a coffeeshop en route
+to work in morning is a very different sort of interaction than even that same
+white collar worker visiting an alley in the dead of night.  Network module
+analyses are often attempts to distinguish kinds, as are motif searches, but
+these typical rely on reductive assumptions about the interactions.
+
+>In the Montreal network, users are all members of the same kind, and locations
+are all of the same kind.  The interactions resulting from co-location are also
+of the same kind.
 
 The physical sciences reliably enjoy this (typically unacknowledged) simplifying
 assumption.  As far and wide as we have looked, one hydrogen atom is the same as
@@ -93,7 +160,7 @@ network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
 some history of broader adoption of this perspective via concepts like
 [partially observed Markov processes][Ionides05122006].
 
-This work may still enjoy more homogeneity in the atomic pieces of the model
+This work still has more homogeneity in the atomic pieces of the model
 than the social sciences, and many of the pertinent observations are the same
 sort of properties that concern the physical sciences - temperatures, chemical
 concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
@@ -101,8 +168,8 @@ formal representation remains quite powerful.
 
 However, given the extreme heterogeneity in kinds for most social science
 questions, we contend that adopting the equation-based formalism to model those
-problems is fundamentally flawed.  Yes, there are plenty of important numerical
-quantities.  Yes, quantitative statistical analysis of the models is still
+problems is fundamentally flawed.  Yes, there are important numerical
+measurements.  Yes, quantitative statistical analysis of the models is still
 important.
 
 But we should accept that many social science models are most naturally expressed
@@ -116,12 +183,12 @@ working on statistical mechanics.
 Prominent articles in the social sciences have previously argued this position,
 though perhaps less specifically, by observing that agent-based
 modeling is the more natural and powerful means to explore representations of
-social phenomena.  Yet, some still insist on using networks as a fundamental
+social phenomena.  Yet, some still insist on using networks as the fundamental
 element of [those models][Snijders201044].  We propose a different lens - the
 transient *events* are what should be modeled, not the ties.  The events are
 then filtered through a model observation process which translates those events
 into a network; this is where we have the opportunity to explicitly state how we
-are aggregating.  We may then meaningful compare predictions based on network
+are aggregating.  We may then meaningfully compare predictions based on network
 measurements to model outcomes via relevant tests.
 
 We will begin by reflecting on modeling philosophy, then discuss some practical
@@ -132,10 +199,10 @@ covert groups.
 One aside before we proceed: there have been great strides in non-model based
 approaches to prediction, such as neural networks and classification trees, and
 those alternatives are both powerful and avoid many problems associated
-[with models][breiman2001statistical].  But to use them effectively, we
+[with models][breiman2001statistical].  But to use them effectively, we must
 carefully attend to the distinction between [explanation and prediction][shmueli2010explain].
 We do not address these approaches here, but we do wish to highlight what
-"thinking carefully" means for covert groups.  These approaches are largely
+\"thinking carefully\" means for covert groups.  These approaches are largely
 interpolative: the product is at most what is in the training data.  There may be
 quite a bit in the training set, indeed enough beyond what is readily apparent to
 any researcher to make the process look capable of extrapolation.
@@ -164,7 +231,7 @@ model to the phenomena.
 
 These traits have analogies in code, though the first two were difficult to put into
 practice until recently.  Historically, most general purpose languages reflected
-what actually occurred in memory with the syntax improvements limited to
+what actually occurred in computer memory with the syntax improvements limited to
 abstractions for convenient creation and manipulation of numerical types, and
 for flow control.  The development and promulgation of object-oriented concepts
 shifted how we reasoned about programs, leading to languages and libraries
@@ -275,9 +342,12 @@ far lower than the sort of care to properly apply the design patterns.
 
 
 ##Scala Demonstration Model
-There are several approaches to achieve the aforementioned design patterns.
+There are several approaches to achieve the aforementioned design patterns.  One
+typical approach is via inheritance.  In some parent representation, we describe
+all the actions our agents can take, and then we have child classes that
+implement, override, or extend those actions.  
 
-inheritance is one option.  However, traditional linear
+However, traditional linear
 inheritance is problematic for reusability if we want to have different kinds.
 If we very carefully implement state + delegation, and chain of responsibility,
 then linear inheritance can work.  Careful implementation of those is hard.
@@ -323,16 +393,43 @@ two basic social traits - family relationships, religious affiliation
 third trait for covert group membership - all agents have it, only active in
 some (recruits)
 
+###Technical Asides
+The [Akka Actor][akkk] framework is based on asynchronous calculation;
+each agent represents its own thread of computation and memory.  Though we
+implemented this particular example on a single machine (with multiple cores),
+this independence abstraction makes it straightforward to reimplement
+the simulation on many machines.
+
+However, it requires overcoming perspective instilled in typical programming
+training.  Namely, that directions to the computer are executed and resolve in
+a particular sequence.  
+
 all use a generic base agent trait to cover tracking through time:
 
 {% highlight scala %}
-import scala.concurrent.Future.successful
-import akka.actors.TypedActor
+trait TimeSensitive {
 
-trait TimeResponse {
-  def tick(implicit when:Int) = successful(Ack)
+  private[this] var was = 0
+  protected def last = was
+
+  final def tick(when:Int) : Future[Try[Reply]] =
+    Future({ resolve(when) }).andThen({
+      case Success(res) =>
+        was = when
+        res
+      case f => f
+    })
+
+
+  protected def resolve(when:Int) : Try[Reply] =
+    Success(Ack)
+
 }
 {% endhighlight %}
+
+This has two parts, one which handles initiating a new iteration, `tick`,
+and one is a hook on which to hang other behaviors, `resolve`.  It also keeps
+track of what time the agent is at via `last`.  This looks pretty basic
 
 ###`ReligiousAffiliation`
 
@@ -392,6 +489,12 @@ ties
 
 ##Afterthoughts
 
+##Acknowledgements
+
+We would like to thank [Thomas J. Hladish](github.com/tjhladish) and
+[Juliet R. C. Pulliam](github.com/jrcpulliam) for their
+feedback getting the voice right for this piece.
+
 [janzen2005test]: <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac> "optional title"
 [barabasi1999]: <http://dx.doi.org/10.1126/science.286.5439.509> "optional title"
 [atlas2012]: <http://www.sciencedirect.com/science/article/pii/S0370269312001852> "optional title"
@@ -404,3 +507,6 @@ ties
 [gofbook]: <> "Design Patterns"
 [breiman2001statistical]: <http://projecteuclid.org/download/pdf_1/euclid.ss/1009213726> "optional title"
 [shmueli2010explain]: <http://projecteuclid.org/download/pdfview_1/euclid.ss/1294167961> "optional title"
+[akka]: <http://akka.io> "Akka"
+[montreal]: <> "Montreal Network"
+[epidemics4]: <https://github.com/pearsonca/epidemics4-talk/blob/master/poster.pdf?raw=true> "Epidemics 4 Poster"
