@@ -10,6 +10,7 @@ authors:
  - name: Edo Airoldi
  - name: Ed Kao
 ---
+
 ##Abstract
 
 Implicit in the label *dark network* is a suggestion that the activity of covert
@@ -52,10 +53,12 @@ assumptions.  Such assumptions can be reasonable, and when they are, a very
 compact general description can usefully cover a broad array of phenomena.  This
 is the case for traditional problems in the physical sciences, loosely speaking.
 
-These assumptions seem less tenable in the natural sciences, and bordering on
-suspicious in the social sciences.  Our focus is how that skepticism might be
-formally applied to the network measures on representations of covert groups
-embedded in a population.  Throughout this chapter, we will refer to dataset and
+These assumptions seem less tenable in the natural sciences, and often border on
+suspicious in the social sciences.  One particularly suspicious application is
+to *dark networks* - the social network representation of covert groups, most
+often criminal organizations.
+
+Throughout this chapter, we will refer to dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
 Montreal data* or *the Montreal network*.  The work that introduces the data
 focuses on a theoretical epidemiological question - whether or not a unique
