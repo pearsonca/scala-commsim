@@ -87,55 +87,70 @@ with X users and Y hotspot locations.
 The strongest assumptions in most network analyses concern homogeneity and
 observational accuracy.
 
+Homogeneity assumptions take many forms, some obvious, some subtle.  We will
+focus on the assumption of homogeneity in kinds, as that is perhaps the most
+fundamental assumption in network models: that edges are edges are edges, and
+likewise with vertices.  In some systems, this is quite reasonable, but when
+the network is organized (by design or spontaneously) to accomplish some task,
+the parts and their interactions are not typically interchangeable.
+
+Observation assumptions come in levels of strength.  The strongest being of
+course that what is observed is the whole truth and nothing but the truth.  This
+is typically weakened to some censoring of events (*i.e.*, false negatives) and
+some mislabeling of non-events (*i.e., false positives*), but with errors that
+independent and identical distributed (usually according to a simple distribution, as well).
+However, with covert groups, the (non-)observation process is censored in a
+deliberate, but unknown, manner.
+
+Critically, these assumptions are suspect when trying to use network analyses
+to find covert groups, also know as the *dark network detection problem*.
+
 ##Homogeniety
 
-##Observation
+*Homogeniety in kinds* is the modeling assumption that is
+that pieces of some kind in the model are identical (and often, therefore,
+interchangeable).  To be clear, this an assumption about the model entities and
+inputs, not an assumption that, say, all vertices have identical degrees or
+centralities.  Indeed, the assumption is critical in many analyses that we
+expect to measure different values, like centralities or module membership.
 
+> ### Homogeniety in the Montreal Network
+>
+> The Montreal source data homogenizes on several key aspects:
+>
+> - all user logins are treated as equal
+> - all locations are treated as equal
+>
+> But we can imagine potentially meaningful censoring that occurs due to this
+homogenization.  In the context of transmissible disease:
+>
+> - some of the *users* might simply be shared business connections (the data has
+several high utilization users that are consistent with this sort of use)
+> - some of the locations might have many ways for co-users to transmit disease,
+while others might be relatively sterile
+>
+> Furthermore, the previous work using this data treats connections as homogeneous
+in terms of their capability to serve as a transmission route.  But there is quite
+a range of variability in the co-location times: some users overlap mere seconds,
+while others overlap for hours.
 
-###Aggregation
+Contact distributions are replete with this sort of assumption.  Extreme
+differences in contact distributions for flight attendants versus theoretical mathematicians can become
+artificially interesting when we treat those jobs, and the kind of interactions
+they entail as the same kind of thing.  Certainly for some questions, this
+homogenization might be reasonable.  But for many others, valuable insight
+arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
+and differentiate flight attendants on private, regional, and hub-to-hub flights.
 
-One flavor of strong assumption is treating different relations as
-a single kind of tie, often driven by data aggregation by the researcher or as
-a consequence of the data source.  Indeed, having static ties at all is a quite strong assumption.
-
-Let's highlight this issue by considering a real data set, which we will refer
-back to throughout the chapter.
-
-
-First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
-connection data tells substantially different stories depending how it is
-sliced.  The network extracted from the data for their theoretical work is
-used for a single epidemic season simulation, but that data is over several years.
-Careful review of the users and hotspot locations indicates a high rate of
-turnover in both.  Using a similar model for the spread of infection, changes in
-tie aggregation windows result in very different disease outcomes.
-
-###Homogenuous Kinds
-
-> observe interaction events, but also observe state changes: a person has supplies
-when they did not before.  they no longer have supplies they once had.  if the view
-is only the network, then who cares.  if the view is the process, then...where did
-these supplies come from?  go to?  if you see them with network associates, then
-you simply missed an exchange events.  if you do not see them, then what contacts
-might you be missing?
-
-##Network Problems
-
-Another very strong, but problematically often unacknowledged, assumption is
-that the individuals are of the same kind.  Extreme differences in contact
-distributions for flight attendants versus theoretical mathematicians become
-artificially interesting when we treat those people as the same kind of thing.
-Bipartite networks may appear to address this problem, but they are just as
-vulnerable.  Having two kinds of interactions still homogenizes those
+Bipartite networks may appear to address this problem, but are often simply adding another *kind*.
+Having two kinds of interactions still homogenizes those
 interactions -- *e.g.*, a white collar worker visiting a coffeeshop en route
 to work in morning is a very different sort of interaction than even that same
-white collar worker visiting an alley in the dead of night.  Network module
+white collar worker visiting an alley in the dead of night.
+
+Network module
 analyses are often attempts to distinguish kinds, as are motif searches, but
 these typical rely on reductive assumptions about the interactions.
-
->In the Montreal network, users are all members of the same kind, and locations
-are all of the same kind.  The interactions resulting from co-location are also
-of the same kind.
 
 The physical sciences reliably enjoy this (typically unacknowledged) simplifying
 assumption.  As far and wide as we have looked, one hydrogen atom is the same as
@@ -159,6 +174,8 @@ observation difficulties.  Can't find the Higgs boson?  Get another 300 trillion
 [samples][atlas2012].  We should hope we cannot get 300 independent samples of
 terrorist cells, let alone a trillion times that, but the few samples we do have
 are further fraught with observation issues.
+
+##Observation
 
 For certain flavors of covert groups - e.g., consumers and distributors of
 illegal substances, persons with persecuted sexual preferences - snowball
@@ -206,6 +223,27 @@ then filtered through a model observation process which translates those events
 into a network; this is where we have the opportunity to explicitly state how we
 are aggregating.  We may then meaningfully compare predictions based on network
 measurements to model outcomes via relevant tests.
+
+###Aggregation
+
+First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
+connection data tells substantially different stories depending how it is
+sliced.  The network extracted from the data for their theoretical work is
+used for a single epidemic season simulation, but that data is over several years.
+Careful review of the users and hotspot locations indicates a high rate of
+turnover in both.  Using a similar model for the spread of infection, changes in
+tie aggregation windows result in very different disease outcomes.
+
+###Homogenuous Kinds
+
+> observe interaction events, but also observe state changes: a person has supplies
+when they did not before.  they no longer have supplies they once had.  if the view
+is only the network, then who cares.  if the view is the process, then...where did
+these supplies come from?  go to?  if you see them with network associates, then
+you simply missed an exchange events.  if you do not see them, then what contacts
+might you be missing?
+
+##Network Problems
 
 We will begin by reflecting on modeling philosophy, then discuss some practical
 outcomes of that philosophy when realized in general purpose programming, and
@@ -526,3 +564,4 @@ feedback getting the voice right for this piece.
 [akka]: <http://akka.io> "Akka"
 [montreal]: <> "Montreal Network"
 [epidemics4]: <https://github.com/pearsonca/epidemics4-talk/blob/master/poster.pdf?raw=true> "Epidemics 4 Poster"
+[grossman1995portion]: <> "On a portion of the well-known collaboration graph"
