@@ -53,10 +53,14 @@ assumptions.  Such assumptions can be reasonable, and when they are, a very
 compact general description can usefully cover a broad array of phenomena.  This
 is the case for traditional problems in the physical sciences, loosely speaking.
 
-These assumptions seem less tenable in the natural sciences, and often border on
-suspicious in the social sciences.  One particularly suspicious application is
-to *dark networks* - the social network representation of covert groups, most
-often criminal organizations.
+With predictive performance more sensitive to variate, these assumptions are
+less tenable in the natural sciences, and often border on suspicious in the
+social sciences.  One particularly suspicious application is to *dark networks* -
+the social network representation of covert groups, most often criminal
+organizations.  A somewhat separate issue is that focusing on network metrics
+can make us forget that the network is not the phenomena: the phenomena is some
+social activity, individuals working together to accomplish a goal perhaps, and
+that we observe the events associated with that activity.
 
 Throughout this chapter, we will refer to dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
@@ -114,6 +118,30 @@ inputs, not an assumption that, say, all vertices have identical degrees or
 centralities.  Indeed, the assumption is critical in many analyses that we
 expect to measure different values, like centralities or module membership.
 
+Most centrality metrics and modularization schemes are expressed in terms of
+unweighted, undirected edges.  These measures often have generalizations
+to account for weighting and direction, though an unscientific survey of
+publications indicates these are rarely used.  But these all still rely on edges
+and vertices being the same *kind* - there are fewer methods for computing
+these metrics when edges are of *different kinds*{: .todo title="venice marriage-trade block model work?"}.
+The typical resolution is to simply create separate networks for each tie-type,
+re-run the metrics on each distinct network, and then speculate about the differences.
+
+As with edges, homogenizing assumptions are typically made for vertices as well.
+Contact distribution studies are replete with this sort of assumption.  Extreme
+differences in contacts for flight attendants versus theoretical mathematicians can become
+artificially interesting when we treat those jobs and the kind of interactions
+they entail as the same kind of thing.  Certainly for some questions, this
+homogenization might be reasonable.  But for many others, valuable insight
+arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
+and differentiate flight attendants on private, regional, and hub-to-hub flights.
+
+Bipartite networks may appear to address this problem, but are often simply adding another *kind*.
+Having two kinds of interactions still homogenizes those
+interactions -- *e.g.*, a white collar worker visiting a coffeeshop en route
+to work in morning is a very different sort of interaction than even that same
+white collar worker visiting an alley in the dead of night.
+
 > ### Homogeniety in the Montreal Network
 >
 > The Montreal source data homogenizes on several key aspects:
@@ -129,28 +157,14 @@ several high utilization users that are consistent with this sort of use)
 > - some of the locations might have many ways for co-users to transmit disease,
 while others might be relatively sterile
 >
-> Furthermore, the previous work using this data treats connections as homogeneous
+> Previous work using this data treats connections as homogeneous
 in terms of their capability to serve as a transmission route.  But there is quite
 a range of variability in the co-location times: some users overlap mere seconds,
 while others overlap for hours.
-
-Contact distributions are replete with this sort of assumption.  Extreme
-differences in contact distributions for flight attendants versus theoretical mathematicians can become
-artificially interesting when we treat those jobs, and the kind of interactions
-they entail as the same kind of thing.  Certainly for some questions, this
-homogenization might be reasonable.  But for many others, valuable insight
-arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
-and differentiate flight attendants on private, regional, and hub-to-hub flights.
-
-Bipartite networks may appear to address this problem, but are often simply adding another *kind*.
-Having two kinds of interactions still homogenizes those
-interactions -- *e.g.*, a white collar worker visiting a coffeeshop en route
-to work in morning is a very different sort of interaction than even that same
-white collar worker visiting an alley in the dead of night.
-
-Network module
-analyses are often attempts to distinguish kinds, as are motif searches, but
-these typical rely on reductive assumptions about the interactions.
+>
+> Indeed, transmission for pathogens like influenza that can persist in the
+environment, introducing a directed edge between users that visit a location
+one after the other is quite sensible relative to the process being modeled.
 
 The physical sciences reliably enjoy this (typically unacknowledged) simplifying
 assumption.  As far and wide as we have looked, one hydrogen atom is the same as
