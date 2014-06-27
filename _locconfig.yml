@@ -1,2 +1,3 @@
 absoluteurl: http://localhost:4000
 baseurl: ''
+development: true
