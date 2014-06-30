@@ -60,7 +60,8 @@ the social network representation of covert groups, most often criminal
 organizations.  A somewhat separate issue is that focusing on network metrics
 can make us forget that the network is not the phenomena: the phenomena is some
 social activity, individuals working together to accomplish a goal perhaps, and
-that we observe the events associated with that activity.
+that we observe the events associated with that activity.  However, when we
+focus on the SNA hammer, we must reduce this process to nails.
 
 Throughout this chapter, we will refer to dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
@@ -96,7 +97,9 @@ focus on the assumption of homogeneity in kinds, as that is perhaps the most
 fundamental assumption in network models: that edges are edges are edges, and
 likewise with vertices.  In some systems, this is quite reasonable, but when
 the network is organized (by design or spontaneously) to accomplish some task,
-the parts and their interactions are not typically interchangeable.
+the parts and their interactions are not typically universally interchangeable.
+We will also highlight the problems with aggregation in time, from the standpoint
+of scientific analysis as well as practical application.
 
 Observation assumptions come in levels of strength.  The strongest being of
 course that what is observed is the whole truth and nothing but the truth.  This
@@ -108,6 +111,24 @@ deliberate, but unknown, manner.
 
 Critically, these assumptions are suspect when trying to use network analyses
 to find covert groups, also know as the *dark network detection problem*.
+
+The issues with these assumptions can be mitigated by adding complexity to
+traditional equation- and network-based models.  However, we argue that a more
+practical solution looks like modeling using general purpose programming
+languages and the structures those languages enable.  Strictly speaking, these
+are still mathematical models (based on the equations of mathematical logic rather
+than numerical equations), but that position is confusingly pedantic given
+that many of the mathematical power tools are provably unavailable (general
+proofs, most notably).  This approach is not new; it is essentially advocating
+for agent-based modeling.  We offer some novel thoughts on how to proceed in a reuse-able,
+replicable fashion, and discard some past emphasis on embedding those agents in
+a network.
+
+We discuss how traditional equation-based modeling practices can be preserved
+moving into the general purpose programming setting, as well as what new sort of
+practices should be adopted.
+
+We close with a demonstration of *dark network detection* on the Montreal data.
 
 ##Homogeniety
 
@@ -191,6 +212,13 @@ are further fraught with observation issues.
 
 ##Observation
 
+> observe interaction events, but also observe state changes: a person has supplies
+when they did not before.  they no longer have supplies they once had.  if the view
+is only the network, then who cares.  if the view is the process, then...where did
+these supplies come from?  go to?  if you see them with network associates, then
+you simply missed an exchange events.  if you do not see them, then what contacts
+might you be missing?
+
 For certain flavors of covert groups - e.g., consumers and distributors of
 illegal substances, persons with persecuted sexual preferences - snowball
 sampling can make [reasonable in-roads][biernacki1981snowball].  However, the
@@ -201,8 +229,7 @@ a way - high compartmentalization, with multiple layers of indirection - such
 that fundamental assumptions of snowball sampling about the relationship
 structure are violated.
 
-These problems - heterogeneity and stringent observation limits - are shared
-by the natural sciences.  Recent work has begun to tackle these problems in
+Stringent observation limits come up more often in the natural sciences.  Recent work has begun to tackle these problems in
 network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
 some history of broader adoption of this perspective via concepts like
 [partially observed Markov processes][Ionides05122006].
@@ -217,9 +244,7 @@ However, given the extreme heterogeneity in kinds for most social science
 questions, we contend that adopting the equation-based formalism to model those
 problems is fundamentally flawed.  Yes, there are important numerical
 measurements.  Yes, quantitative statistical analysis of the models is still
-important.
-
-But we should accept that many social science models are most naturally expressed
+important.  But we should accept that many social science models are most naturally expressed
 with the tools of mathematical logic, which are today most practically
 implemented in general purpose programming languages.  While the physical
 and natural sciences have a successful history with numerical models, and
@@ -238,49 +263,7 @@ into a network; this is where we have the opportunity to explicitly state how we
 are aggregating.  We may then meaningfully compare predictions based on network
 measurements to model outcomes via relevant tests.
 
-###Aggregation
-
-First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
-connection data tells substantially different stories depending how it is
-sliced.  The network extracted from the data for their theoretical work is
-used for a single epidemic season simulation, but that data is over several years.
-Careful review of the users and hotspot locations indicates a high rate of
-turnover in both.  Using a similar model for the spread of infection, changes in
-tie aggregation windows result in very different disease outcomes.
-
-###Homogenuous Kinds
-
-> observe interaction events, but also observe state changes: a person has supplies
-when they did not before.  they no longer have supplies they once had.  if the view
-is only the network, then who cares.  if the view is the process, then...where did
-these supplies come from?  go to?  if you see them with network associates, then
-you simply missed an exchange events.  if you do not see them, then what contacts
-might you be missing?
-
-##Network Problems
-
-We will begin by reflecting on modeling philosophy, then discuss some practical
-outcomes of that philosophy when realized in general purpose programming, and
-close with an implementation that reflects those values in a simulation of
-covert groups.
-
-One aside before we proceed: there have been great strides in non-model based
-approaches to prediction, such as neural networks and classification trees, and
-those alternatives are both powerful and avoid many problems associated
-[with models][breiman2001statistical].  But to use them effectively, we must
-carefully attend to the distinction between [explanation and prediction][shmueli2010explain].
-We do not address these approaches here, but we do wish to highlight what
-\"thinking carefully\" means for covert groups.  These approaches are largely
-interpolative: the product is at most what is in the training data.  There may be
-quite a bit in the training set, indeed enough beyond what is readily apparent to
-any researcher to make the process look capable of extrapolation.
-For covert groups, however, training data is sparse and what
-is present may be mischaracterized.  Researchers attempting to apply non-model
-based approaches to covert groups should be especially skeptical, disbelieving
-any results that do not explicitly address substantial input censoring and
-error.
-
-##Principles of Modeling with Code
+##Addressing These Issues With Agents
 
 Scientific results are not measured by some idealized ability to explain and
 predict, but by their use to those ends.  Regardless of their power,
@@ -353,25 +336,31 @@ build objects - in this case, Agents - by composing capabilities and that we
 should couple those capabilities as loosely as possible.  That work, and
 subsequent innovation built upon it, describes many ways to achieve that end.
 In our demonstration, we will focus on a few -- *Delegate*, *State*, and
-*Chain of Responsibility* -- which reflect the way scientific models acheive
+*Chain of Responsibility* -- which reflect the way scientific models achieve
 reuse.
 
-delegate - agent has some capability, executes it by plugging in some module then handing off
+Delegate
+: agent has some capability, executes it by plugging in some module then handing off
 queries / method calls to that module.
 
-state - response sets are driven by historical exposure.  allows agents to have different
+State
+: response sets are driven by historical exposure.  allows agents to have different
 responses to the same events without model having to create entirely new objects
 
-chain of responsibility concept allows single event to trigger many responses from different
+chain of responsibility
+: concept allows single event to trigger many responses from different
 aspects of agent behavior.
 
-Test-driven design is also a natural fit for scientific modeling.  As [Janzen and Saiedian highlight in their review][janzen2005test], test driven design encourages incremental development of
-narrow, independent behaviors.  as new behavior added to a module, or modules integrated,
-can use test infrastructure to verify that model still obeys constraints / context
-expressed by tests.  This looks quite similar to good modeling practice: develop
-simplest conceivable alternative models (which has many, many simplifying assumptions baked in).
-those model results will suggest two routes: either experiments to distinguish models,
-or that it is time to relax the assumptions and see if results hold.
+Test-driven design is also a natural fit for scientific modeling.  As
+[Janzen and Saiedian highlight in their review][janzen2005test], test driven design
+encourages incremental development of narrow, independent behaviors, which is
+consistent with [iterative model evalution practices][koopman].  as new
+behavior added to a module, or modules integrated, can use test infrastructure
+to verify that model still obeys constraints / context expressed by tests.  This
+looks quite similar to good modeling practice: develop simplest conceivable
+alternative models (which has many, many simplifying assumptions baked in).
+those model results will suggest two routes: either experiments to distinguish
+models, or that it is time to relax the assumptions and see if results hold.
 
 in addition to
 providing confidence in implementation details, the test-based approach provides
@@ -408,6 +397,31 @@ tinkering to get up and running.  It does not preclude some problems (e.g.,
 namespace collisions), but the sort of modeling care needed to avoid those is
 far lower than the sort of care to properly apply the design patterns.
 
+One aside before we proceed: there have been great strides in other algorithmic
+approaches to prediction, such as neural networks and classification trees, and
+those alternatives are both powerful and also avoid many problems associated
+[with traditional equation-based models][breiman2001statistical].  But to use
+them effectively, we must carefully attend to the distinction between
+[explanation and prediction][shmueli2010explain]. We do not address these
+approaches here, but we do wish to highlight what \"thinking carefully\" means
+for covert groups.  These approaches are largely interpolative: the product is
+at most what is in the training data.  There may be quite a bit in the training
+set, indeed enough beyond what is readily apparent to any researcher, thus
+making the process appear capable of extrapolation. For covert groups, however,
+training data is sparse and what is present may be mischaracterized.
+Researchers attempting to apply these sort of algorithmic based approaches to
+covert groups should be especially skeptical, disbelieving any results that do
+not explicitly address substantial input censoring and error.
+
+###Aggregation
+
+First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
+connection data tells substantially different stories depending how it is
+sliced.  The network extracted from the data for their theoretical work is
+used for a single epidemic season simulation, but that data is over several years.
+Careful review of the users and hotspot locations indicates a high rate of
+turnover in both.  Using a similar model for the spread of infection, changes in
+tie aggregation windows result in very different disease outcomes.
 
 ##Scala Demonstration Model
 There are several approaches to achieve the aforementioned design patterns.  One
@@ -579,3 +593,4 @@ feedback getting the voice right for this piece.
 [montreal]: <> "Montreal Network"
 [epidemics4]: <https://github.com/pearsonca/epidemics4-talk/blob/master/poster.pdf?raw=true> "Epidemics 4 Poster"
 [grossman1995portion]: <> "On a portion of the well-known collaboration graph"
+[koopman]: <http://publichealthpractice.com/project-detail/transforming-public-health-surveillance-2/> "forthcoming chapter"
