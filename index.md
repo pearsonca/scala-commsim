@@ -53,15 +53,17 @@ assumptions.  Such assumptions can be reasonable, and when they are, a very
 compact general description can usefully cover a broad array of phenomena.  This
 is the case for traditional problems in the physical sciences, loosely speaking.
 
-With predictive performance more sensitive to variate, these assumptions are
+With phenomena more sensitive to variation, these assumptions are
 less tenable in the natural sciences, and often border on suspicious in the
-social sciences.  One particularly suspicious application is to *dark networks* -
-the social network representation of covert groups, most often criminal
-organizations.  A somewhat separate issue is that focusing on network metrics
-can make us forget that the network is not the phenomena: the phenomena is some
-social activity, individuals working together to accomplish a goal perhaps, and
-that we observe the events associated with that activity.  However, when we
-focus on the SNA hammer, we must reduce this process to nails.
+social sciences.  One particularly questionable application is *dark networks* -
+the social network representation of covert groups, which is often used to model
+criminal organizations.  By focusing on the network reduction of these groups
+and associated network metrics, we may forget that the network is not the
+phenomena.  The phenomena is the interactions between and individual changes in
+the members of that covert enterprise, and the effect those have internal and external
+to that organization.  Indeed, these are the observations we actually make, and
+the outcomes we actually care to understand.  However, when we obsess on the
+social network analysis (SNA) hammer, we must reduce this process to nails.
 
 Throughout this chapter, we will refer to dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
