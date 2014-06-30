@@ -62,8 +62,20 @@ and associated network metrics, we may forget that the network is not the
 phenomena.  The phenomena is the interactions between and individual changes in
 the members of that covert enterprise, and the effect those have internal and external
 to that organization.  Indeed, these are the observations we actually make, and
-the outcomes we actually care to understand.  However, when we obsess on the
-social network analysis (SNA) hammer, we must reduce this process to nails.
+the outcomes we actually care to understand.
+
+Representing those observations in a concise mathematical model, however, is an
+implausible task.  In that sense, the network reduction is a very practical tool.
+
+We propose that concise mathematical models are the wrong formal representation.
+Rather, concise *programmatic* models are a useful and practical representation.
+Strictly speaking, these are still mathematical models (based on the equations
+of mathematical logic rather than numerical equations), but that position is
+confusingly pedantic given that many of the mathematical power tools are
+provably unavailable (general proofs, most notably).  This approach is not new;
+it is essentially advocating for agent-based modeling.  We offer some novel
+thoughts on how to proceed in a reuse-able, replicable fashion, and discard some
+past emphasis on embedding those agents in a network.
 
 Throughout this chapter, we will refer to dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
@@ -117,14 +129,7 @@ to find covert groups, also know as the *dark network detection problem*.
 The issues with these assumptions can be mitigated by adding complexity to
 traditional equation- and network-based models.  However, we argue that a more
 practical solution looks like modeling using general purpose programming
-languages and the structures those languages enable.  Strictly speaking, these
-are still mathematical models (based on the equations of mathematical logic rather
-than numerical equations), but that position is confusingly pedantic given
-that many of the mathematical power tools are provably unavailable (general
-proofs, most notably).  This approach is not new; it is essentially advocating
-for agent-based modeling.  We offer some novel thoughts on how to proceed in a reuse-able,
-replicable fashion, and discard some past emphasis on embedding those agents in
-a network.
+languages and the structures those languages enable.  
 
 We discuss how traditional equation-based modeling practices can be preserved
 moving into the general purpose programming setting, as well as what new sort of
