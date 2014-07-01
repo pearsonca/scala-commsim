@@ -26,7 +26,7 @@ groups: the *dark* label is an accurate gauge of our knowledge.
 
 Thus, to genuinely characterize the performance of these assorted network criteria, we
 must acknowledge they are applied to shadows of the true phenomena.  And unlike
-the more measurements typifying physical sciences, we do not yet have centuries
+the measurements typifying physical sciences, we do not yet have centuries
 of argument to provide context and meaning to what exactly these networks mean.
 
 Fortunately, we can leverage developments in natural sciences that explicitly
@@ -36,8 +36,8 @@ encourages reuse, replication, and refutation.
 
 This approach acknowledges the lessons of traditional equation-based models (the
 primary approach of physical and natural sciences), while also embracing ideas
-from software engineering that are a more appropriate perspective for this kind
-of modeling.
+from software engineering that are a more appropriate perspective for agent-based
+modeling.
 
 * * *
 
@@ -49,20 +49,27 @@ centrality measures, *et cetera* between scenarios.
 
 A network, however, is a *very* simple model of a group, and simple models (of
 all but the most trivial phenomena) are only obtained by making strong
-assumptions.  Such assumptions can be reasonable, and when they are, a very
-compact general description can usefully cover a broad array of phenomena.  This
-is the case for traditional problems in the physical sciences, loosely speaking.
+assumptions.  Such assumptions can be reasonable, and when they are,
+compact descriptions can usefully cover a broad array of phenomena.  One particularly
+strong assumption is homogeneity within kinds and in interactions between kinds.
+This is an assumption that is frequently justified for problems in the physical
+sciences.
 
-With phenomena more sensitive to variation, these assumptions are
-less tenable in the natural sciences, and often border on suspicious in the
-social sciences.  One particularly questionable application is *dark networks* -
-the social network representation of covert groups, which is often used to model
-criminal organizations.  By focusing on the network reduction of these groups
-and associated network metrics, we may forget that the network is not the
-phenomena.  The phenomena is the interactions between and individual changes in
-the members of that covert enterprise, and the effect those have internal and external
-to that organization.  Indeed, these are the observations we actually make, and
-the outcomes we actually care to understand.
+The natural and social sciences, however, consider phenomena more sensitive to
+context and variation. Thus, homogeneity is can be an unreliable assumption in
+the natural sciences, and often borders on suspicious in the social sciences.
+
+One particularly questionable application is *dark networks* - the social
+network representation of covert groups, which is often used to model criminal
+organizations.  By focusing on the network reduction of these groups and
+associated network metrics, we may forget that the network is not the phenomena.
+The phenomena is the interactions between and individual changes in the members
+of that covert enterprise over the life of their collaboration, and the effect
+those have internal and external to that organization.  Indeed, these are the
+observations we actually make - not some network - and the outcomes we actually
+care to understand.  Additionally, if we are considering these groups as
+foreground embedded in a background population, the problem is vastly
+complicated by observation issues and computational concerns.
 
 Representing those observations in a concise mathematical model, however, is an
 implausible task.  In that sense, the network reduction is a very practical tool.
@@ -73,25 +80,27 @@ Strictly speaking, these are still mathematical models (based on the equations
 of mathematical logic rather than numerical equations), but that position is
 confusingly pedantic given that many of the mathematical power tools are
 provably unavailable (general proofs, most notably).  This approach is not new;
-it is essentially advocating for agent-based modeling.  We offer some novel
-thoughts on how to proceed in a reuse-able, replicable fashion, and discard some
-past emphasis on embedding those agents in a network.
+it is essentially advocating for agent-based modeling.  We reiterate some
+insights from the software engineering discipline on how to proceed in a
+reuse-able, replicable fashion, and discard some past emphasis on embedding
+those agents in a network.
 
-Throughout this chapter, we will refer to dataset and
+To motivate the discussion of notable pitfalls in the *dark network* approach,
+we will refer to back to a dataset and
 its interpretations to illustrate that skepticism, using shorthand like *the
-Montreal data* or *the Montreal network*.  The work that introduces the data
-focuses on a theoretical epidemiological question - whether or not a unique
-network structure could explain a specific kind of epidemic dynamic.  The
-relationship between the data and that network model, however, is ideal for
-exploring many of the issues present in attempting to represent covert social
-groups with so-called dark networks. We will refer back to this *Montreal Model*
-as a practical touchstone for issues we highlight with typical approaches.
+Montreal data* or *the Montreal network*.  For longer notes, we will embrace an
+aside format as follows:
 
 >###The Montreal Municipal WiFi Service Data & A Basic Model
 >
 >In a [forthcoming publication][montreal], epidemiological modelers use data on
 access to the Montreal Municipal WiFi service to build a contact network and
-then consider the spread of flu-like pathogens on that network.
+then consider the spread of flu-like pathogens on that network.  That work
+focuses on a theoretical epidemiological question - whether or not a unique
+network structure could explain a specific kind of epidemic dynamic.  The
+relationship between the data and that network model, however, is ideal for
+exploring many of the issues present in attempting to represent covert social
+groups with so-called dark networks.
 >
 >The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
