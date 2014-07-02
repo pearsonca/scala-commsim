@@ -316,6 +316,33 @@ certainly reflect higher stakes than outcomes in academic circles.
 
 ##Addressing These Issues With Agents
 
+Mathematical equations are the traditional way to accomplish the necessary
+precision for scientific expression.  Those relations always rely on assumptions,
+and the scientific utility of these ideas in turn rests on whether those assumptions
+are accurate enough.  If the idea is sound, but the assumptions are not, relaxing
+those assumptions can lead to a more accurate expression, but often this results
+in reducing our ability to understand and work with that expression, which means
+that increased accuracy is not the same as increased utility.
+
+Hence, we arrive at the problem with using simple mathematic structures and the
+required strong assumptions, particularly homogeneity in kinds and strong observation,
+with a problem space like covert groups where those assumptions are not obviously
+applicable.
+
+If we instead embrace the higher level abstraction of mathematics that general
+purpose programming languages represent, by encoding a great deal of complexity into
+smaller forms, then we have some chance to formally model these groups in a way
+that is both precise and possible for scientist to grapple with.  Note that while we
+are distinguishing here the notion of simply using computers to better solve equations,
+we do not suggest that such models would be equation free.
+
+Those familiar with
+numerical equation based models will recognize some of the features of effective
+expression: conventional and consistent notation to leverage the audiences' pre-
+existing knowledge, equation forms that relate parameters that have intuitive
+meanings in obvious ways, and finally variable name choices that connect the
+model to the phenomena.
+
 > observe interaction events, but also observe state changes: a person has supplies
 when they did not before.  they no longer have supplies they once had.  if the view
 is only the network, then who cares.  if the view is the process, then...where did
@@ -357,20 +384,6 @@ into a network; this is where we have the opportunity to explicitly state how we
 are aggregating.  We may then meaningfully compare predictions based on network
 measurements to model outcomes via relevant tests.
 
-Scientific results are not measured by some idealized ability to explain and
-predict, but by their use to those ends.  Regardless of their power,
-if poorly communicated, they will remain idle.  Which is to say, great stories
-and great storytelling are not one and the same.  Our common language
-description of scientific ideas contributes to their effective communication,
-certainly, but the core expression of those models must be in precise syntax,
-and choices there matter as well.
-
-Equations are a typical way to accomplish such precision.  Those familiar with
-numerical equation based models will recognize some of the features of effective
-expression: conventional and consistent notation to leverage the audiences' pre-
-existing knowledge, equation forms that relate parameters that have intuitive
-meanings in obvious ways, and finally variable name choices that connect the
-model to the phenomena.
 
 These traits have analogies in code, though the first two were difficult to put into
 practice until recently.  Historically, most general purpose languages reflected
