@@ -336,12 +336,63 @@ that is both precise and possible for scientist to grapple with.  Note that whil
 are distinguishing here the notion of simply using computers to better solve equations,
 we do not suggest that such models would be equation free.
 
-Those familiar with
-numerical equation based models will recognize some of the features of effective
+Prominent articles in the social sciences have previously argued this position,
+though perhaps less specifically, by observing that agent-based modeling is the
+more natural and powerful means to explore representations of social phenomena.
+Yet, some still insist on using networks with particular properties (including
+specific arrangements) as a fundamental assumption of [those models][Snijders201044].
+Nor do those publications or most textbooks on agent-based modeling discuss what
+principles of numerical models are worth preserving, let alone how to implement
+them in agent-based models.  These concepts and guidance on how to achieve are
+present, however, in the field of software engineering, if perhaps without
+explicit ties to what makes good equation-based models.
+
+Those familiar with equation based models will recognize some of the features of effective
 expression: conventional and consistent notation to leverage the audiences' pre-
 existing knowledge, equation forms that relate parameters that have intuitive
-meanings in obvious ways, and finally variable name choices that connect the
+meanings in obvious ways, and finally variable choices that connect the
 model to the phenomena.
+
+Equation-based models tend to relate a few parameters at a time, despite
+attempting to model many different interacting phenomena.  Consider recent work
+on addressing disease risk as a consequence of [mosquito population response to climate change][morincomrie2010].
+In that model, many relevant ecological phenomena are included, each by an equation
+linking a few variables at a time.  This general approach affords many advantages:
+
+- each relation can be individually considered (for comprehension, for evaluation
+of reasonableness, for experimental validation, *et cetera*)
+- the model can be constructed incrementally; i.e., relationships can begin as
+simple constant parameters and then later capture more sophisticated covariates
+- generally, alternative relationships can be proposed and substituted into the model
+- relationships are individually portable to other modeling contexts
+- use of general equation forms (where accurate) allows leveraging analytical results for
+those general forms (e.g., integrals, standard approximations, transformations)
+
+The [Morin-Comrie model][morincomrie2010] also illustrates many bad
+habits related to equation based modeling.  Many equations have atypical syntax
+(e.g., functional relationships expressed as $f_T$ instead of $f(T)$, piece-wise
+defined functions are discontinuous and expressed with the domains first).  Many
+constants are expressed simply as numerical values rather than the fitted
+parameters that they are, though this problem is inconsistent, contributing even
+further to the confusion about which numbers of which variety.  Most of the
+equations are from other sources, but
+there is no effort to argue that application context is consistent with the source
+context.
+
+You can find many similar examples throughout scientific and engineering
+literature, and while the balance of good and bad will vary, these general
+themes persist.  They have analogies in code-based models, even when those
+models go beyond representing equation-based models, and these analogies are
+well-captured by general software engineering patterns and principles developed
+over many years in that industry.
+
+
+We propose a different lens - the transient *events*
+are what should be modeled, not the ties.  The events are then filtered through
+a model observation process which translates those events into a network; this
+is where we have the opportunity to explicitly state how we are aggregating.  We
+may then meaningfully compare predictions based on network measurements to model
+outcomes via relevant tests.
 
 > observe interaction events, but also observe state changes: a person has supplies
 when they did not before.  they no longer have supplies they once had.  if the view
@@ -373,16 +424,7 @@ certainly a tradition of model selection worth consideration, the best source of
 practical model insight looks more like the videogame industry than physicists
 working on statistical mechanics.
 
-Prominent articles in the social sciences have previously argued this position,
-though perhaps less specifically, by observing that agent-based
-modeling is the more natural and powerful means to explore representations of
-social phenomena.  Yet, some still insist on using networks as the fundamental
-element of [those models][Snijders201044].  We propose a different lens - the
-transient *events* are what should be modeled, not the ties.  The events are
-then filtered through a model observation process which translates those events
-into a network; this is where we have the opportunity to explicitly state how we
-are aggregating.  We may then meaningfully compare predictions based on network
-measurements to model outcomes via relevant tests.
+
 
 
 These traits have analogies in code, though the first two were difficult to put into
@@ -399,38 +441,6 @@ We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 First, there are some other practical considerations to modeling in code, also
 analogous to features of good modeling with equations.
 
-Equation-based models tend to relate a few parameters at a time, despite
-attempting to model many different interacting phenomena.  Consider recent work
-on addressing disease risk as a consequence of [mosquito ecology response to climate change][morincomrie2010].
-In that model, many relevant ecological phenomena are included, each by an equation
-linking a few variables at a time.  This general approach affords many advantages:
-
-- each relation can be individually considered (for comprehension, for evaluation
-of reasonableness, for experimental validation, *et cetera*)
-- the model can be constructed incrementally; i.e., relationships can begin as
-simple constant parameters and then later capture more sophisticated covariates
-- generally, alternative relationships can be proposed and substituted into the model
-- relationships are individually portable to other modeling contexts
-- use of general equation forms (where accurate) allows leveraging analytical results for
-those general forms (e.g., integrals, standard approximations, transformations)
-
-The [Morin-Comrie model][morincomrie2010] also illustrates many bad
-habits related to equation based modeling.  Many equations have atypical syntax
-(e.g., functional relationships expressed as $f_T$ instead of $f(T)$, piece-wise
-defined functions are discontinuous and expressed with the domains first).  Many
-constants are expressed simply as numerical values rather than the fitted
-parameters that they are, though this problem is inconsistent, contributing even
-further to the confusion about which numbers of which variety.  Most of the
-equations are from other sources, but
-there is no effort to argue that application context is consistent with the source
-context.
-
-You can find many similar examples throughout scientific and engineering
-literature, and while the balance of good and bad will vary, these general
-themes persist.  They have analogies in code-based models, even when those
-models go beyond representing equation-based models, and these analogies are
-well-captured by general software engineering patterns and principles developed
-over many years in that industry.
 
 Providing a complete overview of that discipline is best left to other venues.
 We will instead focus on few lessons from a [seminal work in this area][gofbook],
