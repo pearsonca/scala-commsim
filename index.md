@@ -57,7 +57,7 @@ sciences.
 
 The natural and social sciences, however, consider phenomena more sensitive to
 context and variation. Thus, homogeneity is can be an unreliable assumption in
-the natural sciences, and often borders on suspicious in the social sciences.
+the natural sciences, and can border on suspicious in the social sciences.
 
 One particularly questionable application is *dark networks* - the social
 network representation of covert groups, which is often used to model criminal
@@ -91,7 +91,7 @@ its interpretations to illustrate that skepticism, using shorthand like *the
 Montreal data* or *the Montreal network*.  For longer notes, we will embrace an
 aside format as follows:
 
->###The Montreal Municipal WiFi Service Data & A Basic Model
+>##The Montreal Municipal WiFi Service Data & A Basic Model
 >
 >In a [forthcoming publication][montreal], epidemiological modelers use data on
 access to the Montreal Municipal WiFi service to build a contact network and
@@ -112,6 +112,12 @@ duplicates and self loops.
 >The data spans roughly five years, a few hundred thousand entries of login data
 with X users and Y hotspot locations.
 
+Ultimately, we will use the *Montreal data* to highlight some of the issues with
+network-based approaches in a simulation, and discuss what sort of steps should
+be taken with *dark network* research questions.
+
+##Assumptions Gone Wild
+
 The strongest assumptions in most network analyses concern homogeneity and
 observational accuracy.
 
@@ -130,23 +136,16 @@ is typically weakened to some censoring of events (*i.e.*, false negatives) and
 some mislabeling of non-events (*i.e., false positives*), but with errors that
 independent and identical distributed (usually according to a simple distribution, as well).
 However, with covert groups, the (non-)observation process is censored in a
-deliberate, but unknown, manner.
-
-Critically, these assumptions are suspect when trying to use network analyses
-to find covert groups, also know as the *dark network detection problem*.
+deliberate, but unknown, manner for the covert actors, and confounded by
+overlapping behavior in the background population.
 
 The issues with these assumptions can be mitigated by adding complexity to
-traditional equation- and network-based models.  However, we argue that a more
-practical solution looks like modeling using general purpose programming
-languages and the structures those languages enable.  
+traditional equation- and network-based models.  However, at some point this
+complexity becomes impractical for scientific work - it clouds reasoning about
+those formal systems, can be source of implementation error, or can simply
+overwhelm the abilities of researchers.
 
-We discuss how traditional equation-based modeling practices can be preserved
-moving into the general purpose programming setting, as well as what new sort of
-practices should be adopted.
-
-We close with a demonstration of *dark network detection* on the Montreal data.
-
-##Homogeniety
+###Homogeniety
 
 *Homogeniety in kinds* is the modeling assumption that is
 that pieces of some kind in the model are identical (and often, therefore,
@@ -156,13 +155,13 @@ centralities.  Indeed, the assumption is critical in many analyses that we
 expect to measure different values, like centralities or module membership.
 
 Most centrality metrics and modularization schemes are expressed in terms of
-unweighted, undirected edges.  These measures often have generalizations
+unweighted, undirected edges.  Some of these measures have generalizations
 to account for weighting and direction, though an unscientific survey of
 publications indicates these are rarely used.  But these all still rely on edges
 and vertices being the same *kind* - there are fewer methods for computing
 these metrics when edges are of *different kinds*{: .todo title="venice marriage-trade block model work?"}.
 The typical resolution is to simply create separate networks for each tie-type,
-re-run the metrics on each distinct network, and then speculate about the differences.
+re-run the metrics on each distinct network, and then speculate about the results.
 
 As with edges, homogenizing assumptions are typically made for vertices as well.
 Contact distribution studies are replete with this sort of assumption.  Extreme
@@ -173,26 +172,29 @@ homogenization might be reasonable.  But for many others, valuable insight
 arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
 and differentiate flight attendants on private, regional, and hub-to-hub flights.
 
-Bipartite networks may appear to address this problem, but are often simply adding another *kind*.
-Having two kinds of interactions still homogenizes those
-interactions -- *e.g.*, a white collar worker visiting a coffeeshop en route
-to work in morning is a very different sort of interaction than even that same
-white collar worker visiting an alley in the dead of night.
+Bipartite networks may appear to address this problem, but are often simply
+adding another *kind*. Having two kinds of interactions still homogenizes those
+interactions - *e.g.*, a white collar worker (person kind) visiting a coffeeshop
+(location kind) en route to work in morning is a very different sort of
+interaction than even that same white collar worker visiting an alley in the
+dead of night.
 
-> ### Homogeniety in the Montreal Network
+> ###Homogeniety in the Montreal Network
 >
 > The Montreal source data homogenizes on several key aspects:
 >
 > - all user logins are treated as equal
 > - all locations are treated as equal
 >
-> But we can imagine potentially meaningful censoring that occurs due to this
+> We can imagine and even find indications in the data of potentially meaningful censoring that occurs due to this
 homogenization.  In the context of transmissible disease:
 >
 > - some of the *users* might simply be shared business connections (the data has
 several high utilization users that are consistent with this sort of use)
 > - some of the locations might have many ways for co-users to transmit disease,
-while others might be relatively sterile
+while others might be relatively sterile (though not included in the published data,
+the raw data includes geo-location of hotspots, which can in turn be tied to very
+different sorts of businesses)
 >
 > Previous work using this data treats connections as homogeneous
 in terms of their capability to serve as a transmission route.  But there is quite
@@ -226,16 +228,72 @@ observation difficulties.  Can't find the Higgs boson?  Get another 300 trillion
 terrorist cells, let alone a trillion times that, but the few samples we do have
 are further fraught with observation issues.
 
-##Observation
+###Observation
 
-> observe interaction events, but also observe state changes: a person has supplies
-when they did not before.  they no longer have supplies they once had.  if the view
-is only the network, then who cares.  if the view is the process, then...where did
-these supplies come from?  go to?  if you see them with network associates, then
-you simply missed an exchange events.  if you do not see them, then what contacts
-might you be missing?
+In the simplest version of scientific pursuits, observation is direct truth: we
+read off the ruler tick marks to know the dimensions of our subject.  By degrees,
+however, this idealization must be sacrificed to practical realities.
 
-For certain flavors of covert groups - e.g., consumers and distributors of
+Our observations have precision errors: we manufacture rulers with different lengths, or
+we read the tick marks incorrectly.  Observations are transformations of the subjects:
+we apply the ruler to what see through the microscope.  Observations are sensitive
+to the subject's behavior: we use the ruler on something traveling a substantial portion
+of the speed of light.  Subjects are very difficult to measure and appear rarely:
+we must engineer rulers of colossal proportions and apply them over and over to
+find what we seek.
+
+For the physical sciences, this is traditionally the end of observational
+difficulties (ignoring effects that preclude simultaneous measures of particular
+features).  For the natural sciences, all of these problems are amplified, and
+we start to see the problem of measurements changing meaning as we continue in
+time and of the act of measurement having practical consequences for the subject.
+For all the time spent smashing protons attempting to find the Higgs boson, we
+may reliably expect that having started the same experiment a few years (even decades)
+earlier or later would not affect our resulting knowledge, nor has the nature of
+protons generally been altered by running that experiment.
+
+If we actively sampled (*e.g.*, systematically modified environmental conditions
+and observed response) a comparable number of any non-microbe species on earth,
+even accounting for the time scale of the experiment, that species would be
+irrevocably altered and quite possibly extinct. Because the individuals involved
+also have notably more variability than protons, its even possible that the
+question behind this massive hypothetical study might not be answered.
+
+The social science version is even more practically complicated.  There are few
+ethical dilemmas involved in basic physical science research (applications is
+another matter, as any query of academic literature on, *e.g.*, `atomic bomb`
+will reveal).  Not so for social science research, where even mildly
+[active observations][facebook] at any appreciable scale elicit research ethics debates
+(even if those studies have basically indiscernable effect sizes).  Likewise, in
+addition to natural human biological variation, there are additional layers of
+cultural life history diversity.
+
+For social science, we a thus restricted to primarily passive observation of natural
+experiments, with restricted ability to conduct active experimentation on a very small scale.
+Covert groups, by definition, further complicate this passive observation.
+
+> ### Observation in the Montreal Data
+>
+> The Montreal dataset is explicitly user logins to the publicly provisioned wifi
+system at locations that have adopted that service.
+>
+> If we restrict our view to the very narrow activity this data covers - people
+using wifi at places - we can still imagine significant concerns mapping our observations
+to conclusions about co-location:
+>
+> - people do not always use the wifi, and some do not even have accounts
+> - not all places use the public wifi service
+> - some of the locations are close enough together that people may be at one location,
+and use another's hotspot
+> - multiple people may share a single account, or one person may have multiple
+accounts
+>
+> Some of these obviously apply based on the data (*e.g.*, if businesses had as few
+customers as many locations had users, they would fail).  Others would entail
+gathering extensive additional data (*e.g.*, counting competing hotspot service
+installations).
+
+For certain flavors of covert groups - *e.g.*, consumers and distributors of
 illegal substances, persons with persecuted sexual preferences - snowball
 sampling can make [reasonable in-roads][biernacki1981snowball].  However, the
 techniques required for successful snowball sampling are conspicuously untenable
@@ -244,6 +302,26 @@ state espionage apparati.  In some cases, these groups may even be structured in
 a way - high compartmentalization, with multiple layers of indirection - such
 that fundamental assumptions of snowball sampling about the relationship
 structure are violated.
+
+The more application-oriented reader might at this point note while these
+observation restrictions exist for academic research, they are less applicable
+for law enforcement, military, or intelligence gathering organizations.  While
+not unbound by rules, it is true that these entities are typically more capable
+of more extensive passive observation and executing active experiments, by
+nature of looser restrictions and more resources.  The fact remains that their
+observations will be incomplete, clouded by background data, subject to
+deception (both the targets and biased analysts); while these effects might be
+lessened for these organizations, the consequences of action and inaction
+certainly reflect higher stakes than outcomes in academic circles.
+
+##Addressing These Issues With Agents
+
+> observe interaction events, but also observe state changes: a person has supplies
+when they did not before.  they no longer have supplies they once had.  if the view
+is only the network, then who cares.  if the view is the process, then...where did
+these supplies come from?  go to?  if you see them with network associates, then
+you simply missed an exchange events.  if you do not see them, then what contacts
+might you be missing?
 
 Stringent observation limits come up more often in the natural sciences.  Recent work has begun to tackle these problems in
 network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
@@ -278,8 +356,6 @@ then filtered through a model observation process which translates those events
 into a network; this is where we have the opportunity to explicitly state how we
 are aggregating.  We may then meaningfully compare predictions based on network
 measurements to model outcomes via relevant tests.
-
-##Addressing These Issues With Agents
 
 Scientific results are not measured by some idealized ability to explain and
 predict, but by their use to those ends.  Regardless of their power,
@@ -610,3 +686,4 @@ feedback getting the voice right for this piece.
 [epidemics4]: <https://github.com/pearsonca/epidemics4-talk/blob/master/poster.pdf?raw=true> "Epidemics 4 Poster"
 [grossman1995portion]: <> "On a portion of the well-known collaboration graph"
 [koopman]: <http://publichealthpractice.com/project-detail/transforming-public-health-surveillance-2/> "forthcoming chapter"
+[facebook]: <http://dx.doi.org/10.1371/journal.pone.0090315> "facebook thing"
