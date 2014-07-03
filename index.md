@@ -303,104 +303,6 @@ a way - high compartmentalization, with multiple layers of indirection - such
 that fundamental assumptions of snowball sampling about the relationship
 structure are violated.
 
-The more application-oriented reader might at this point note while these
-observation restrictions exist for academic research, they are less applicable
-for law enforcement, military, or intelligence gathering organizations.  While
-not unbound by rules, it is true that these entities are typically more capable
-of more extensive passive observation and executing active experiments, by
-nature of looser restrictions and more resources.  The fact remains that their
-observations will be incomplete, clouded by background data, subject to
-deception (both the targets and biased analysts); while these effects might be
-lessened for these organizations, the consequences of action and inaction
-certainly reflect higher stakes than outcomes in academic circles.
-
-##Addressing These Issues With Agents
-
-Mathematical equations are the traditional way to accomplish the necessary
-precision for scientific expression.  Those relations always rely on assumptions,
-and the scientific utility of these ideas in turn rests on whether those assumptions
-are accurate enough.  If the idea is sound, but the assumptions are not, relaxing
-those assumptions can lead to a more accurate expression, but often this results
-in reducing our ability to understand and work with that expression, which means
-that increased accuracy is not the same as increased utility.
-
-Hence, we arrive at the problem with using simple mathematic structures and the
-required strong assumptions, particularly homogeneity in kinds and strong observation,
-with a problem space like covert groups where those assumptions are not obviously
-applicable.
-
-If we instead embrace the higher level abstraction of mathematics that general
-purpose programming languages represent, by encoding a great deal of complexity into
-smaller forms, then we have some chance to formally model these groups in a way
-that is both precise and possible for scientist to grapple with.  Note that while we
-are distinguishing here the notion of simply using computers to better solve equations,
-we do not suggest that such models would be equation free.
-
-Prominent articles in the social sciences have previously argued this position,
-though perhaps less specifically, by observing that agent-based modeling is the
-more natural and powerful means to explore representations of social phenomena.
-Yet, some still insist on using networks with particular properties (including
-specific arrangements) as a fundamental assumption of [those models][Snijders201044].
-Nor do those publications or most textbooks on agent-based modeling discuss what
-principles of numerical models are worth preserving, let alone how to implement
-them in agent-based models.  These concepts and guidance on how to achieve are
-present, however, in the field of software engineering, if perhaps without
-explicit ties to what makes good equation-based models.
-
-Those familiar with equation based models will recognize some of the features of effective
-expression: conventional and consistent notation to leverage the audiences' pre-
-existing knowledge, equation forms that relate parameters that have intuitive
-meanings in obvious ways, and finally variable choices that connect the
-model to the phenomena.
-
-Equation-based models tend to relate a few parameters at a time, despite
-attempting to model many different interacting phenomena.  Consider recent work
-on addressing disease risk as a consequence of [mosquito population response to climate change][morincomrie2010].
-In that model, many relevant ecological phenomena are included, each by an equation
-linking a few variables at a time.  This general approach affords many advantages:
-
-- each relation can be individually considered (for comprehension, for evaluation
-of reasonableness, for experimental validation, *et cetera*)
-- the model can be constructed incrementally; i.e., relationships can begin as
-simple constant parameters and then later capture more sophisticated covariates
-- generally, alternative relationships can be proposed and substituted into the model
-- relationships are individually portable to other modeling contexts
-- use of general equation forms (where accurate) allows leveraging analytical results for
-those general forms (e.g., integrals, standard approximations, transformations)
-
-The [Morin-Comrie model][morincomrie2010] also illustrates many bad
-habits related to equation based modeling.  Many equations have atypical syntax
-(e.g., functional relationships expressed as $f_T$ instead of $f(T)$, piece-wise
-defined functions are discontinuous and expressed with the domains first).  Many
-constants are expressed simply as numerical values rather than the fitted
-parameters that they are, though this problem is inconsistent, contributing even
-further to the confusion about which numbers of which variety.  Most of the
-equations are from other sources, but
-there is no effort to argue that application context is consistent with the source
-context.
-
-You can find many similar examples throughout scientific and engineering
-literature, and while the balance of good and bad will vary, these general
-themes persist.  They have analogies in code-based models, even when those
-models go beyond representing equation-based models, and these analogies are
-well-captured by general software engineering patterns and principles developed
-over many years in that industry.
-
-
-We propose a different lens - the transient *events*
-are what should be modeled, not the ties.  The events are then filtered through
-a model observation process which translates those events into a network; this
-is where we have the opportunity to explicitly state how we are aggregating.  We
-may then meaningfully compare predictions based on network measurements to model
-outcomes via relevant tests.
-
-> observe interaction events, but also observe state changes: a person has supplies
-when they did not before.  they no longer have supplies they once had.  if the view
-is only the network, then who cares.  if the view is the process, then...where did
-these supplies come from?  go to?  if you see them with network associates, then
-you simply missed an exchange events.  if you do not see them, then what contacts
-might you be missing?
-
 Stringent observation limits come up more often in the natural sciences.  Recent work has begun to tackle these problems in
 network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
 some history of broader adoption of this perspective via concepts like
@@ -424,27 +326,125 @@ certainly a tradition of model selection worth consideration, the best source of
 practical model insight looks more like the videogame industry than physicists
 working on statistical mechanics.
 
+The more application-oriented reader might at this point note though these
+observation restrictions exist for academic research, they are less applicable
+for law enforcement, military, and intelligence gathering organizations.  While
+not unbound by rules, it is true that these entities are typically more capable
+of more extensive passive observation and executing active experiments, by
+nature of looser restrictions and more resources.  The fact remains that their
+observations will be incomplete, clouded by background data, subject to
+deception (of both the targets and biased analysts).  These effects might be
+lessened for these organizations, but the consequences of action and inaction
+certainly reflect higher stakes than typical academic outcomes.
 
+##Addressing These Issues With Agents
 
+###Brief Modeling Aside
 
-These traits have analogies in code, though the first two were difficult to put into
-practice until recently.  Historically, most general purpose languages reflected
+Mathematical equations are the traditional way to accomplish the necessary
+precision for scientific expression.  Those relations always rely on assumptions,
+and the scientific utility of these ideas in turn rests on whether those assumptions
+are accurate enough.  If the idea is sound, but the assumptions are not, relaxing
+those assumptions can lead to a more accurate expression, but often this results
+in reducing our ability to understand and work with that expression.  This means
+that increased accuracy is not the same as increased utility.
+
+Hence, we arrive at the problem with using simple mathematic structures and the
+required strong assumptions, particularly homogeneity in kinds and strong observation,
+with a problem like covert groups where those assumptions are not obviously
+applicable.  General purpose programming languages compress mathematical notation complexity into
+smaller forms, enabling us to formally model concepts like these covert groups in a way
+that is both precise and possible for scientist to grapple with.  Note that while we
+are distinguishing here the notion of simply using computers to better solve equations,
+we do not suggest that such models would be equation free.
+
+Prominent articles in the social sciences have previously argued this position,
+though perhaps less specifically, by observing that agent-based modeling is the
+more natural and powerful means to explore representations of social phenomena.
+Yet, some still insist on using networks with particular properties (including
+specific arrangements) as a fundamental assumption of [those models][Snijders201044].
+Nor do those publications or most textbooks on agent-based modeling discuss what
+principles of numerical models are worth preserving, let alone how to implement
+them in agent-based models.  These concepts and guidance on how to achieve are
+present, however, in the field of software engineering, if perhaps without
+explicit ties to what makes good equation-based models.
+
+Those familiar with equation based models will recognize some of the features of effective
+expression:
+
+ - conventional and consistent notation to leverage pre-existing knowledge,
+ - variable choices that clearly connect the model to the phenomena,
+ - composition of complex phenomena out many simple relations
+
+Recent work on addressing disease risk as a consequence of [mosquito population response to climate change][morincomrie2010]
+provides an example of both good and bad execution of this philosophy.
+In that model, many relevant ecological phenomena are included, each by an equation
+linking a few variables at a time.  This general approach affords many advantages:
+
+ - each relation can be individually considered (for comprehension, for evaluation
+of reasonableness, for experimental validation, *et cetera*)
+ - the model can be constructed incrementally; *i.e.*, relationships can begin as
+simple constant parameters and then later capture more sophisticated covariates
+ - generally, alternative relationships can be proposed and substituted into the model
+ - relationships are individually portable to other modeling contexts
+ - use of general equation forms (where accurate) allows leveraging analytical results for
+those general forms (*e.g.*, integrals, standard approximations, transformations)
+
+This model also illustrates many bad
+habits related to equation-based modeling:
+
+ - several equations have atypical syntax (*e.g.*, functional relationships
+   expressed as $f_T$ instead of $f(T)$, piece-wise defined functions are discontinuous and expressed with the domains first),
+ - constants are used inconsistently: sometimes they are geometric values (*e.g.*, for rescaling temperature)
+ sometimes they are fitted parameters, while both of those kinds are also sometimes
+ expressed with variables,
+ - most of the equations are from other sources, but there is no effort to argue that application context is consistent with the source
+context.
+
+The scientific and engineering literature are replete with these sort models,
+and while the balance of good and bad will vary, these general themes persist.
+They have analogies in code-based models, even when those models go beyond
+representing equation-based models, and these analogies are well-captured by
+general software engineering patterns and principles developed over many years
+in that industry.
+
+Providing a complete overview of that discipline is best left to other venues.
+We will instead focus on few lessons from a [seminal work in this area][gofbook],
+a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
+
+Initially, most general purpose languages reflected
 what actually occurred in computer memory with the syntax improvements limited to
 abstractions for convenient creation and manipulation of numerical types, and
-for flow control.  The development and promulgation of object-oriented concepts
+for flow control.  The [development and promulgation][dahl1966simula] of object-oriented concepts
 shifted how we reasoned about programs, leading to languages and libraries
 designed for those concepts.  Modern programming languages bring even-more-natural
 language syntax while maintaining the precision necessary to direct a computer,
 allowing us to represent complex models with [literate code][knuth1984literate].
 We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
+###Agent-Based Solutions
+
+In the aforementioned publication advocating for agent-based modeling, Snidjers
+et al *explicitly argued against modeling events*{: .todo title="double check this"}.
+While we agree with their argument generally for agent-based models, we contend
+that the transient *events* are what should be modeled, not the ties.  If we wish
+to subsequently apply network science methods (as is the case with evaluating
+*dark network* conclusions), then we can filter these events through
+a model observation process in a pure network reduction.  We can also apply more
+sophisticated options, such as those used in biochemical network analysis that
+capture vertex state, by altering how that observation filter works.
+
+> observe interaction events, but also observe state changes: a person has supplies
+when they did not before.  they no longer have supplies they once had.  if the view
+is only the network, then who cares.  if the view is the process, then...where did
+these supplies come from?  go to?  if you see them with network associates, then
+you simply missed an exchange events.  if you do not see them, then what contacts
+might you be missing?
+
+
 First, there are some other practical considerations to modeling in code, also
 analogous to features of good modeling with equations.
 
-
-Providing a complete overview of that discipline is best left to other venues.
-We will instead focus on few lessons from a [seminal work in this area][gofbook],
-a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
 
 The principle lessons of the [Design Patterns book][gofbook] are that we should
 build objects - in this case, Agents - by composing capabilities and that we
@@ -710,3 +710,4 @@ feedback getting the voice right for this piece.
 [grossman1995portion]: <> "On a portion of the well-known collaboration graph"
 [koopman]: <http://publichealthpractice.com/project-detail/transforming-public-health-surveillance-2/> "forthcoming chapter"
 [facebook]: <http://dx.doi.org/10.1371/journal.pone.0090315> "facebook thing"
+[dahl1966simula]: <http://dx.doi.org/10.1145/365813.365819> "simula"
