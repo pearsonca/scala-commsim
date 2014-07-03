@@ -5,12 +5,14 @@
   padding: 1em;
   color: black;
   background-color: white;
+  text-align: justify;
 }
 
 .main blockquote {
   background: #D3D3D3;
   border-left: solid 0.2em #A9A9A9;
-  padding-left: 1em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
   padding-top: 0.1em;
   padding-bottom: 0.1em;
 }
