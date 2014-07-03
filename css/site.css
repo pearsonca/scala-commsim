@@ -17,6 +17,13 @@
   padding-bottom: 0.1em;
 }
 
+.main blockquote h1:first-child,
+.main blockquote h2:first-child,
+.main blockquote h3:first-child {
+  margin-bottom: 0em;
+  margin-top: 0.5em;
+}
+
 .main .todo {
   background: red;
 }
