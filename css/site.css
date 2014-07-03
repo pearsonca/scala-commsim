@@ -10,7 +10,7 @@
 
 .main blockquote {
   background: #D3D3D3;
-  border-left: solid 0.2em #A9A9A9;
+  border: solid 0.1em #A9A9A9;
   padding-left: 0.5em;
   padding-right: 0.5em;
   padding-top: 0.1em;
