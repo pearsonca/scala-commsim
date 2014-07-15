@@ -672,6 +672,22 @@ Want: expected ROC summary statistic (area under the curve or area between the
 curve and uninformative) + confidence intervals as a function of time, for a few
 locations in phase space - high rate of meets + probability of use.
 
+###Parameter Setting
+
+using empirical dataset:
+
+- determine mean number of locations visited by a user
+- determine mean visitation rate by users
+
+Covert group has stochastic behavior that is expected to match these results.
+Rate of attendance + rate of use of wifi obvious non-identifiable (with this data, probably quite
+identifiable with simple additional observations on empirical data), so will use
+a single parameter for them.
+
+So the simulation parameters are covert group size + \"plotting\" rate.  As
+plotting rate is increased or decreased, it is offset by non-plotting visit
+rate.
+
 ##Afterthoughts
 
 ##Acknowledgements
