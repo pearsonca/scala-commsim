@@ -186,11 +186,13 @@ dead of night.
 > - all user logins are treated as equal
 > - all locations are treated as equal
 >
-> We can imagine and even find indications in the data of potentially meaningful censoring that occurs due to this
-homogenization.  In the context of transmissible disease:
+> We can imagine and even find indications in the data of potentially meaningful
+censoring that occurs due to this homogenization.  In the context of
+transmissible disease:
 >
 > - some of the *users* might simply be shared business connections (the data has
 several high utilization users that are consistent with this sort of use)
+> - some users or locations may in fact be identical, simply with new credentials
 > - some of the locations might have many ways for co-users to transmit disease,
 while others might be relatively sterile (though not included in the published data,
 the raw data includes geo-location of hotspots, which can in turn be tied to very
@@ -210,11 +212,11 @@ assumption.  As far and wide as we have looked, one hydrogen atom is the same as
 another (give or take a few nucleons, but in a very simply described way).  Prominent
 publications on networks by scientists from that background often adopt this
 assumption implicitly.  Sometimes, this assumption is generally reasonable (e.g.,
-Ising models of phase transitions), and sometimes it's acceptable given the
+Ising models of phase transitions in a physical material), and sometimes it's acceptable given the
 specific question (e.g., the growth of the world wide web or citation networks).
 Sometimes [posterior analyses][barabasi1999] find this assumption is not
-obviously precluded (though they may argue a stronger conclusion), but that's
-scant indication the assumption is reasonable.
+obviously precluded (though they may argue a stronger conclusion), though do not
+necessarily follow up with prediction and validation.
 
 This homogeneity in kinds, however, seems suspect for many questions in social
 science.  Several of the other chapters in these proceedings highlight such
@@ -313,18 +315,6 @@ than the social sciences, and many of the pertinent observations are the same
 sort of properties that concern the physical sciences - temperatures, chemical
 concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
 formal representation remains quite powerful.
-
-However, given the extreme heterogeneity in kinds for most social science
-questions, we contend that adopting the equation-based formalism to model those
-problems is fundamentally flawed.  Yes, there are important numerical
-measurements.  Yes, quantitative statistical analysis of the models is still
-important.  But we should accept that many social science models are most naturally expressed
-with the tools of mathematical logic, which are today most practically
-implemented in general purpose programming languages.  While the physical
-and natural sciences have a successful history with numerical models, and
-certainly a tradition of model selection worth consideration, the best source of
-practical model insight looks more like the videogame industry than physicists
-working on statistical mechanics.
 
 The more application-oriented reader might at this point note though these
 observation restrictions exist for academic research, they are less applicable
@@ -432,18 +422,11 @@ We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
 ###Observation in Equation-Based Models
 
-Stringent observation limits come up more often in the natural sciences.  Recent work has begun to tackle these problems in
-network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
-some history of broader adoption of this perspective via concepts like
-[partially observed Markov processes][Ionides05122006].
+REDO
 
-This work still has more homogeneity in the atomic pieces of the model
-than the social sciences, and many of the pertinent observations are the same
-sort of properties that concern the physical sciences - temperatures, chemical
-concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
-formal representation remains quite powerful.
+###Modeling in Code
 
-However, given the extreme heterogeneity in kinds for most social science
+Given the extreme heterogeneity in kinds for most social science
 questions, we contend that adopting the equation-based formalism to model those
 problems is fundamentally flawed.  Yes, there are important numerical
 measurements.  Yes, quantitative statistical analysis of the models is still
@@ -455,33 +438,8 @@ certainly a tradition of model selection worth consideration, the best source of
 practical model insight looks more like the videogame industry than physicists
 working on statistical mechanics.
 
-First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
-connection data tells substantially different stories depending how it is
-sliced.  The network extracted from the data for their theoretical work is
-used for a single epidemic season simulation, but that data is over several years.
-Careful review of the users and hotspot locations indicates a high rate of
-turnover in both.  Using a similar model for the spread of infection, changes in
-tie aggregation windows result in very different disease outcomes.
-
-One aside before we proceed: there have been great strides in other algorithmic
-approaches to prediction, such as neural networks and classification trees, and
-those alternatives are both powerful and also avoid many problems associated
-[with traditional equation-based models][breiman2001statistical].  But to use
-them effectively, we must carefully attend to the distinction between
-[explanation and prediction][shmueli2010explain]. We do not address these
-approaches here, but we do wish to highlight what \"thinking carefully\" means
-for covert groups.  These approaches are largely interpolative: the product is
-at most what is in the training data.  There may be quite a bit in the training
-set, indeed enough beyond what is readily apparent to any researcher, thus
-making the process appear capable of extrapolation. For covert groups, however,
-training data is sparse and what is present may be mischaracterized.
-Researchers attempting to apply these sort of algorithmic based approaches to
-covert groups should be especially skeptical, disbelieving any results that do
-not explicitly address substantial input censoring and error.
-
-###Modeling in Code
-
-These traits have analogies in code, though the first two were difficult to put into
+However, the traits of good equation-based models have analogies in code,
+particularly modularity and clear mechanism.  These two were difficult to put into
 practice until recently.  Historically, most general purpose languages reflected
 what actually occurred in computer memory with the syntax improvements limited to
 abstractions for convenient creation and manipulation of numerical types, and
