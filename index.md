@@ -170,7 +170,7 @@ artificially interesting when we treat those jobs and the kind of interactions
 they entail as the same kind of thing.  Certainly for some questions, this
 homogenization might be reasonable.  But for many others, valuable insight
 arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
-and differentiate flight attendants on private, regional, and hub-to-hub flights.
+among mathematicians and differentiate flight attendants on private, regional, and hub-to-hub flights.
 
 Bipartite networks may appear to address this problem, but are often simply
 adding another *kind*. Having two kinds of interactions still homogenizes those
@@ -246,7 +246,7 @@ For the physical sciences, this is traditionally the end of observational
 difficulties (ignoring effects that preclude simultaneous measures of particular
 features).  For the natural sciences, all of these problems are amplified, and
 we start to see the problem of measurements changing meaning as we continue in
-time and of the act of measurement having practical consequences for the subject.
+time and the act of measurement having practical consequences for the subject.
 For all the time spent smashing protons attempting to find the Higgs boson, we
 may reliably expect that having started the same experiment a few years (even decades)
 earlier or later would not affect our resulting knowledge, nor has the nature of
@@ -339,24 +339,32 @@ certainly reflect higher stakes than typical academic outcomes.
 
 ##Addressing These Issues With Agents
 
-###Brief Modeling Aside
+###What's Good About Equation-Based Models?
 
 Mathematical equations are the traditional way to accomplish the necessary
-precision for scientific expression.  Those relations always rely on assumptions,
-and the scientific utility of these ideas in turn rests on whether those assumptions
-are accurate enough.  If the idea is sound, but the assumptions are not, relaxing
-those assumptions can lead to a more accurate expression, but often this results
-in reducing our ability to understand and work with that expression.  This means
+precision for scientific expression.  Those relations always rely on
+assumptions, and the scientific utility of these ideas in turn rests on whether
+those assumptions are accurate enough (assuming faithful execution of the
+ideas).  If the idea is sound, but the assumptions are not, relaxing those
+assumptions can lead to a more accurate expression, but this can result in
+reducing our ability to understand and work with that expression, which means
 that increased accuracy is not the same as increased utility.
 
 Hence, we arrive at the problem with using simple mathematic structures and the
 required strong assumptions, particularly homogeneity in kinds and strong observation,
-with a problem like covert groups where those assumptions are not obviously
-applicable.  General purpose programming languages compress mathematical notation complexity into
-smaller forms, enabling us to formally model concepts like these covert groups in a way
-that is both precise and possible for scientist to grapple with.  Note that while we
-are distinguishing here the notion of simply using computers to better solve equations,
-we do not suggest that such models would be equation free.
+with a problem space like covert groups where those assumptions are not obviously
+applicable.
+
+If we instead embrace the higher level abstraction of mathematics that general
+purpose programming languages represent, then we have some chance to formally
+model these groups in a way that is both precise and possible for researchers to
+grok.  We are distinguishing here representing generic objects and simply
+larger, more complicated systems of equations.  Certainly, computers are useful
+with the latter, and we are not suggesting that models using the former would be
+equation free.  However, we argue that `agents` of any appreciable complexity
+would require too many equations to formally capture with that kind of mathematics,
+but if we leverage the formalism of general purpose programming we can do so
+with relative (if not absolute) ease.
 
 Prominent articles in the social sciences have previously argued this position,
 though perhaps less specifically, by observing that agent-based modeling is the
@@ -422,29 +430,74 @@ language syntax while maintaining the precision necessary to direct a computer,
 allowing us to represent complex models with [literate code][knuth1984literate].
 We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
-###Agent-Based Solutions
+###Observation in Equation-Based Models
 
-In the aforementioned publication advocating for agent-based modeling, Snidjers
-et al *explicitly argued against modeling events*{: .todo title="double check this"}.
-While we agree with their argument generally for agent-based models, we contend
-that the transient *events* are what should be modeled, not the ties.  If we wish
-to subsequently apply network science methods (as is the case with evaluating
-*dark network* conclusions), then we can filter these events through
-a model observation process in a pure network reduction.  We can also apply more
-sophisticated options, such as those used in biochemical network analysis that
-capture vertex state, by altering how that observation filter works.
+Stringent observation limits come up more often in the natural sciences.  Recent work has begun to tackle these problems in
+network contexts, e.g. [HIV transmission][volz2013inferring], but there is also
+some history of broader adoption of this perspective via concepts like
+[partially observed Markov processes][Ionides05122006].
 
-> observe interaction events, but also observe state changes: a person has supplies
-when they did not before.  they no longer have supplies they once had.  if the view
-is only the network, then who cares.  if the view is the process, then...where did
-these supplies come from?  go to?  if you see them with network associates, then
-you simply missed an exchange events.  if you do not see them, then what contacts
-might you be missing?
+This work still has more homogeneity in the atomic pieces of the model
+than the social sciences, and many of the pertinent observations are the same
+sort of properties that concern the physical sciences - temperatures, chemical
+concentrations, sizes, masses, *et cetera*.  Hence, the largely equation-based
+formal representation remains quite powerful.
 
+However, given the extreme heterogeneity in kinds for most social science
+questions, we contend that adopting the equation-based formalism to model those
+problems is fundamentally flawed.  Yes, there are important numerical
+measurements.  Yes, quantitative statistical analysis of the models is still
+important.  But we should accept that many social science models are most naturally expressed
+with the tools of mathematical logic, which are today most practically
+implemented in general purpose programming languages.  While the physical
+and natural sciences have a successful history with numerical models, and
+certainly a tradition of model selection worth consideration, the best source of
+practical model insight looks more like the videogame industry than physicists
+working on statistical mechanics.
+
+First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
+connection data tells substantially different stories depending how it is
+sliced.  The network extracted from the data for their theoretical work is
+used for a single epidemic season simulation, but that data is over several years.
+Careful review of the users and hotspot locations indicates a high rate of
+turnover in both.  Using a similar model for the spread of infection, changes in
+tie aggregation windows result in very different disease outcomes.
+
+One aside before we proceed: there have been great strides in other algorithmic
+approaches to prediction, such as neural networks and classification trees, and
+those alternatives are both powerful and also avoid many problems associated
+[with traditional equation-based models][breiman2001statistical].  But to use
+them effectively, we must carefully attend to the distinction between
+[explanation and prediction][shmueli2010explain]. We do not address these
+approaches here, but we do wish to highlight what \"thinking carefully\" means
+for covert groups.  These approaches are largely interpolative: the product is
+at most what is in the training data.  There may be quite a bit in the training
+set, indeed enough beyond what is readily apparent to any researcher, thus
+making the process appear capable of extrapolation. For covert groups, however,
+training data is sparse and what is present may be mischaracterized.
+Researchers attempting to apply these sort of algorithmic based approaches to
+covert groups should be especially skeptical, disbelieving any results that do
+not explicitly address substantial input censoring and error.
+
+###Modeling in Code
+
+These traits have analogies in code, though the first two were difficult to put into
+practice until recently.  Historically, most general purpose languages reflected
+what actually occurred in computer memory with the syntax improvements limited to
+abstractions for convenient creation and manipulation of numerical types, and
+for flow control.  The development and promulgation of object-oriented concepts
+shifted how we reasoned about programs, leading to languages and libraries
+designed for those concepts.  Modern programming languages bring even-more-natural
+language syntax while maintaining the precision necessary to direct a computer,
+allowing us to represent complex models with [literate code][knuth1984literate].
+We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
 First, there are some other practical considerations to modeling in code, also
 analogous to features of good modeling with equations.
 
+Providing a complete overview of that discipline is best left to other venues.
+We will instead focus on few lessons from a [seminal work in this area][gofbook],
+a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
 
 The principle lessons of the [Design Patterns book][gofbook] are that we should
 build objects - in this case, Agents - by composing capabilities and that we
@@ -462,14 +515,14 @@ State
 : response sets are driven by historical exposure.  allows agents to have different
 responses to the same events without model having to create entirely new objects
 
-chain of responsibility
+Chain of Responsibility
 : concept allows single event to trigger many responses from different
 aspects of agent behavior.
 
 Test-driven design is also a natural fit for scientific modeling.  As
 [Janzen and Saiedian highlight in their review][janzen2005test], test driven design
 encourages incremental development of narrow, independent behaviors, which is
-consistent with [iterative model evalution practices][koopman].  as new
+consistent with [iterative model evalution practices][koopman].  As new
 behavior added to a module, or modules integrated, can use test infrastructure
 to verify that model still obeys constraints / context expressed by tests.  This
 looks quite similar to good modeling practice: develop simplest conceivable
@@ -512,33 +565,6 @@ tinkering to get up and running.  It does not preclude some problems (e.g.,
 namespace collisions), but the sort of modeling care needed to avoid those is
 far lower than the sort of care to properly apply the design patterns.
 
-One aside before we proceed: there have been great strides in other algorithmic
-approaches to prediction, such as neural networks and classification trees, and
-those alternatives are both powerful and also avoid many problems associated
-[with traditional equation-based models][breiman2001statistical].  But to use
-them effectively, we must carefully attend to the distinction between
-[explanation and prediction][shmueli2010explain]. We do not address these
-approaches here, but we do wish to highlight what \"thinking carefully\" means
-for covert groups.  These approaches are largely interpolative: the product is
-at most what is in the training data.  There may be quite a bit in the training
-set, indeed enough beyond what is readily apparent to any researcher, thus
-making the process appear capable of extrapolation. For covert groups, however,
-training data is sparse and what is present may be mischaracterized.
-Researchers attempting to apply these sort of algorithmic based approaches to
-covert groups should be especially skeptical, disbelieving any results that do
-not explicitly address substantial input censoring and error.
-
-###Aggregation
-
-First, the matter of aggregation: as highlighted in [subsequent work][epidemics4], the
-connection data tells substantially different stories depending how it is
-sliced.  The network extracted from the data for their theoretical work is
-used for a single epidemic season simulation, but that data is over several years.
-Careful review of the users and hotspot locations indicates a high rate of
-turnover in both.  Using a similar model for the spread of infection, changes in
-tie aggregation windows result in very different disease outcomes.
-
-##Scala Demonstration Model
 There are several approaches to achieve the aforementioned design patterns.  One
 typical approach is via inheritance.  In some parent representation, we describe
 all the actions our agents can take, and then we have child classes that
@@ -573,116 +599,84 @@ providing benefit of compiled, strongly typed language.
 basic approach: agents mixin in traits (in this approach, all agents mixin the
   same traits, but those traits have state which make them inactive)
 
-one *Universe* agent which handles agent interaction with outside world
+##An Implementation
 
-*Universe* controls progress of time, logs external interactions
+As mentioned, [Snijders *et al.*][Snijders201044] argue for agent-based models,
+but argue specifically for avoiding the *event based* perspective.  We propose
+that the transient *events* (*e.g.*, meetings, exchanges) and *state changes*
+(*e.g.*, gains equipment, financing) are precisely what we should focus on modeling.
+The events and state changes may then be filtered through
+a model observation process which translates those interactions into a network; this
+is where we have the opportunity to explicitly state how we are aggregating.  We
+may then meaningfully compare predictions based on network measurements to model
+outcomes via relevant tests.
 
-individuals log their interactions
+Here we are going to use an augmentation model, where we take an empirical data
+set as the background and add to it synthetic data as the foreground.  We are
+assuming that the empirical data set has nothing interesting in it, based on the
+reasoning that for rare and difficult to observe phenomena, like the activities
+of covert groups, it is unlikely that these will meaningfully appear in any
+untargeted sample.   The synthetic model has whatever behavior we want to explore,
+*e.g.*, more or less cautious covert groups, and produces (among other measurements)
+at least whatever kind of interaction we have in the empirical data set.
 
-in response to each tick, individuals issue interaction events to other
-individuals.  in this simulation, people have homogenous distribution of
-their probability to contact a family member (p to issue a message), and
-homogenous lamba for number of hops for message (nuclear = parents, siblings, children all
-  1 hop)
+> ##Using the Montreal Data
+>
+> Recall that the Montreal data is unique users joining and leaving
+unique hotspots, and that close examination of this data indicates there is regular
+turnover (immigration and emigration) in users and locations.  For our model, we
+will assume that the background actually has a constant number of actual human
+users and actual locations.
+>
+> We will also aggregate wifi access data to a daily interval, *i.e.* a user
+accessed the system at particular location on a particular day.
+>
+> *Why these assumptions?*{: .todo title="yeah carl, why?"}
 
-two basic social traits - family relationships, religious affiliation
+- covert group members (agents in the simulation) have some probability of turning over user ids
+- per unit time, pairs / groups receive direction to meet around a target time
+- they have exponentially distributed pre-arrival and post-departure times
+- within that window, they have exponentially distributed time-to-device log-ins, of course with possibility of drawing
+times outside window
 
-third trait for covert group membership - all agents have it, only active in
-some (recruits)
-
-###Technical Asides
-The [Akka Actor][akkk] framework is based on asynchronous calculation;
-each agent represents its own thread of computation and memory.  Though we
-implemented this particular example on a single machine (with multiple cores),
-this independence abstraction makes it straightforward to reimplement
-the simulation on many machines.
-
-However, it requires overcoming perspective instilled in typical programming
-training.  Namely, that directions to the computer are executed and resolve in
-a particular sequence.  
-
-all use a generic base agent trait to cover tracking through time:
+In our model then, agents need a few traits:
 
 {% highlight scala %}
 trait TimeSensitive {
-
-  private[this] var was = 0
-  protected def last = was
-
-  final def tick(when:Int) : Future[Try[Reply]] =
-    Future({ resolve(when) }).andThen({
-      case Success(res) =>
-        was = when
-        res
-      case f => f
-    })
-
-
-  protected def resolve(when:Int) : Try[Reply] =
-    Success(Ack)
-
+  // advance internal clock - reply with next delta t agent cares about
 }
 {% endhighlight %}
-
-This has two parts, one which handles initiating a new iteration, `tick`,
-and one is a hook on which to hang other behaviors, `resolve`.  It also keeps
-track of what time the agent is at via `last`.  This looks pretty basic
-
-###`ReligiousAffiliation`
 
 {% highlight scala %}
-trait ReligiousAffiliation extends TimeResponse {
-
+trait HoppingID extends TimeSensitive {
+  // have exponential waiting time
+  // calculate next time to switching id, be able to queue a request to universe
+  // for new id, also knows what ID currently is
 }
 {% endhighlight %}
-
-
-- institution
-- attendence generator on tick
-- probability of attendence
-
-note assumptions, like weekly service model, uniform probability of attendance.
-options for higher attendance on holidays, longer religious observations, etc
-
-###`FamilyRelations`
 
 {% highlight scala %}
-trait FamilyRelations extends TimeResponse {
-
+trait GoesToLocations extends TimeSensitive {
+  // randomly go to locations
+  // by responding to ticks, then queing a visit
 }
 {% endhighlight %}
 
-- parents
-- partner
-- children
-- contact generator per tick
+{% highlight scala %}
+trait GetsDirections extends GoesToLocations {
+  // occasionally receive orders to go somewhere
+}
+{% endhighlight %}
 
-note how assumptions can be highlighted: monogamous, permanent partnerships
-no gender in model
+We also need a *Universe* to issue new IDs, as well as provide direction on
+meetings.
 
-###`CovertAffiliation`
-
-- known other affiliates
-- activation state
-
-###Family Generation
-
-show opportunity for demographic fitting options
-
-###Religious Affiliation Generation
-
-show opportunity for more demographics options
-
-###Covert Generation
-
-recruitment dynamics based on arbitrary acquaintance generation
-
-###Composed Models
-
-show family altering religious affiliation generation (recruit children into
-same org.).  Show religious affiliation modifying family generation
-(partnership formation).  show covert recruitment based on familial / religious
-ties
+{% highlight scala %}
+class Universe extends Actor with TimeSensitive {
+  // knows about group membership
+  // watch ticks, issue orders to meet at exponentially distributed rate
+}
+{% endhighlight %}
 
 ##Afterthoughts
 
