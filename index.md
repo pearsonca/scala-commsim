@@ -636,6 +636,42 @@ class Universe extends Actor with TimeSensitive {
 }
 {% endhighlight %}
 
+Using these agents, we can generate a synthetic time series of events to augment
+the empirical data set.
+
+##Using Implementation to Characterize Network Analysis
+
+Now we consider a first-pass analysis of the resulting data.  We will consider a
+very loose performance criteria: that our analysis be able to partition the
+observations into communities, and that one community effectively represent the
+covert group.  The analysis is not required to identify which community *is in fact*
+the covert group.  Practically speaking, this sort of analysis might correspond
+to an initial partitioning of groups to investigate further, but with the knowledge
+that are acting as a group.
+
+We have a time series of events on a bipartite network (users to locations).  We
+want to see if we can properly identify the covert group as a community, though
+not identify that community particularly, since that would require additional
+information (*e.g.*, communities that meets to discuss books versus meets to
+discuss bombs).
+
+If all of the covert members are in a single identified community, then we have
+perfect sensitivity (true positive rate = 1).  If that community also has zero
+non-covert group members, we have perfect specificity (false positive rate = 0).
+
+It is non-obvious how to consider other cases.  We will call the true positive rate
+the number of covert members in community that has the highest number of covert
+group members, divided by the total number of covert actors.  The false positive
+rate will be the number of non-covert members of the community that has the largest
+number of covert-members, divided by the total membership in the community.
+
+We want to characterize a realtime detection process, so we are going to calculate
+our ROC metric on each time step.
+
+Want: expected ROC summary statistic (area under the curve or area between the
+curve and uninformative) + confidence intervals as a function of time, for a few
+locations in phase space - high rate of meets + probability of use.
+
 ##Afterthoughts
 
 ##Acknowledgements
