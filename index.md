@@ -583,8 +583,12 @@ at least whatever kind of interaction we have in the empirical data set.
 > Recall that the Montreal data is unique users joining and leaving
 unique hotspots, and that close examination of this data indicates there is regular
 turnover (immigration and emigration) in users and locations.  For our model, we
-will assume that the background actually has a constant number of actual human
-users and actual locations.
+will assume that the background actually has a constant number of actual locations,
+and that turnover is locations adopting or quitting the municipal service.
+>
+> For users, we assume that their turnover represents entering and leaving the system.
+We might reasonably conclude that some changes represent identical users changing
+authentication credentials.  However, for simplicity we ignore that at this stage.
 >
 > We will also aggregate wifi access data to a daily interval, *i.e.* a user
 accessed the system at particular location on a particular day.
