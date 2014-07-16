@@ -601,6 +601,8 @@ accessed the system at particular location on a particular day.
 - within that window, they have exponentially distributed time-to-device log-ins, of course with possibility of drawing
 times outside window
 
+### Agent Definitions
+
 In our model then, agents need a few traits:
 
 {% highlight scala %}
@@ -643,38 +645,53 @@ class Universe extends Actor with TimeSensitive {
 Using these agents, we can generate a synthetic time series of events to augment
 the empirical data set.
 
-##Using Implementation to Characterize Network Analysis
+### Characterizing Network Detection Methods
 
-Now we consider a first-pass analysis of the resulting data.  We will consider a
-very loose performance criteria: that our analysis be able to partition the
-observations into communities, and that one community effectively represent the
-covert group.  The analysis is not required to identify which community *is in fact*
-the covert group.  Practically speaking, this sort of analysis might correspond
-to an initial partitioning of groups to investigate further, but with the knowledge
-that are acting as a group.
+Now we consider a simple, but non-trivial community detection method against the
+augmented data.  The detector is not intended to detect a particular network
+signature of the covert group; our model is unlikely to have a realistic signature anyway.
+Instead, we analyze the detector performance assuming
+that some other technique accurately identifies a covert member at random, and then that random
+member's associated community is then implicated as the covert group.
 
-We have a time series of events on a bipartite network (users to locations).  We
-want to see if we can properly identify the covert group as a community, though
-not identify that community particularly, since that would require additional
-information (*e.g.*, communities that meets to discuss books versus meets to
-discuss bombs).
+How should we think about this performance?  We obviously want to characterize
+placing all of the covert group, and only members of that group, into a single
+community as perfect.  The worst possible performance would be completely
+dispersing the covert group into different communities, and for each community
+to have a covert group member.  The perfect case has a True Positive Rate (TPR)
+of 1 - *i.e.* is absolutely sensitive - and a False Positive Rate (FPR) of 0 -
+*i.e.* is absolutely specific.  The worst case has a TPR of 0, but its not
+immediately obvious how to calculate FPR; the average community size is of
+course the total background population divided by the number of covert group
+members.  If we use the total population as the denominator, then the peak FPR
+can never be 1, and indeed is determined by the size of the covert group. There
+is some argument for having an error rate that would be independent of the
+covert group size, but we need not obsess on mathematical elegance for this
+demonstration.  We thus have our formal TPR and FPR:
 
-If all of the covert members are in a single identified community, then we have
-perfect sensitivity (true positive rate = 1).  If that community also has zero
-non-covert group members, we have perfect specificity (false positive rate = 0).
+$$
+TPR = \sum_i \frac{n_i-1}{n_t-1} \\
+FPR = \sum_i \frac{n_i-1}{n_t-1} \frac{b_i}{b_t}
+$$
 
-It is non-obvious how to consider other cases.  We will call the true positive rate
-the number of covert members in community that has the highest number of covert
-group members, divided by the total number of covert actors.  The false positive
-rate will be the number of non-covert members of the community that has the largest
-number of covert-members, divided by the total membership in the community.
+With TPR, FPR, and tunable process for community detection, we can create Receiver
+Operating Characteristic (ROC) curves, and associated statistics, *e.g.* discrimination.
 
-We want to characterize a realtime detection process, so we are going to calculate
-our ROC metric on each time step.
+Since we have a time-dependent process, and in general we are interested in real
+time detection, we should of course be interested in the time evolution of our
+discrimination statistic.  This would provide us some qualitative insight on
+trade-offs between risk of the covert group executing some goal, opportunity
+cost (in terms of missed covert members), and downside (in terms of collateral
+population implicated).  Thus, our initial analysis will be to produce curves
+that contain this data, though we make no attempt to do subsequent meta-analysis
+like the trade-off consideration.
 
-Want: expected ROC summary statistic (area under the curve or area between the
-curve and uninformative) + confidence intervals as a function of time, for a few
-locations in phase space - high rate of meets + probability of use.
+As we had more basis for informing the model of the covert group, we could
+likewise propose detectors that used the more detailed data produced by the
+simulation, and revise our definition of what detection entailed.  If we had
+reliable data about covert group signature, then perhaps we might update our
+criteria to be correctly identifying the particular community, rather than
+couching performance in terms of another assumed process.
 
 ###Parameter Setting
 
