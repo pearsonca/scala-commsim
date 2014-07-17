@@ -612,22 +612,16 @@ trait TimeSensitive {
 {% endhighlight %}
 
 {% highlight scala %}
-trait HoppingID extends TimeSensitive {
-  // have exponential waiting time
-  // calculate next time to switching id, be able to queue a request to universe
-  // for new id, also knows what ID currently is
-}
-{% endhighlight %}
-
-{% highlight scala %}
 trait GoesToLocations extends TimeSensitive {
-  // randomly go to locations
-  // by responding to ticks, then queing a visit
+  // draw an exponentially distributed time for visit, random sample for locations
+  // stash (location, time)
+  // as ticks proceed, deduct time from (location, time)
+  // when time = 0, visit location
 }
 {% endhighlight %}
 
 {% highlight scala %}
-trait GetsDirections extends GoesToLocations {
+trait GetsDirections {
   // occasionally receive orders to go somewhere
 }
 {% endhighlight %}
@@ -637,8 +631,9 @@ meetings.
 
 {% highlight scala %}
 class Universe extends Actor with TimeSensitive {
-  // knows about group membership
-  // watch ticks, issue orders to meet at exponentially distributed rate
+  // knows about group membership, clandestine locations
+  // with exponentially distributed times, direct randomly selected members
+  //  to go to randomly selected clandestine location
 }
 {% endhighlight %}
 
@@ -727,16 +722,9 @@ the distribution for our covert group.
 >
 > Thus, we will have our group members target their overall behavior against
 these means, where the covert group activity (rate of clandestine meetings,
-number of meeting locations) count against these background-typical behaviors.
+number of meeting locations) deduct from these background-typical behaviors.
 
-Covert group has stochastic behavior that is expected to match these results.
-Rate of attendance + rate of use of wifi obvious non-identifiable (with this data, probably quite
-identifiable with simple additional observations on empirical data), so will use
-a single parameter for them.
-
-So the simulation parameters are covert group size + \"plotting\" rate.  As
-plotting rate is increased or decreased, it is offset by non-plotting visit
-rate.
+### Results
 
 ##Afterthoughts
 
