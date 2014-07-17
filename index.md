@@ -693,12 +693,41 @@ reliable data about covert group signature, then perhaps we might update our
 criteria to be correctly identifying the particular community, rather than
 couching performance in terms of another assumed process.
 
-###Parameter Setting
+### Parameter Setting
 
-using empirical dataset:
+If the covert group were detectable by non-network methods - *e.g.*, if they had
+statistically outlying behavior on frequency or diversity of activities - then
+the network analysis would be quite silly.  It may well be the case that they
+are noticeably different, but we are considering cases where network analysis
+methods provide valuable insight.  As such, we must inform the behavior of our
+simulated covert group by those values for this particular study. More
+generally, for any sort of augmentation study, we should seek to ensure that our
+synthetic group mimics the background in ways that would fool whatever
+techniques we would use ahead of the one we wish to validate.
 
-- determine mean number of locations visited by a user
-- determine mean visitation rate by users
+> ### Key Montreal Measures
+>
+> The Montreal data concerns user, locations, and wifi access.  The first
+analysis for interesting user activity should of course be to test for users
+that have very high or low numbers of locations visited, and likewise users
+that have very high or low frequency of use.  Given that the data forms a time
+series, it would probably also be useful to examine the distribution of visits
+- *e.g.* steady cycling between locations or highly skewed visitation, stable activity
+level versus long periods of no activity between very ones - however, we are not
+going into that level of detail for this study.
+>
+> From the Montreal data, we must then obtain some crude measures:
+>
+> - distribution of location counts visited by users
+> - distribution of visitation rate for users
+>
+> From those distributions, we can select mean values for the covert group to
+abide.  If we were being more sophisticated in our model, we might sample from
+the distribution for our covert group.
+>
+> Thus, we will have our group members target their overall behavior against
+these means, where the covert group activity (rate of clandestine meetings,
+number of meeting locations) count against these background-typical behaviors.
 
 Covert group has stochastic behavior that is expected to match these results.
 Rate of attendance + rate of use of wifi obvious non-identifiable (with this data, probably quite
