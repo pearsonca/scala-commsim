@@ -621,13 +621,14 @@ trait GoesToLocations extends TimeSensitive {
 {% endhighlight %}
 
 {% highlight scala %}
-trait GetsDirections {
+trait GetsDirections extends GoesToLocations {
   // occasionally receive orders to go somewhere
+  //  re-use GoesToLocations machinery for recording visit
 }
 {% endhighlight %}
 
-We also need a *Universe* to issue new IDs, as well as provide direction on
-meetings.
+We also need a `Universe` - an entity outside of the data we could plausibly
+attain - to provide direction on meetings.
 
 {% highlight scala %}
 class Universe extends Actor with TimeSensitive {
