@@ -689,6 +689,87 @@ reliable data about covert group signature, then perhaps we might update our
 criteria to be correctly identifying the particular community, rather than
 couching performance in terms of another assumed process.
 
+### Augmenting Empirical Data
+
+An easy approach to validating network-based covert group detection techniques
+would be to take some empirical network, add a covert group network, and
+then add some random connections between the two.  Remix a statistically satisfying
+number of times, and presto, suitable subject for analysis?
+
+Recall the Montreal data scheme:
+
+| user | location | log in time | log out time |
+|:====:|:========:|============:|=============:|
+| ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
+| etc  | etc      | etc         | etc |
+
+Which exactly translates to a time-sensitive bipartite network.  If one collapses
+on location, that would produce a user-to-user time-sensitive network.
+Then using a reasonable window, *e.g.* a day, and one could aggregate the network
+into a daily time series.
+
+This might represent a typical starting point - an existing daily series for a
+user-to-user network - to which we could add a similar times series of covert
+member network representations (also sourced elsewhere), then test our detection
+scheme, and given interesting enough results, we might be off to the presses.
+
+In this scenario, we did not carefully examine what our network means, nor
+think about what we are treating it as meaning.  We want to treat it as a sample
+of which people meet on what days.
+
+The problem, however, is that our empirical background network probably does not mean that.
+
+We could not know that without access to the raw event data,
+despite the forthright description of sensible transformations (not unlike what
+one might see for typical network datasets).  Even if we were careful about looking
+at network metrics, we would see results that typify ubiquitously cited networks:
+power law degree distributions, but with actual community structure beyond
+random graphs.
+
+When we start to delve into what the event data say, the inadequacy becomes apparent.
+We can start with the typical user session length, about 70 minutes.  That seems
+reasonable: we can imagine mixing the coffee-shop-email-checking set with the public-library-job-hunting
+set.  Examining our intuition, however, yields what should be unsettling results:
+roughly ten percent of the entries have zero duration sessions.  What does that
+mean?  Around one percent have a duration greater than a twelve hour working day.  Does it
+make sense to treat those sessions as a \"person\" that can meet with others?
+
+Maybe the authors of the original paper were careful: they noticed these oddities,
+highlighted them, and provided an alternative network time series filtering out
+high and zero session duration events.  Was that the right thing to do?  These
+event data, which in this scenario are only being published as a network time
+series, would have to be checked against ground truth to answer that.  Maybe the times are just
+reporting errors - not usually possible to get out convenience-sourced datasets
+like the Montreal data, since investigating would rapidly make them inconvenient
+for the supplier.  Maybe the times are real outcomes of uncommon cases, like people
+that live above their storefronts and use their business hotspots for personal machines
+as well, or partial system unavailability for the zero duration sessions.
+
+Lots of options (and thus opinions) in there.  Nor have we gotten into the other
+oddities in the source (*e.g.*, the number of locations that have one vistor
+ever).  Before we can ever treat this series of events as serious scientific
+data, let alone reduce to a network representing social contact, we would need
+to do some serious empirical follow-up.  Then we would need to do some careful
+modeling of human activity to see if we could get a model of the activity we want - in this
+people visiting locations, some together and some not - to reproduce these events.
+At that point, we would have a suitable basis to start modeling covert member
+behavior.
+
+We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
+so that careful work is implausible.  Instead, we have use supposition about what
+is going on in background population.  Fortunately, we do have the event data to
+use.
+
+Based on the usage statistics and personal anecdote, we could reasonably infer
+that many of the users represent tourists, particular those that make a single
+login.  Those will probably not influence community structure, and might even be
+plausibly excluded from the false positive rate by excluding background users
+that have no future logins from FPR calculations.  We will retain them, however,
+to provide conservative estimates.  For locations that have short total hotspot
+availability, we can assume that businesses are not created and closed
+so quickly.
+
+
 ### Parameter Setting
 
 If the covert group were detectable by non-network methods - *e.g.*, if they had
