@@ -696,28 +696,36 @@ would be to take some empirical network, add a covert group network, and
 then add some random connections between the two.  Remix a statistically satisfying
 number of times, and presto, suitable subject for analysis?
 
-Recall the Montreal data scheme:
+Recall the Montreal data schema:
 
 | user | location | log in time | log out time |
 |:====:|:========:|============:|=============:|
 | ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
 | etc  | etc      | etc         | etc |
 
-Which exactly translates to a time-sensitive bipartite network.  If one collapses
-on location, that would produce a user-to-user time-sensitive network.
-Then using a reasonable window, *e.g.* a day, and one could aggregate the network
-into a daily time series.
+Which exactly translates to a *time-dependent, bipartite network*.  If one collapses
+on location, that would produce a *time-dependent, unipartite network*.
+Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
+time series of networks.
 
-This might represent a typical starting point - an existing daily series for a
-user-to-user network - to which we could add a similar times series of covert
-member network representations (also sourced elsewhere), then test our detection
-scheme, and given interesting enough results, we might be off to the presses.
+This is the way we will use the Montreal data, because this a typical starting
+point: an existing daily series for an empirical social network, to which we add
+a similar, synthetic times series of covert member network representations (also
+sourced elsewhere), and then test our detection scheme.  Instead of specific
+covert networks, we will be simulating covert group interaction events instead.
 
-In this scenario, we did not carefully examine what our network means, nor
-think about what we are treating it as meaning.  We want to treat it as a sample
-of which people meet on what days.
+Why not covert networks?
 
-The problem, however, is that our empirical background network probably does not mean that.
+In the scenario where the networks produced from the Montreal data as described
+above is treated as social network background truth for detecting covert groups
+against, the modelers have not carefully compared what the network means and is
+being treated as meaning.
+
+The implicit interpretation is that the network is a sample of which people meet
+at businesses on what days.
+
+The problem, however, is that this empirical data probably does not mean that,
+and that a network translation of would hide that fact.
 
 We could not know that without access to the raw event data,
 despite the forthright description of sensible transformations (not unlike what
@@ -727,33 +735,48 @@ power law degree distributions, but with actual community structure beyond
 random graphs.
 
 When we start to delve into what the event data say, the inadequacy becomes apparent.
-We can start with the typical user session length, about 70 minutes.  That seems
-reasonable: we can imagine mixing the coffee-shop-email-checking set with the public-library-job-hunting
-set.  Examining our intuition, however, yields what should be unsettling results:
-roughly ten percent of the entries have zero duration sessions.  What does that
-mean?  Around one percent have a duration greater than a twelve hour working day.  Does it
-make sense to treat those sessions as a \"person\" that can meet with others?
+If we think from what the data are first, login and logouts to hotspots, we can
+imagine the associated human activity that produces this data, and then put some
+boundaries on that image by comparing it to data.
 
-Maybe the authors of the original paper were careful: they noticed these oddities,
-highlighted them, and provided an alternative network time series filtering out
-high and zero session duration events.  Was that the right thing to do?  These
-event data, which in this scenario are only being published as a network time
-series, would have to be checked against ground truth to answer that.  Maybe the times are just
-reporting errors - not usually possible to get out convenience-sourced datasets
-like the Montreal data, since investigating would rapidly make them inconvenient
-for the supplier.  Maybe the times are real outcomes of uncommon cases, like people
-that live above their storefronts and use their business hotspots for personal machines
-as well, or partial system unavailability for the zero duration sessions.
+We can start with the typical session length, about 70 minutes.  That seems
+reasonable: we can imagine mixing the coffee-shop-email-checking set with the
+public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
+we dig any further, we find what should be unsettling results: roughly ten
+percent of the entries have zero duration sessions.  What does that mean?  More
+bizzarely, around one percent have a duration greater than a twelve hour working
+day.  Does it make sense to treat either of those sessions as a \"person\" that can meet
+with others?
 
-Lots of options (and thus opinions) in there.  Nor have we gotten into the other
-oddities in the source (*e.g.*, the number of locations that have one vistor
-ever).  Before we can ever treat this series of events as serious scientific
-data, let alone reduce to a network representing social contact, we would need
-to do some serious empirical follow-up.  Then we would need to do some careful
-modeling of human activity to see if we could get a model of the activity we want - in this
-people visiting locations, some together and some not - to reproduce these events.
-At that point, we would have a suitable basis to start modeling covert member
-behavior.
+If our starting point is some extant network, we can hope that the authors were
+careful: they noticed these oddities, highlighted them, and provided an
+alternative network time series filtering out high and zero session duration
+events.  That is better than nothing, but which is the right one to use?  The event data would have to be
+checked against ground truth to answer that, since maybe the times are just reporting
+errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
+Montreal data, since investigating would rapidly become inconvenient for the
+supplier.  Alternatively, the researchers might have gone to some of the locations
+in the dataset, and directly observed behavior for comparison to the dataset.  For
+the Montreal data, they would have needed some specialized equipment (*e.g.*, connection
+sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
+the prospect of a working vacation in Montreal is no doubt appealing to some,
+what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
+A reality that makes so-called convenient data rapidly annoying.
+
+And this is just the first of many oddities in the source (*e.g.*, the number of
+locations that have one vistor ever indicates that just about everywhere in
+Montreal must be going out of business).  As stated, Before we can ever treat
+this series of events as serious scientific data, let alone reduce to a network
+representing social contact, we would need to do some serious empirical
+follow-up.  We are certain that what we find is that these oddities are rarely
+actually dismissable (and even in the case   of measurement errors, may needed
+to included in simulation as well), but they may represent cases that are far
+outside how our covert group will present. Thus, given this thorough follow-up,
+we would need to do some careful modeling of human activity to see if we could
+get a model of the activity we want - in this people visiting locations, some
+together and some not - to reproduce these events. At that point, we would have
+a suitable basis to start serious modeling of covert member behavior, which
+could then be synthetically added to the dataset, and finally an network-based.
 
 We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
 so that careful work is implausible.  Instead, we have use supposition about what
