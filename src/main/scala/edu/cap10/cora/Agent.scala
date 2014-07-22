@@ -3,28 +3,32 @@ package edu.cap10.cora
 import akka.actor.TypedActor
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util.Random
+import scala.util.Random.{shuffle, nextInt}
 import java.io.BufferedWriter
 
 trait GoesPlaces {
-  def visit(location:Int, hour:Int, min: =>Int = Random.nextInt(60), sec: =>Int = Random.nextInt(60)) = Future { _visit(location, hour, min, sec)  }
-  protected[this] def _visit(location:Int, hour:Int, min: =>Int = Random.nextInt(60), sec: =>Int = Random.nextInt(60)) = f"$location $hour%02d:$min%02d:$sec%02d"
+  def visit(location:Int, hour:Int, min: =>Int = nextInt(60), sec: =>Int = nextInt(60)) = Future { _visit(location, hour, min, sec)  }
+  
+  protected[this] def _visit(location:Int, hour:Int, min: =>Int = nextInt(60), sec: =>Int = nextInt(60)) = 
+    f"$location "+timestamp(hour, min, sec)
+    
+  def timestamp(hour:Int, min: Int, sec: Int) = f"$hour%02d:$min%02d:$sec%02d"
 }
 
-trait Agent extends TimeSensitive with GoesPlaces
+trait Agent extends TimeSensitive with GoesPlaces with CSVLogger
 
-class AgentImpl(val id:Int, val normLocs:Seq[Int], val visProbPerDay:Double, fh:BufferedWriter) extends Agent {
+class AgentImpl(val id:Int, val normLocs:Seq[Int], val visProbPerDay:Double, val fh:BufferedWriter) extends Agent {
   
   var visited : Boolean = false
   
-  override def visit(location:Int, hour:Int, min: =>Int = Random.nextInt(60), sec: =>Int = Random.nextInt(60)) = {
+  override def _visit(location:Int, hour:Int, min: =>Int = nextInt(60), sec: =>Int = nextInt(60)) = {
     visited = true
-    super.visit(location, hour, min, sec).map( res => id + " " +res)
+    toRow(Seq(id, location, timestamp(hour, min, sec)))
   }
   
   override def resolve(when:Int) = {
-    if (!visited && Math.random() < visProbPerDay) {
-      fh.write(when+ " " + id + " " + _visit(Random.shuffle(normLocs).apply(0), Random.nextInt(9)+8 )+"\n")
+    if (!visited && Math.random() < visProbPerDay) { // making own trip if not directed to take one
+      log(Seq(when, _visit(shuffle(normLocs).apply(0), nextInt(9)+8 )))
     } else {
       visited = false
     }

@@ -22,7 +22,7 @@ object MontrealProperties {
 
 object SimulationProperties {
   val startDay = 0
-  val (minAgents, maxAgents) = (10, 20)
+  val (minAgents, maxAgents) = (18, 20) // 10
   val sampleSize = 100
   val (minPlotPeriod, maxPlotPeriod) = (10, 30)
   val maxMeetLocations = MontrealProperties.avgLocs - 1
@@ -43,7 +43,8 @@ object Demo {
       meetLocs <- 1 to maxMeetLocations;
       agentP = dailyVisitProb - 1.0/plotPeriod;
       sample <- 1 to sampleSize;
-      fname = f"$agentN-$plotPeriod-$meetLocs-$sample%03d.csv") {
+      fname = f"./simdata/$agentN-$plotPeriod-$meetLocs-$sample%03d.csv"
+    ) {
       
         val fh = new BufferedWriter(new FileWriter(fname))
         val universe = system.typedActorOf(Universe.props(plotPeriod, agentN, uniqueLocs, meetLocs, agentP, avgLocs, fh))

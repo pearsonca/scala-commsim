@@ -27,8 +27,8 @@ class Universe(
     meetingLocationCount:Int,
     visProb:Double,
     avgLocs:Int,
-    fh:BufferedWriter) 
-  extends TimeSensitive with PoissonDraws {
+    val fh:BufferedWriter) 
+  extends TimeSensitive with PoissonDraws with CSVLogger {
   
   val expectedK = expectedDaysBetweenMeets  // set the PoissonDraws parameter
   var daysToNextMeeting : Int = nextPoisson()    // get the initial days-to-next-covert meeting
@@ -54,7 +54,7 @@ class Universe(
         shuffle(agents).take(2).map( agent => agent.visit(loc, h, m, s ) ) foreach {
           response => {
             val s = Await.result(response, 400 millis)
-            fh.write(when+" "+s+"\n")      
+            log(Seq(when, s))      
           }
         }
         
