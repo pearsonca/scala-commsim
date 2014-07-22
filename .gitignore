@@ -40,3 +40,5 @@ project/target/*
 _site/*
 
 token.txt
+
+*.csv
