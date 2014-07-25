@@ -42,3 +42,4 @@ _site/*
 token.txt
 
 /simdata/*
+*.cpp
