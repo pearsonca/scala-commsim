@@ -22,7 +22,7 @@ object MontrealProperties {
 
 object SimulationProperties {
   val startDay = 0
-  val (minAgents, maxAgents) = (18, 20) // 10
+  val (minAgents, maxAgents) = (10, 20)
   val sampleSize = 100
   val (minPlotPeriod, maxPlotPeriod) = (10, 30)
   val maxMeetLocations = MontrealProperties.avgLocs - 1
