@@ -1,13 +1,22 @@
 ## script calculates and plot various event data
 require(data.table)
 src <- commandArgs(trailingOnly = T)[1]
-src <- "~/Dropbox/epidemics4share/merged.o"
+src <- "~/Dropbox/montreal/merged.o"
 stopifnot(!is.na(src))
 
 src.handle <- read.table(src, head=F,col.names = c("user.id", "loc.id", "login", "logout"))
 src.dt <- data.table(src.handle, key = c("login","logout","user.id","loc.id"))
 src.dt[,delta:=logout-login]
 #src.dt <- src.dt[delta != 0,]
+
+min.login <- src.dt[,min(login)]
+oldorig <- trunc(as.POSIXlt("2005-01-01", tz="EST"), "days")
+neworig <- trunc(as.POSIXlt(min.login, origin = "2005-01-01", tz = "EST"), "days")
+del <- as.numeric(neworig)-as.numeric(as.POSIXlt("2005-01-01"))
+src.dt[,login := login - del]
+src.dt[,logout := logout - del]
+
+max.uid <- src.dt[,max(user.id)]
 
 filtered.src.dt <- src.dt[delta != 0 & delta < 12*3600,]
 time.dist <- hist(filtered.src.dt[,delta]/60, plot=F)
