@@ -563,11 +563,29 @@ As mentioned, [Snijders *et al.*][Snijders201044] argue for agent-based models,
 but argue specifically for avoiding the *event based* perspective.  We propose
 that the transient *events* (*e.g.*, meetings, exchanges) and *state changes*
 (*e.g.*, gains equipment, financing) are precisely what we should focus on modeling.
-The events and state changes may then be filtered through
-a model observation process which translates those interactions into a network; this
-is where we have the opportunity to explicitly state how we are aggregating.  We
-may then meaningfully compare predictions based on network measurements to model
-outcomes via relevant tests.
+
+The implementation of an agent presents a model that is possible to reason about.
+The events and state changes can correspond to phenomena we could observe,
+and likely do observe, if perhaps not very easily for the covert members.
+
+We do not discount the value of network science techniques.  We suggest that one
+must be cautious in their application when there is not a very complete, clear, and uniform
+translation of observed phenomena into a network.  One way to take that caution
+is to step back into the messier details, simulate those as a ground truth.  When
+we do that, we must clearly state the ways we believe the system might work.
+We may take those simulation results, and then translate them into networks.
+Again, to accomplish that, we must clearly state how we believe our observations
+relate to the real phenomena and how we aggregate our observations into reduced
+measures.  Finally, we may perform our network science analyses with some confidence
+about what their results mean because we can compare those to the simulation inputs
+where we know truth (*model* truth, that is).
+
+We demonstrate doing just this with applying simple community detection to a
+covert group embedded in a larger population.  The point of this effort is less
+about the results - they are predictably laughable given the simplicity of the
+behavior model and detection algorithm - and more about providing some guidelines
+about what constitutes a scientific approach to the problem, instead of scientism
+or inapplicable, if elegant, mathematics.
 
 Here we are going to use an augmentation model, where we take an empirical data
 set as the background and add to it synthetic data as the foreground.  We are
