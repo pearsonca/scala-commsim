@@ -59,7 +59,7 @@ readELtable <- function(tar) {
   res
 }
 
-src <- "merged.o"
+src <- "~/Dropbox/montreal/merged.o"
 
 src.dt <- data.table(read.table(src, head=F,col.names = c("user.id", "loc.id", "login", "logout")), key = c("login","logout","user.id","loc.id"))
 #src.dt <- src.dt[delta != 0,]
@@ -69,7 +69,7 @@ oldorig <- trunc(as.POSIXlt("2005-01-01", tz="EST"), "days")
 neworig <- trunc(as.POSIXlt(min.login, origin = "2005-01-01", tz = "EST"), "days")
 del <- as.numeric(neworig)-as.numeric(as.POSIXlt("2005-01-01"))
 
-base.dt <- readELtable("paired.o")
+base.dt <- readELtable("~/Dropbox/montreal/paired.o")
 base.dt[,login := login - del]
 base.dt[,logout := logout - del]
 
@@ -77,13 +77,9 @@ slice <- function(el.dt, start.day, end.day) {
   data.table(unique(el.dt[(logout < end.day*24*3600) & (login > start.day*24*3600), list(user.a, user.b)])+1, key = c("user.a", "user.b")) 
 }
 
-filebase <- paste(cnt, inter, locs, sep="-")
-
-
-
-result <- function(count, intervals, locations) {
-  cc.pairs<- getCCPairs(count, intervals, locations) ## should be one for each sample
-  cu.pairs<- getCUPairs(count, intervals, locations)
+resolve <- function(count, intervals, locations) {
+  cc.pairs<- paste("./cc_files/",getCCPairs(count, intervals, locations),sep="") ## should be one for each sample
+  cu.pairs<- paste("./cu_files/",getCUPairs(count, intervals, locations),sep="")
   covert.ids <- (1:count)+max.uid
   samples <- mapply(function(cc.file, cu.file) {
     members.wh <- file(gsub("\\.cc", "-members.csv", cc.file), open = "a")
@@ -96,9 +92,9 @@ result <- function(count, intervals, locations) {
       cs <- fastgreedy.community(gg)
       members <- membership(cs)[covert.ids]
       comm.counts <- sizes(cs)[members]
-      write(members, members.wh, count, append = T)
-      write(comm.counts, sizes.wh, count, append = T)
-      return()
+      write(c(day,members), members.wh, ncolumns = count+1, append = T)
+      write(c(day,comm.counts), sizes.wh, ncolumns = count+1, append = T)
+      cat(day, "\n")
     })
     flush(members.wh)
     flush(sizes.wh)
@@ -107,7 +103,9 @@ result <- function(count, intervals, locations) {
   }, cc.pairs, cu.pairs)
 }
 
-result(cnt, inter, locs)
+# 1482
+
+resolve(cnt, inter, locs)
 # ,
 # rep(memberCount, each=length(meetInterval)*length(meetLocations)),
 # rep(meetInterval, each=length(meetLocations), times=length(memberCount)),
