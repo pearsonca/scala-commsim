@@ -40,3 +40,6 @@ project/target/*
 _site/*
 
 token.txt
+
+/simdata/*
+*.cpp

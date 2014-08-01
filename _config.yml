@@ -7,5 +7,6 @@ exclude:
   - 'src'
   - 'target'
   - 'project'
+  - 'simdata'
   - '*.sh'
   - '*.sbt'

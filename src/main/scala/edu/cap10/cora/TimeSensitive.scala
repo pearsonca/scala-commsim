@@ -4,6 +4,11 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util.{Try, Success, Failure}
 
+trait Reply
+
+object Ack extends Reply
+case class Error(msg:String) extends Reply
+
 trait TimeSensitive {
   
   private[this] var was = 0

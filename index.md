@@ -619,15 +619,60 @@ accessed the system at particular location on a particular day.
 - within that window, they have exponentially distributed time-to-device log-ins, of course with possibility of drawing
 times outside window
 
-### Agent Definitions
+### Traits
 
-In our model then, agents need a few traits:
+The Scala `TypedActor` paradigm allows us to define `traits`s and then mix those
+traits into our agent based models implemented in that paradigm.  We demonstrate
+several broad categories of traits with our simple model embedding a covert group
+in the Montreal data:
+
+We have a simulation backbone, in this case following the passage of time:
 
 {% highlight scala %}
 trait TimeSensitive {
-  // advance internal clock - reply with next delta t agent cares about
+
+  private[this] var was = 0
+  protected def last = was
+
+  final def tick(when:Int) : Future[Try[Reply]] =
+    Future({ resolve(when) }).andThen({
+      case Success(res) =>
+        was = when
+        res
+      case f => f
+    })
+
+
+  protected def resolve(when:Int) : Try[Reply] =
+    Success(Ack)
+
 }
 {% endhighlight %}
+
+while this trait itself may seem incomprehensible, this definition is what tool
+developers would use, not typical modelers.  Instead, modelers would add the traits
+to their entities, like
+
+{% highlight scala %}
+class AgentImpl(/*...*/) extends Agent {
+
+  // ...
+  private var visited = false
+
+  override def resolve(when:Int) = {
+    if (!visited && Math.random() < visProbPerDay) {
+      // taking own trip if not directed to take one
+      // ...
+    } else {
+      visited = false
+    }
+    super.resolve(when)
+  }
+}
+{% endhighlight %}
+
+Pushing this approach to get to something akin to the current community behind,
+*e.g.* R or Python modeling 
 
 {% highlight scala %}
 trait GoesToLocations extends TimeSensitive {
