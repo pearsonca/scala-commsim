@@ -559,26 +559,50 @@ basic approach: agents mixin in traits (in this approach, all agents mixin the
 
 ##An Implementation
 
-As mentioned, [Snijders *et al.*][Snijders201044] argue for agent-based models,
-but argue specifically for avoiding the *event based* perspective.  We propose
-that the transient *events* (*e.g.*, meetings, exchanges) and *state changes*
-(*e.g.*, gains equipment, financing) are precisely what we should focus on modeling.
+[Snijders *et al.*][Snijders201044] argue for agent-based models, but argue
+explicitly for avoiding the *event based* perspective.  We propose that the
+transient *events* (*e.g.*, individuals meet), *state changes* (*e.g.*, an
+individual gains or expends money), and *observation* process of how those are
+recorded (*e.g.*, people appear together at particular locations) are precisely
+what we should focus on modeling.
 
-The implementation of an agent presents a model that is possible to reason about.
-The events and state changes can correspond to phenomena we could observe,
-and likely do observe, if perhaps not very easily for the covert members.
+Implementing an agent from this perspective requires a model that is inherently
+possible to reason about and argue with.  The events and state changes should
+correspond to phenomena we could observe, and likely do observe, if perhaps not
+very easily for the covert members.  We have models of such individual and
+small-group behavior, even if perhaps those are simply story-telling models.
+Likewise, we can engage critically with an explicitly modeled observation process.
+Are we monitoring wifi logins?  We can grapple with the details of such a system:
+how are accounts obtained?  Do people rotate accounts?  Do businesses rotate accounts?
+Maybe we cannot practically answer these questions, and maybe we do not include
+all of them in our model - but we can at least acknowledge them.
 
-We do not discount the value of network science techniques.  We suggest that one
-must be cautious in their application when there is not a very complete, clear, and uniform
-translation of observed phenomena into a network.  One way to take that caution
-is to step back into the messier details, simulate those as a ground truth.  When
-we do that, we must clearly state the ways we believe the system might work.
-We may take those simulation results, and then translate them into networks.
-Again, to accomplish that, we must clearly state how we believe our observations
-relate to the real phenomena and how we aggregate our observations into reduced
-measures.  Finally, we may perform our network science analyses with some confidence
-about what their results mean because we can compare those to the simulation inputs
-where we know truth (*model* truth, that is).
+None of this discounts the value of network science techniques.  We suggest that
+instead one must be cautious in their application when there is not a very
+complete, clear, and uniform translation of observed phenomena into a network, for
+the previously discussed formal issues with network representations.
+One way to take that caution is to step back into the messier details - the
+events, states, and observations - and simulate those as a ground truth.  When
+we do that, we must clearly state the ways we believe the system might work. We
+may take those simulation results, and then translate them into networks. Again,
+to accomplish that, we must clearly state how we believe our observations relate
+to the real phenomena and how we aggregate our observations into reduced
+measures.  Finally, we may perform our network science analyses with some
+confidence about what their results mean because we can compare those to the
+simulation inputs where we know truth (*model* truth, that is).
+
+If we are especially careful in our implementations of these models, we can isolate
+particular aspects, and then reuse them.  We might have, for example, agents that perform
+arbitrage.  That implementation, carefully abstracted, might be portable from an
+initial context of stock market actors to criminal gangs.  Clearly, the inputs
+are different, but if we believe the core mechanisms are the same, then
+we ought to implement it once and then reuse that element.  This has dual advantages.
+There is the practical matter of having more thoroughly vetted models faster.
+The second is that re-use process will gradually smooth the abstraction into
+what is actually conserved across those domains, and further highlight what
+differs between contexts.
+
+
 
 We demonstrate doing just this with applying simple community detection to a
 covert group embedded in a larger population.  The point of this effort is less
@@ -672,7 +696,7 @@ class AgentImpl(/*...*/) extends Agent {
 {% endhighlight %}
 
 Pushing this approach to get to something akin to the current community behind,
-*e.g.* R or Python modeling 
+*e.g.* R or Python modeling
 
 {% highlight scala %}
 trait GoesToLocations extends TimeSensitive {

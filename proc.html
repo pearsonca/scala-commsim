@@ -640,15 +640,55 @@ providing benefit of compiled, strongly typed language.</p>
 
 <h2 id="an-implementation">An Implementation</h2>
 
-<p>As mentioned, <a href="http://dx.doi.org/10.1016/j.socnet.2009.02.004" title="optional title">Snijders <em>et al.</em></a> argue for agent-based models,
-but argue specifically for avoiding the <em>event based</em> perspective.  We propose
-that the transient <em>events</em> (<em>e.g.</em>, meetings, exchanges) and <em>state changes</em>
-(<em>e.g.</em>, gains equipment, financing) are precisely what we should focus on modeling.
-The events and state changes may then be filtered through
-a model observation process which translates those interactions into a network; this
-is where we have the opportunity to explicitly state how we are aggregating.  We
-may then meaningfully compare predictions based on network measurements to model
-outcomes via relevant tests.</p>
+<p><a href="http://dx.doi.org/10.1016/j.socnet.2009.02.004" title="optional title">Snijders <em>et al.</em></a> argue for agent-based models, but argue
+explicitly for avoiding the <em>event based</em> perspective.  We propose that the
+transient <em>events</em> (<em>e.g.</em>, individuals meet), <em>state changes</em> (<em>e.g.</em>, an
+individual gains or expends money), and <em>observation</em> process of how those are
+recorded (<em>e.g.</em>, people appear together at particular locations) are precisely
+what we should focus on modeling.</p>
+
+<p>Implementing an agent from this perspective requires a model that is inherently
+possible to reason about and argue with.  The events and state changes should
+correspond to phenomena we could observe, and likely do observe, if perhaps not
+very easily for the covert members.  We have models of such individual and
+small-group behavior, even if perhaps those are simply story-telling models.
+Likewise, we can engage critically with an explicitly modeled observation process.
+Are we monitoring wifi logins?  We can grapple with the details of such a system:
+how are accounts obtained?  Do people rotate accounts?  Do businesses rotate accounts?
+Maybe we cannot practically answer these questions, and maybe we do not include
+all of them in our model - but we can at least acknowledge them.</p>
+
+<p>None of this discounts the value of network science techniques.  We suggest that
+instead one must be cautious in their application when there is not a very
+complete, clear, and uniform translation of observed phenomena into a network, for
+the previously discussed formal issues with network representations.
+One way to take that caution is to step back into the messier details - the
+events, states, and observations - and simulate those as a ground truth.  When
+we do that, we must clearly state the ways we believe the system might work. We
+may take those simulation results, and then translate them into networks. Again,
+to accomplish that, we must clearly state how we believe our observations relate
+to the real phenomena and how we aggregate our observations into reduced
+measures.  Finally, we may perform our network science analyses with some
+confidence about what their results mean because we can compare those to the
+simulation inputs where we know truth (<em>model</em> truth, that is).</p>
+
+<p>If we are especially careful in our implementations of these models, we can isolate
+particular aspects, and then reuse them.  We might have, for example, agents that perform
+arbitrage.  That implementation, carefully abstracted, might be portable from an
+initial context of stock market actors to criminal gangs.  Clearly, the inputs
+are different, but if we believe the core mechanisms are the same, then
+we ought to implement it once and then reuse that element.  This has dual advantages.
+There is the practical matter of having more thoroughly vetted models faster.
+The second is that re-use process will gradually smooth the abstraction into
+what is actually conserved across those domains, and further highlight what
+differs between contexts.</p>
+
+<p>We demonstrate doing just this with applying simple community detection to a
+covert group embedded in a larger population.  The point of this effort is less
+about the results - they are predictably laughable given the simplicity of the
+behavior model and detection algorithm - and more about providing some guidelines
+about what constitutes a scientific approach to the problem, instead of scientism
+or inapplicable, if elegant, mathematics.</p>
 
 <p>Here we are going to use an augmentation model, where we take an empirical data
 set as the background and add to it synthetic data as the foreground.  We are
@@ -735,7 +775,7 @@ to their entities, like</p>
 <span class="o">}</span></code></pre></div>
 
 <p>Pushing this approach to get to something akin to the current community behind,
-<em>e.g.</em> R or Python modeling </p>
+<em>e.g.</em> R or Python modeling</p>
 
 <div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">GoesToLocations</span> <span class="k">extends</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
   <span class="c1">// draw an exponentially distributed time for visit, random sample for locations</span>
