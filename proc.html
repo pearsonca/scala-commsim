@@ -1,27 +1,16 @@
-<!doctype html>
-<html>
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"
+"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+[<!ENTITY mathml "http://www.w3.org/1998/Math/MathML">]
+>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Challenges to Understanding Covert Groups</title>
   <link rel="stylesheet" type="text/css" href="http://localhost:4000/css/site.css">
   <link rel="stylesheet" type="text/css" href="http://localhost:4000/css/syntax.css">
   <script type="text/javascript" src="http://localhost:4000/js/site.js"></script>
-  <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {inlineMath: [['<!-- begin MathToWeb -->
-<!-- (your LaTeX) $','$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mo>'</mo>
-	<mo>,</mo>
-	<mo>'</mo>
-</mrow>
-</math>
-<!-- end MathToWeb -->'], ['\\(','\\)']]}
-  });
-  </script>
-  <script type="text/javascript"
-    src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
 </head>
 <body>
 <div class="main">
@@ -32,9 +21,7 @@
   
   <a href="mailto:bhsinger@ufl.edu">Burton H. Singer</a>, 
   
-  <a href="mailto:">Edo Airoldi</a>, 
-  
-  <a href="mailto:">Ed Kao</a>
+  <a href="mailto:">Edo Airoldi</a>
   
 </p>
 <p>
@@ -814,23 +801,169 @@ member’s associated community is then implicated as the covert group.</p>
 placing all of the covert group, and only members of that group, into a single
 community as perfect.  The worst possible performance would be completely
 dispersing the covert group into different communities, and for each community
-to have a covert group member.  The perfect case has a True Positive Rate (TPR)
-of 1 - <em>i.e.</em> is absolutely sensitive - and a False Positive Rate (FPR) of 0 -
-<em>i.e.</em> is absolutely specific.  The worst case has a TPR of 0, but its not
+to have a covert group member.  The perfect case has a True Positive Rate (<!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->)
+of 1 - <em>i.e.</em> is absolutely sensitive - and a False Positive Rate (<!-- begin MathToWeb -->
+<!-- (your LaTeX) $FPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->) of 0 -
+<em>i.e.</em> is absolutely specific.  The worst case has a <!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR = 0$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>=</mo>
+	<mn>0</mn>
+</mrow>
+</math>
+<!-- end MathToWeb -->, but its not
 immediately obvious how to calculate FPR; the average community size is of
 course the total background population divided by the number of covert group
-members.  If we use the total population as the denominator, then the peak FPR
-can never be 1, and indeed is determined by the size of the covert group. There
+members.  If we use the total population as the denominator, then the peak
+<!-- begin MathToWeb -->
+<!-- (your LaTeX) $FPR != 1$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>!</mo>
+	<mo>=</mo>
+	<mn>1</mn>
+</mrow>
+</math>
+<!-- end MathToWeb -->, and indeed is determined by the size of the covert group. There
 is some argument for having an error rate that would be independent of the
 covert group size, but we need not obsess on mathematical elegance for this
 demonstration.  We thus have our formal TPR and FPR:</p>
 
-<script type="math/tex; mode=display">
-TPR = \sum_i \frac{n_i-1}{n_t-1} \\
+<p><!-- begin MathToWeb -->
+<!-- (your LaTeX) \begin{align}
+TPR = \sum_i \frac{n_i-1}{n_t-1} <br />
 FPR = \sum_i \frac{n_i-1}{n_t-1} \frac{b_i}{b_t}
-</script>
+\end{align} -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable class="m-align" displaystyle="true" style="display: block; margin-top: 1.0em; margin-bottom: 2.0em">
+	<mtr>
+		<mtd rowspan="1">
+			<mspace width="6.0em" />
+		</mtd>
+		<mtd columnalign="right">
+			<mi>T</mi>
+			<mi>P</mi>
+			<mi>R</mi>
+			<mo>=</mo>
+			<mstyle displaystyle="true">
+				<munder>
+					<mo>&sum;</mo>
+					<mi>i</mi>
+				</munder>
+			</mstyle>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>i</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>t</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+			</mfrac>
+			<mo>&lt;</mo>
+			<mi>b</mi>
+			<mi>r</mi>
+			<mo>&sol;</mo>
+			<mo>&gt;</mo>
+			<mi>F</mi>
+			<mi>P</mi>
+			<mi>R</mi>
+			<mo>=</mo>
+			<mstyle displaystyle="true">
+				<munder>
+					<mo>&sum;</mo>
+					<mi>i</mi>
+				</munder>
+			</mstyle>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>i</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>t</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+			</mfrac>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>b</mi>
+						<mi>i</mi>
+					</msub>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>b</mi>
+						<mi>t</mi>
+					</msub>
+				</mrow>
+			</mfrac>
+		</mtd>
+		<mtd columnalign="right" style="width: 100%">
+			<mtext id="">(1)</mtext>
+			<mspace width="6.0em" />
+		</mtd>
+	</mtr>
+</mtable>
+</math>
+<!-- end MathToWeb --></p>
 
-<p>With TPR, FPR, and tunable process for community detection, we can create Receiver
+<p>With <!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR, FPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>,</mo>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->, and tunable process for community detection, we can create Receiver
 Operating Characteristic (ROC) curves, and associated statistics, <em>e.g.</em> discrimination.</p>
 
 <p>Since we have a time-dependent process, and in general we are interested in real
