@@ -648,55 +648,108 @@ traits into our agent based models implemented in that paradigm.  We demonstrate
 several broad categories of traits with our simple model embedding a covert group
 in the Montreal data:
 
- - step-wise progression
+ - sequential time progression
+ - acting independently or by direction
+ - probabilistic generators
+ - data-recording
 
 We have a simulation backbone, in this case following the passage of time:
 
 {% highlight scala %}
 trait TimeSensitive {
 
-  private[this] var was = 0
-  protected def last = was
+  final def tick(when:Int) : Future[Int] = Future({ _tick(when) })
 
-  final def tick(when:Int) : Future[Try[Reply]] =
-    Future({ resolve(when) }).andThen({
-      case Success(res) =>
-        was = when
-        res
-      case f => f
-    })
-
-
-  protected def resolve(when:Int) : Try[Reply] =
-    Success(Ack)
+  protected def _tick(when:Int) = when
 
 }
 {% endhighlight %}
 
-while this trait itself may seem incomprehensible, this definition is what tool
-developers would use, not typical modelers.  Instead, modelers would add the traits
-to their entities, like
+This trait seems quite boring - it receives a time, and replies with that time.
+Recall, however, that traits are meant to be consumed:
 
 {% highlight scala %}
-class AgentImpl(/*...*/) extends Agent {
+class AgentImpl(visProbPerTick: Double, /*...*/) extends Agent {
 
   // ...
   private var visited = false
 
-  override def resolve(when:Int) = {
-    if (!visited && Math.random() < visProbPerDay) {
-      // taking own trip if not directed to take one
+  override def _tick(when:Int) = {
+    if (!visited && (Math.random < visProbPerTick)) {
+      // do something on this time step
       // ...
     } else {
+      // reset visit lock
       visited = false
     }
-    super.resolve(when)
+    super._tick(when)
   }
 }
 {% endhighlight %}
 
-Pushing this approach to get to something akin to the current community behind,
-*e.g.* R or Python modeling
+Here we provided agent behavior by overriding the default behavior.  In
+this particular case, we have intercepted the call, stochastically had
+the agent visit a location, then returned to behavior defined elsewhere by
+closing with `super._tick(when)`.
+
+Most notably, we have focused on what in particular the agent does relative to
+the passage of time in the simulation.  There are only two lines devoted to the
+program mechanics (the `override def ...` and `super._tick(when)`) as compared
+to the content devoted to the model mechanics.  We have also kept the details
+necessary to make this code functional in an asynchronous setting (*e.g.*, in
+cluster computation) in the trait itself, and out of the way of the researcher
+producing the simulation.  Finally, using a build tool (such as `sbt` or `make`) or the developmental
+`macro` feature in Scala could reduce that footprint even further, though we
+avoided these capabilities to best balance our discussion of model choices and
+the gory details of model implementation.
+
+If this agent had other traits that were also `TimeSensitive`, then the chain
+of execution would simply continue on those until finally hitting the root trait.  For example,
+we might want an agent that alters behavior with age, so we need a way of keeping
+track of age:
+
+{% highlight scala %}
+trait Age extends TimeSensitive {
+
+  private[this] var _age = 0
+  public def age = _age
+
+  override def _tick(when:Int) = {
+    _age += 1
+    super._tick(when)
+  }
+
+}
+{% endhighlight %}
+
+This `agent.age` could then be used to, say, modify an agent's tendency visit places.
+
+Researchers experienced with simulation will have noticed by now that `Age`
+shows some of the weaknesses in our `TimeSensitive` implementation, *e.g.* what
+happens if `agent.tick(when = 1)` is called repeatedly?  An agent with `Age`
+would grow older by multiple increments, despite actually being directed to
+respond to the same time-tick.
+
+That sort of command is a simple error to make in an entirely local simulation,
+so we ought to be addressing it purely from the standpoint of having simulation
+components that highlight logical errors.  However, once we start simulating
+agents on multiple nodes in a super-computer setting, it becomes a necessary
+concern even if our simulation is error-free.
+
+We have elected a simpler implementation to avoid distraction from other
+points.  But the structure of our implementation - *i.e.*, in a `trait` with
+a method that the adopting agent (and potentially other `trait`s of that agent)
+links into a chain of execution - means that we can fix this problem in the `trait`.
+With no changes to *scientific* meaning of this model, or other models re-using
+this trait, we can \"upgrade\" this aspect to do that error handling.
+
+And of course, if there was sufficient adoption in Scala,
+*e.g.* levels akin to the current R or Python modeling communities, we would see
+a distribution system and automatic version updates improving all of the dependent
+simulations.
+
+With that introductory discussion covered, we will more succinctly introduce the
+other traits we used in our particular implementation.
 
 {% highlight scala %}
 trait GoesToLocations extends TimeSensitive {
