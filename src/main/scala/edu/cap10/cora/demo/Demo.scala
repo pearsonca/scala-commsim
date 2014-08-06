@@ -9,14 +9,18 @@ import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 
 import edu.cap10.cora.Universe
+import edu.cap10.util.Probability
+import edu.cap10.util.Probability._
 
 import java.io.BufferedWriter
 import java.io.FileWriter
 
+import scala.language.postfixOps
+
 object MontrealProperties {
   val uniqueLocs = 345
   val totalDays = 356*5
-  val dailyVisitProb = 0.5
+  val dailyVisitProb : Probability = 0.5
   val avgLocs = 4
 }
 

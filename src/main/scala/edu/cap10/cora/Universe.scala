@@ -8,11 +8,14 @@ import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 import java.io.BufferedWriter
 import scala.util.Random.{shuffle, nextInt}
+import scala.language.postfixOps
+
+import edu.cap10.util.Probability
 
 object Universe {
-  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Double, avgLocs:Int, fh:BufferedWriter)
+  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Int, fh:BufferedWriter)
   	= TypedProps(classOf[TimeSensitive], new Universe(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs, fh))
-  def agentProps(id:Int, locs:Iterable[Int], p:Double, fh:BufferedWriter) = TypedProps(classOf[Agent], new AgentImpl(id, locs.toSeq, p, fh))
+  def agentProps(id:Int, locs:Iterable[Int], p:Probability, fh:BufferedWriter) = TypedProps(classOf[Agent], new AgentImpl(id, locs.toSeq, p, fh))
 
 }
 
@@ -25,7 +28,7 @@ class Universe(
     groupSize: Int,
     locationCount:Int,
     meetingLocationCount:Int,
-    visProb:Double,
+    visProb:Probability,
     avgLocs:Int,
     val fh:BufferedWriter) 
   extends TimeSensitive with PoissonDraws with CSVLogger {
@@ -43,7 +46,7 @@ class Universe(
     }
   }
   
-  override def resolve(when:Int) = {
+  override def _tick(when:Int) = {
     if (daysToNextMeeting < 0) {
       daysToNextMeeting = nextPoisson()
     } else {
@@ -51,7 +54,7 @@ class Universe(
         val loc = shuffle(meetingLocations).apply(0)
         val (h, m, s) = (nextInt(9)+8, nextInt(60), nextInt(60) ) 
                 
-        shuffle(agents).take(2).map( agent => agent.visit(loc, h, m, s ) ) foreach {
+        shuffle(agents).take(2).map( agent => agent.travel(loc, h, m, s ) ) foreach {
           response => {
             val s = Await.result(response, 400 millis)
             log(Seq(when, s))      
@@ -62,7 +65,7 @@ class Universe(
       daysToNextMeeting -= 1
     }
     agents foreach { a => a.tick(when) }
-    super.resolve(when)
+    super._tick(when)
   }
   
 }
