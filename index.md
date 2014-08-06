@@ -1,5 +1,4 @@
 ---
-layout: paper
 title: Challenges to Understanding Covert Groups
 authors:
  - name: Carl A. B. Pearson
@@ -8,7 +7,6 @@ authors:
  - name: Burton H. Singer
    email: bhsinger@ufl.edu
  - name: Edo Airoldi
- - name: Ed Kao
 ---
 
 ##Abstract
@@ -650,6 +648,8 @@ traits into our agent based models implemented in that paradigm.  We demonstrate
 several broad categories of traits with our simple model embedding a covert group
 in the Montreal data:
 
+ - step-wise progression
+
 We have a simulation backbone, in this case following the passage of time:
 
 {% highlight scala %}
@@ -741,23 +741,23 @@ How should we think about this performance?  We obviously want to characterize
 placing all of the covert group, and only members of that group, into a single
 community as perfect.  The worst possible performance would be completely
 dispersing the covert group into different communities, and for each community
-to have a covert group member.  The perfect case has a True Positive Rate (TPR)
-of 1 - *i.e.* is absolutely sensitive - and a False Positive Rate (FPR) of 0 -
-*i.e.* is absolutely specific.  The worst case has a TPR of 0, but its not
+to have a covert group member.  The perfect case has a True Positive Rate ($TPR$)
+of 1 - *i.e.* is absolutely sensitive - and a False Positive Rate ($FPR$) of 0 -
+*i.e.* is absolutely specific.  The worst case has a $TPR = 0$, but its not
 immediately obvious how to calculate FPR; the average community size is of
 course the total background population divided by the number of covert group
-members.  If we use the total population as the denominator, then the peak FPR
-can never be 1, and indeed is determined by the size of the covert group. There
+members.  If we use the total population as the denominator, then the peak
+$FPR != 1$, and indeed is determined by the size of the covert group. There
 is some argument for having an error rate that would be independent of the
 covert group size, but we need not obsess on mathematical elegance for this
 demonstration.  We thus have our formal TPR and FPR:
 
-$$
-TPR = \sum_i \frac{n_i-1}{n_t-1} \\
-FPR = \sum_i \frac{n_i-1}{n_t-1} \frac{b_i}{b_t}
-$$
+\begin{align}
+TPR = \sum_i\frac{n_i-1}{n_t-1}\\
+FPR = \sum_i\frac{n_i-1}{n_t-1}\frac{b_i}{b_t}
+\end{align}
 
-With TPR, FPR, and tunable process for community detection, we can create Receiver
+With $TPR, FPR$, and tunable process for community detection, we can create Receiver
 Operating Characteristic (ROC) curves, and associated statistics, *e.g.* discrimination.
 
 Since we have a time-dependent process, and in general we are interested in real
