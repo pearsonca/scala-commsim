@@ -671,16 +671,12 @@ Recall, however, that traits are meant to be consumed:
 {% highlight scala %}
 class AgentImpl(visProbPerTick: Double, /*...*/) extends Agent {
 
-  // ...
-  private var visited = false
-
   override def _tick(when:Int) = {
-    if (!visited && (Math.random < visProbPerTick)) {
+    if (!_traveled && (Math.random < visProbPerTick)) {
       // do something on this time step
       // ...
     } else {
-      // reset visit lock
-      visited = false
+      _clearTravel
     }
     super._tick(when)
   }
@@ -752,20 +748,35 @@ With that introductory discussion covered, we will more succinctly introduce the
 other traits we used in our particular implementation.
 
 {% highlight scala %}
-trait GoesToLocations extends TimeSensitive {
-  // draw an exponentially distributed time for visit, random sample for locations
-  // stash (location, time)
-  // as ticks proceed, deduct time from (location, time)
-  // when time = 0, visit location
+trait Travels[ResultType] {
+
+  private[this] var traveled : Boolean = false
+  protected[this] def travelResult(location:Int, ts:TimeStamp) : ResultType
+
+  def _traveled = traveled
+
+  def _clearTravel = {
+    traveled = false
+  }
+
+  def travel(
+    location: Int,
+    ts: TimeStamp
+  ) = Future { _travel(location, ts)  }
+
+  protected[this] def _travel(
+    location: Int,
+    ts: TimeStamp
+  ) : ResultType = {
+    traveled = true
+    travelResult(location, ts)
+  }
+
 }
 {% endhighlight %}
 
-{% highlight scala %}
-trait GetsDirections extends GoesToLocations {
-  // occasionally receive orders to go somewhere
-  //  re-use GoesToLocations machinery for recording visit
-}
-{% endhighlight %}
+This provides for agents visiting locations at particular times, and tracks if
+they have traveled \"recently\".
 
 We also need a `Universe` - an entity outside of the data we could plausibly
 attain - to provide direction on meetings.
