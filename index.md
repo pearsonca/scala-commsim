@@ -37,49 +37,40 @@ Some network science approaches to social phenomena seem to amount to looking
 for statistically significant differences on degree distributions, paths,
 centrality measures, *et cetera* between scenarios.
 
-A network, however, is a *very* simple model of a group, and simple models (of
-all but the most trivial phenomena) are only obtained by making strong
-assumptions.  Such assumptions can be reasonable, and when they are,
-compact descriptions can usefully cover a broad array of phenomena.  One particularly
-strong assumption is homogeneity within kinds and in interactions between kinds.
-This is an assumption that is frequently justified for problems in the physical
-sciences.
+Network models, however, make strong assumptions - that the things we represent
+as vertices are formally all the same *kind* of thing, that the interactions
+between them are all of the same flavor.  Such assumptions can be reasonable,
+and when they are, compact descriptions can usefully cover a broad array of
+phenomena.  This is largely the basis for the success of [mathematics in the physical sciences][wigner1960unreasonable],
+whether one subscribes to scientific realist or instrumentalist philosophies.
 
 The natural and social sciences, however, consider phenomena more sensitive to
-context and variation. Thus, homogeneity is can be an unreliable assumption in
-the natural sciences, and can border on suspicious in the social sciences.
+context and variation. For those phenomena, lumping elements into the same
+categorical types can be an unreliable assumption.
 
-One particularly questionable application is *dark networks* - the social
-network representation of covert groups, which is often used to model criminal
+One such questionable application is *dark networks* - the social
+network representation of covert groups, often used to model criminal
 organizations.  By focusing on the network reduction of these groups and
 associated network metrics, we may forget that the network is not the phenomena.
 The phenomena is the interactions between and individual changes in the members
 of that covert enterprise over the life of their collaboration, and the effect
 those have internal and external to that organization.  Indeed, these are the
 observations we actually make - not some network - and the outcomes we actually
-care to understand.  Additionally, if we are considering these groups as
-foreground embedded in a background population, the problem is vastly
-complicated by observation issues and computational concerns.
+care to understand.  Further complicated such a treatment, these groups exist as
+foreground alongside a background population.
 
-Representing those observations in a concise mathematical model, however, is an
-implausible task.  In that sense, the network reduction is a very practical tool.
+We should expect that representing such groups as a concise set of equations is
+an implausible task, and as such we propose that concise mathematical models are
+the wrong formal representation. Rather, concise *programmatic* models are a
+useful and practical representation. This approach is not new; it is essentially
+advocating for agent-based modeling.  We reiterate some insights from the
+software engineering discipline on how to proceed in a reuse-able, replicable
+fashion, and discard some past emphasis on embedding those agents in a network.
 
-We propose that concise mathematical models are the wrong formal representation.
-Rather, concise *programmatic* models are a useful and practical representation.
-Strictly speaking, these are still mathematical models (based on the equations
-of mathematical logic rather than numerical equations), but that position is
-confusingly pedantic given that many of the mathematical power tools are
-provably unavailable (general proofs, most notably).  This approach is not new;
-it is essentially advocating for agent-based modeling.  We reiterate some
-insights from the software engineering discipline on how to proceed in a
-reuse-able, replicable fashion, and discard some past emphasis on embedding
-those agents in a network.
-
-To motivate the discussion of notable pitfalls in the *dark network* approach,
-we will refer to back to a dataset and
-its interpretations to illustrate that skepticism, using shorthand like *the
-Montreal data* or *the Montreal network*.  For longer notes, we will embrace an
-aside format as follows:
+To motivate this discussion of the *dark network* approach, with a large
+empirical dataset and its interpretations, using shorthand like *the Montreal
+data* or *the Montreal network*.  For longer notes, we will embrace an aside
+format as follows:
 
 >##The Montreal Municipal WiFi Service Data & A Basic Model
 >
@@ -89,18 +80,18 @@ then consider the spread of flu-like pathogens on that network.  That work
 focuses on a theoretical epidemiological question - whether or not a unique
 network structure could explain a specific kind of epidemic dynamic.  The
 relationship between the data and that network model, however, is ideal for
-exploring many of the issues present in attempting to represent covert social
-groups with so-called dark networks.
+exploring many of the issues present in attempting to analyze covert social
+groups with dark networks.
 >
 >The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
-are translated into a network for the epidemiological
-analysis is also simple: users that logged into the same location at the same time are joined
-by an edge.  Those edges are then aggregated into a contact network, removing
-duplicates and self loops.
+are translated into a network for the epidemiological analysis is also simple:
+users that logged into the same location at the same time are joined by an edge.
+Those edges are then aggregated into a contact network, removing duplicates and
+self loops.
 >
 >The data spans roughly five years, a few hundred thousand entries of login data
-with X users and Y hotspot locations.
+with around 200k users and roughly 350 hotspot locations.
 
 Ultimately, we will use the *Montreal data* to highlight some of the issues with
 network-based approaches in a simulation, and discuss what sort of steps should
@@ -1095,3 +1086,4 @@ feedback getting the voice right for this piece.
 [koopman]: <http://publichealthpractice.com/project-detail/transforming-public-health-surveillance-2/> "forthcoming chapter"
 [facebook]: <http://dx.doi.org/10.1371/journal.pone.0090315> "facebook thing"
 [dahl1966simula]: <http://dx.doi.org/10.1145/365813.365819> "simula"
+[wigner1960unreasonable]: <http://math.northwestern.edu/~theojf/FreshmanSeminar2014/Wigner1960.pdf> "Unreasonable effectiveness of Mathematics in the Natural Sciences."
