@@ -2,25 +2,31 @@ package edu.cap10.cora
 
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util.Random.nextInt
-import edu.cap10.util.TimeStamp
 
-import scala.language.implicitConversions 
+import edu.cap10.util.TimeStamp
 
 trait Travels[ResultType] {
   
-  protected[this] def randomLocation : Int
+  private[this] var traveled : Boolean = false
+  protected[this] def travelResult(location:Int, ts:TimeStamp) : ResultType
   
-  implicit def hour2RandomTimeStamp(hour:Int) = TimeStamp(hour, nextInt(60), nextInt(60))
+  def _traveled = traveled
+  
+  def _clearTravel = {
+    traveled = false
+  }
   
   def travel(
-    location: =>Int = randomLocation,
+    location: Int,
     ts: TimeStamp
   ) = Future { _travel(location, ts)  }
   
   protected[this] def _travel(
-    location: =>Int = randomLocation,
+    location: Int,
     ts: TimeStamp
-  ) : ResultType
+  ) : ResultType = {
+    traveled = true
+    travelResult(location, ts)
+  }
 
 }
