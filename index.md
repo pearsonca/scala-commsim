@@ -778,16 +778,110 @@ trait Travels[ResultType] {
 This provides for agents visiting locations at particular times, and tracks if
 they have traveled \"recently\".
 
-We also need a `Universe` - an entity outside of the data we could plausibly
-attain - to provide direction on meetings.
+These traits are sufficient to fully define our agent from a model perspective:
 
 {% highlight scala %}
-class Universe extends Actor with TimeSensitive {
-  // knows about group membership, clandestine locations
-  // with exponentially distributed times, direct randomly selected members
-  //  to go to randomly selected clandestine location
+class AgentImpl(
+  val id:Int, val normLocs:Seq[Int],
+  val visProbPerTick:Probability, val fh:BufferedWriter) extends Agent {
+
+  // ...
+
+  override def _tick(when:Int) = {
+    if (!_traveled && (Math.random < visProbPerTick)) {
+      // making own trip if not directed to take one
+      log( _travel( location = randomLocation, ts = randomHour ).copy( when = when ) )
+    } else {
+      _clearTravel
+    }
+    super._tick(when)
+  }
 }
 {% endhighlight %}
+
+The agent can be directed to travel, but if it has not, it randomly visits the
+normal haunts at some stochastic rate.  In addition to the components of the scientific model,
+there is also some obvious algorithmic infrastructure in the `CSVLogger` trait,
+which provides the `log(...)` method.  That trait is written to be re-usable
+for any type of agent that might need to record data, but it is also written in
+a way that a different sort of logger (*e.g.*, SQL database) or different format
+(*e.g.*, JSON) could be written in an analogous trait and the simulation could
+be re-run merely changing by merely changing the trait from `CSVLogger` to the
+new type.
+
+Finally, rather than use these agents directly in `main` method, we use a `Universe`
+\"agent\".  In agent-based simulations, we have detailed agents inside some boundary
+conditions.  Commonly, however, there are also exogenous forces that we need
+to evolve as part of the simulation.  That is, the boundary is not a collection
+of constants, but also an entity requiring updates as the simulation proceeds.
+When a simulation calls for both micro-simulation (*i.e.,* the agents) and an
+\"external\" macro-simulation, then having a `Universe` entity is an practical
+representation.  Our `Universe` is:
+
+{% highlight scala %}
+class Universe(/* simulation parameters */)
+  extends TimeSensitive with PoissonDraws with CSVLogger[TravelData] {
+
+  // ...
+
+  val agents : Seq[Agent]
+    = Universe.createAgents(groupSize, locationCount, meetingLocations, avgLocs, visProb, fh)
+
+  var daysToNextMeeting : Int = nextDraw()
+    // initial days-to-next-covert meeting
+
+  override def _tick(when:Int) = {
+
+    if (daysToNextMeeting < 0) {
+      daysToNextMeeting = nextDraw()
+    } else {
+      if (daysToNextMeeting == 0) { // time to meet
+        val loc = shuffle(meetingLocations).apply(0)
+        val ts = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )
+        // choose place, time
+
+        Await.result(
+          Future.sequence(
+            shuffle(agents).take(2).map( agent => agent.travel(loc, ts) )
+            // randomly draw 2 agents to meet at a specific place, time
+          ),
+          400 millis
+        ) foreach {
+          res => log(res) // record results
+        }
+
+      }
+      daysToNextMeeting -= 1
+    }
+
+    agents foreach { a => a.tick(when) }
+    super._tick(when)
+  }
+
+}  
+{% endhighlight %}
+
+We use `Universe` as the root of the simulation, building the agents within
+itself, running the state of the external world - specifically, how often the covert group
+receives orders to meet - and handing off the `ticks` that drive the simulation.
+There is also a final utility trait, `PoissonDraws`, which handles the
+stochasticity for the external world:
+
+{% highlight scala %}
+trait PoissonDraws {
+
+  val expectedK : Double
+
+  lazy val poissonK : Iterator[Int] = DiscreteCountStats.poissonK(expectedK)
+
+  def nextDraw() : Int = poissonK.next()
+
+}
+{% endhighlight %}
+
+This trait represents a particular strategy for choosing the duration between
+meetings.  If we wanted to use a different distribution (*e.g.*, binomial or
+exponential), then we could use a `Universe` with an alternative trait.
 
 Using these agents, we can generate a synthetic time series of events to augment
 the empirical data set.
