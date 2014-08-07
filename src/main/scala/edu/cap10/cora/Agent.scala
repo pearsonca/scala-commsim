@@ -15,7 +15,9 @@ case class TravelData(when:Int, id: Int, location:Int, ts:TimeStamp) extends CSV
 
 trait Agent extends TimeSensitive with Travels[TravelData] with CSVLogger[TravelData]
 
-class AgentImpl(val id:Int, val normLocs:Seq[Int], val visProbPerTick:Probability, val fh:BufferedWriter) extends Agent {
+class AgentImpl(
+  val id:Int, val normLocs:Seq[Int],
+  val visProbPerTick:Probability, val fh:BufferedWriter) extends Agent {
    
   private def randomLocation = shuffle(normLocs).apply(0)
   
@@ -24,7 +26,8 @@ class AgentImpl(val id:Int, val normLocs:Seq[Int], val visProbPerTick:Probabilit
   override def travelResult(location: Int, ts: TimeStamp) = TravelData(-1, id, location, ts)
    
   override def _tick(when:Int) = {
-    if (!_traveled && (Math.random < visProbPerTick)) { // making own trip if not directed to take one
+    if (!_traveled && (Math.random < visProbPerTick)) {
+      // making own trip if not directed to take one
       log( _travel( location = randomLocation, ts = randomHour ).copy( when = when ) )
     } else {
       _clearTravel
