@@ -31,6 +31,6 @@ trait PoissonDraws {
   
   lazy val poissonK : Iterator[Int] = DiscreteCountStats.poissonK(expectedK)
   
-  def nextPoisson() : Int = poissonK.next()
+  def nextDraw() : Int = poissonK.next()
   
 }
