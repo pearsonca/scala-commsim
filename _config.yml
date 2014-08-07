@@ -10,6 +10,7 @@ exclude:
   - 'simdata'
   - '*.sh'
   - '*.sbt'
+  - '*.jar'
 defaults:
   -
     scope:
