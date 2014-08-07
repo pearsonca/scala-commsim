@@ -9,21 +9,28 @@ import java.io.BufferedWriter
 import edu.cap10.util.Probability
 import edu.cap10.util.TimeStamp
 
+case class TravelData(when:Int, id: Int, location:Int, ts:TimeStamp) extends CSVLoggable {
+  def mkString(sep : String = ", ") : String = Seq(when, id, location, ts) mkString sep
+}
 
-trait Agent extends TimeSensitive with Travels with CSVLogger
+trait Agent extends TimeSensitive with Travels[TravelData] with CSVLogger[TravelData]
 
 class AgentImpl(val id:Int, val normLocs:Seq[Int], val visProbPerTick:Probability, val fh:BufferedWriter) extends Agent {
   
   var visited : Boolean = false
   
-  override def _travel(location:Int, hour:Int, min: =>Int = nextInt(60), sec: =>Int = nextInt(60)) = {
+  override def randomLocation = shuffle(normLocs).apply(0)
+  
+  private def randomHour = nextInt(9)+8
+  
+  override def _travel(location: =>Int = randomLocation, ts: TimeStamp) = {
     visited = true
-    toRow(Seq(id, location, TimeStamp(hour, min, sec)))
+    TravelData(-1, id, location, ts)
   }
   
   override def _tick(when:Int) = {
     if (!visited && (Math.random < visProbPerTick)) { // making own trip if not directed to take one
-      log(Seq(when, _travel(shuffle(normLocs).apply(0), nextInt(9)+8 )))
+      log( _travel( ts = randomHour ).copy( when = when ) )
     } else {
       visited = false
     }

@@ -11,6 +11,7 @@ import scala.util.Random.{shuffle, nextInt}
 import scala.language.postfixOps
 
 import edu.cap10.util.Probability
+import edu.cap10.util.TimeStamp
 
 object Universe {
   def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Int, fh:BufferedWriter)
@@ -31,7 +32,7 @@ class Universe(
     visProb:Probability,
     avgLocs:Int,
     val fh:BufferedWriter) 
-  extends TimeSensitive with PoissonDraws with CSVLogger {
+  extends TimeSensitive with PoissonDraws with CSVLogger[TravelData] {
   
   val expectedK = expectedDaysBetweenMeets  // set the PoissonDraws parameter
   var daysToNextMeeting : Int = nextPoisson()    // get the initial days-to-next-covert meeting
@@ -52,12 +53,12 @@ class Universe(
     } else {
       if (daysToNextMeeting == 0) {
         val loc = shuffle(meetingLocations).apply(0)
-        val (h, m, s) = (nextInt(9)+8, nextInt(60), nextInt(60) ) 
+        val ts = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) ) 
                 
-        shuffle(agents).take(2).map( agent => agent.travel(loc, h, m, s ) ) foreach {
+        shuffle(agents).take(2).map( agent => agent.travel(loc, ts) ) foreach {
           response => {
-            val s = Await.result(response, 400 millis)
-            log(Seq(when, s))      
+            val s = Await.result(response, 400 millis).copy( when = when )
+            log( s )      
           }
         }
         

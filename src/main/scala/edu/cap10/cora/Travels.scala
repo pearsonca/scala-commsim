@@ -5,14 +5,22 @@ import ExecutionContext.Implicits.global
 import scala.util.Random.nextInt
 import edu.cap10.util.TimeStamp
 
-trait Travels {
-  def travel(
-    location:Int, hour:Int,
-    min: =>Int = nextInt(60),
-    sec: =>Int = nextInt(60)
-  ) = Future { _travel(location, hour, min, sec)  }
+import scala.language.implicitConversions 
+
+trait Travels[ResultType] {
   
-  protected[this] def _travel(location:Int, hour:Int, min: =>Int = nextInt(60), sec: =>Int = nextInt(60)) = 
-    f"$location "+TimeStamp(hour, min, sec)
+  protected[this] def randomLocation : Int
+  
+  implicit def hour2RandomTimeStamp(hour:Int) = TimeStamp(hour, nextInt(60), nextInt(60))
+  
+  def travel(
+    location: =>Int = randomLocation,
+    ts: TimeStamp
+  ) = Future { _travel(location, ts)  }
+  
+  protected[this] def _travel(
+    location: =>Int = randomLocation,
+    ts: TimeStamp
+  ) : ResultType
 
 }
