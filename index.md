@@ -15,27 +15,19 @@ Implicit in the label *dark network* is a suggestion that the activity of covert
 groups is driven by - and therefore, may be understood in terms of - network
 measures like degree distributions, paths, centralities, and so on.
 
-That may be true.
+That may be true in some cases, but the central assumption of network analyses,
+that the represented entities and interactions are of a small set of formal
+types, have limited empirical basis for covert groups.  As such, we should be
+skeptical attempting network-based techniques on these covert groups.
 
-Network representations, however, are a remarkably simple description, and
-simple models of all but the most trivial phenomena must make very strong
-assumptions.  We have little basis to assume anything in the case of covert
-groups: the *dark* label is an accurate gauge of our knowledge.
+If we wish to more confidently characterize the performance of these assorted network criteria, we
+must acknowledge they are applied to shadows of the true phenomena.
+We can make guesses about the underlying mechanisms, simulate them, and then project those
+observations of those mechanics into a network representation for analysis.
 
-Thus, to genuinely characterize the performance of these assorted network criteria, we
-must acknowledge they are applied to shadows of the true phenomena.  And unlike
-the measurements typifying physical sciences, we do not yet have centuries
-of argument to provide context and meaning to what exactly these networks mean.
-
-Fortunately, we can leverage developments in natural sciences that explicitly
-incorporate observation into the modeling process.  We demonstrate these, with
-particular emphasis on agent-based models and a development approach the
-encourages reuse, replication, and refutation.
-
-This approach acknowledges the lessons of traditional equation-based models (the
-primary approach of physical and natural sciences), while also embracing ideas
-from software engineering that are a more appropriate perspective for agent-based
-modeling.
+We demonstrate just such an approach by augmenting an empirical dataset with
+synthetic results for simulated covert groups.  We discuss the results and
+implications for naive application of social network analyses to covert groups.
 
 * * *
 
@@ -911,7 +903,7 @@ covert group size, but we need not obsess on mathematical elegance for this
 demonstration.  We thus have our formal TPR and FPR:
 
 \begin{align}
-TPR = \sum_i\frac{n_i-1}{n_t-1}\\
+TPR = \sum_i\frac{n_i-1}{n_t-1}\n
 FPR = \sum_i\frac{n_i-1}{n_t-1}\frac{b_i}{b_t}
 \end{align}
 
