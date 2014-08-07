@@ -9,11 +9,9 @@ import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 
 import edu.cap10.cora.Universe
+import edu.cap10.cora.CSVLogger
 import edu.cap10.util.Probability
 import edu.cap10.util.Probability._
-
-import java.io.BufferedWriter
-import java.io.FileWriter
 
 import scala.language.postfixOps
 
@@ -47,10 +45,10 @@ object Demo {
       meetLocs <- 1 to maxMeetLocations;
       agentP = dailyVisitProb - 1.0/plotPeriod;
       sample <- 1 to sampleSize;
-      fname = f"./simdata/$agentN-$plotPeriod-$meetLocs-$sample%03d.csv"
+      fname = f"./simdata/$agentN-$plotPeriod-$meetLocs-$sample%03d"
     ) {
       
-        val fh = new BufferedWriter(new FileWriter(fname))
+        val fh = CSVLogger.makeFH(fname)
         val universe = system.typedActorOf(Universe.props(plotPeriod, agentN, uniqueLocs, meetLocs, agentP, avgLocs, fh))
         (startDay to totalDays) foreach { 
     	  t => Await.result( universe.tick(t), 1 seconds)
