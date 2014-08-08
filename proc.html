@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"
-"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
-[<!ENTITY mathml "http://www.w3.org/1998/Math/MathML">]
->
+"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -37,27 +35,19 @@
 groups is driven by - and therefore, may be understood in terms of - network
 measures like degree distributions, paths, centralities, and so on.</p>
 
-<p>That may be true.</p>
+<p>That may be true in some cases, but the central assumption of network analyses,
+that the represented entities and interactions are of a small set of formal
+types, have limited empirical basis for covert groups.  As such, we should be
+skeptical attempting network-based techniques on these covert groups.</p>
 
-<p>Network representations, however, are a remarkably simple description, and
-simple models of all but the most trivial phenomena must make very strong
-assumptions.  We have little basis to assume anything in the case of covert
-groups: the <em>dark</em> label is an accurate gauge of our knowledge.</p>
+<p>If we wish to more confidently characterize the performance of these assorted network criteria, we
+must acknowledge they are applied to shadows of the true phenomena.
+We can make guesses about the underlying mechanisms, simulate them, and then project those
+observations of those mechanics into a network representation for analysis.</p>
 
-<p>Thus, to genuinely characterize the performance of these assorted network criteria, we
-must acknowledge they are applied to shadows of the true phenomena.  And unlike
-the measurements typifying physical sciences, we do not yet have centuries
-of argument to provide context and meaning to what exactly these networks mean.</p>
-
-<p>Fortunately, we can leverage developments in natural sciences that explicitly
-incorporate observation into the modeling process.  We demonstrate these, with
-particular emphasis on agent-based models and a development approach the
-encourages reuse, replication, and refutation.</p>
-
-<p>This approach acknowledges the lessons of traditional equation-based models (the
-primary approach of physical and natural sciences), while also embracing ideas
-from software engineering that are a more appropriate perspective for agent-based
-modeling.</p>
+<p>We demonstrate just such an approach by augmenting an empirical dataset with
+synthetic results for simulated covert groups.  We discuss the results and
+implications for naive application of social network analyses to covert groups.</p>
 
 <hr />
 
@@ -67,49 +57,41 @@ modeling.</p>
 for statistically significant differences on degree distributions, paths,
 centrality measures, <em>et cetera</em> between scenarios.</p>
 
-<p>A network, however, is a <em>very</em> simple model of a group, and simple models (of
-all but the most trivial phenomena) are only obtained by making strong
-assumptions.  Such assumptions can be reasonable, and when they are,
-compact descriptions can usefully cover a broad array of phenomena.  One particularly
-strong assumption is homogeneity within kinds and in interactions between kinds.
-This is an assumption that is frequently justified for problems in the physical
-sciences.</p>
+<p>Network models, however, make strong assumptions - that the things we represent
+as vertices are formally all the same <em>kind</em> of thing, that the interactions
+between them are all of the same flavor.  Such assumptions can be reasonable,
+and when they are, compact descriptions can usefully cover a broad array of
+phenomena.  This is largely the basis for the success of <a href="http://math.northwestern.edu/~theojf/FreshmanSeminar2014/Wigner1960.pdf" title="Unreasonable effectiveness of Mathematics in the Natural Sciences.">mathematics in the physical sciences</a>,
+whether one subscribes to scientific realist or instrumentalist philosophies.</p>
 
 <p>The natural and social sciences, however, consider phenomena more sensitive to
-context and variation. Thus, homogeneity is can be an unreliable assumption in
-the natural sciences, and can border on suspicious in the social sciences.</p>
+context and variation. For those phenomena, lumping elements into the same
+categorical types can be an unreliable assumption.</p>
 
-<p>One particularly questionable application is <em>dark networks</em> - the social
-network representation of covert groups, which is often used to model criminal
+<p>One such questionable application is <em>dark networks</em> - the social network
+representation of covert groups, often used as a means to model criminal
 organizations.  By focusing on the network reduction of these groups and
 associated network metrics, we may forget that the network is not the phenomena.
 The phenomena is the interactions between and individual changes in the members
 of that covert enterprise over the life of their collaboration, and the effect
 those have internal and external to that organization.  Indeed, these are the
 observations we actually make - not some network - and the outcomes we actually
-care to understand.  Additionally, if we are considering these groups as
-foreground embedded in a background population, the problem is vastly
-complicated by observation issues and computational concerns.</p>
+care to understand.  Further complicating such a treatment, these groups exist
+as foreground alongside a background population, with the populations largely
+indistinguishable.</p>
 
-<p>Representing those observations in a concise mathematical model, however, is an
-implausible task.  In that sense, the network reduction is a very practical tool.</p>
+<p>We should expect that representing such groups as a concise set of equations is
+an implausible task, and as such we propose that concise mathematical models are
+the wrong formal representation.  Rather, concise <em>programmatic</em> models are a
+useful and practical representation.  This approach is not new; it is essentially
+advocating for agent-based modeling.  We reiterate some insights from the
+software engineering discipline on how to proceed in a reuse-able, replicable
+fashion, and discard some past emphasis on embedding those agents in a network.</p>
 
-<p>We propose that concise mathematical models are the wrong formal representation.
-Rather, concise <em>programmatic</em> models are a useful and practical representation.
-Strictly speaking, these are still mathematical models (based on the equations
-of mathematical logic rather than numerical equations), but that position is
-confusingly pedantic given that many of the mathematical power tools are
-provably unavailable (general proofs, most notably).  This approach is not new;
-it is essentially advocating for agent-based modeling.  We reiterate some
-insights from the software engineering discipline on how to proceed in a
-reuse-able, replicable fashion, and discard some past emphasis on embedding
-those agents in a network.</p>
-
-<p>To motivate the discussion of notable pitfalls in the <em>dark network</em> approach,
-we will refer to back to a dataset and
-its interpretations to illustrate that skepticism, using shorthand like <em>the
-Montreal data</em> or <em>the Montreal network</em>.  For longer notes, we will embrace an
-aside format as follows:</p>
+<p>To motivate this discussion of the <em>dark network</em> approach, with a large
+empirical dataset and its interpretations, using shorthand like <em>the Montreal
+data</em> or <em>the Montreal network</em>.  For longer notes, we will embrace an aside
+format as follows:</p>
 
 <blockquote>
   <h2 id="the-montreal-municipal-wifi-service-data--a-basic-model">The Montreal Municipal WiFi Service Data &amp; A Basic Model</h2>
@@ -120,23 +102,745 @@ then consider the spread of flu-like pathogens on that network.  That work
 focuses on a theoretical epidemiological question - whether or not a unique
 network structure could explain a specific kind of epidemic dynamic.  The
 relationship between the data and that network model, however, is ideal for
-exploring many of the issues present in attempting to represent covert social
-groups with so-called dark networks.</p>
+exploring many of the issues present in attempting to analyze covert social
+groups with dark networks.</p>
 
   <p>The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
-are translated into a network for the epidemiological
-analysis is also simple: users that logged into the same location at the same time are joined
-by an edge.  Those edges are then aggregated into a contact network, removing
-duplicates and self loops.</p>
+are translated into a network for the epidemiological analysis is also simple:
+users that logged into the same location at the same time are joined by an edge.
+Those edges are then aggregated into a contact network, removing duplicates and
+self loops.</p>
 
   <p>The data spans roughly five years, a few hundred thousand entries of login data
-with X users and Y hotspot locations.</p>
+with around 200k users and roughly 350 hotspot locations.</p>
 </blockquote>
 
 <p>Ultimately, we will use the <em>Montreal data</em> to highlight some of the issues with
 network-based approaches in a simulation, and discuss what sort of steps should
 be taken with <em>dark network</em> research questions.</p>
+
+<h2 id="modeling-in-code">Modeling in Code</h2>
+
+<p><a href="http://dx.doi.org/10.1016/j.socnet.2009.02.004" title="optional title">Snijders <em>et al.</em></a> argue for agent-based models, but argue
+explicitly for avoiding the <em>event based</em> perspective.  We propose that the
+transient <em>events</em> (<em>e.g.</em>, individuals meet), <em>state changes</em> (<em>e.g.</em>, an
+individual gains or expends money), and <em>observation</em> process of how those are
+recorded (<em>e.g.</em>, people appear together at particular locations) are precisely
+what we should focus on modeling.</p>
+
+<p>Implementing an agent from this perspective requires a model that is inherently
+possible to reason about and argue with.  The events and state changes should
+correspond to phenomena we could observe, and likely do observe, if perhaps not
+very easily for the covert members.  We have models of such individual and
+small-group behavior, even if perhaps those are simply story-telling models.
+Likewise, we can engage critically with an explicitly modeled observation
+process. Are we monitoring wifi logins?  We can grapple with the details of such
+a system: how are accounts obtained?  Do people rotate accounts?  Do businesses
+rotate accounts? Maybe we cannot practically answer these questions, and maybe
+we do not include all of them in our model - but we can at least acknowledge
+them.  These sort of challenges reflect those traditionally possible with good
+equation-based models.</p>
+
+<p>None of this discounts the value of network science techniques.  We suggest that
+instead one must be cautious in their application when there is not a very
+complete, clear, and uniform translation of observed phenomena into a network, for
+the previously discussed formal issues with network representations.
+One way to take that caution is to step back into the messier details - the
+events, states, and observations - and simulate those as a ground truth.  When
+we do that, we must clearly state the ways we believe the system might work. We
+may take those simulation results, and then translate them into networks. Again,
+to accomplish that, we must clearly state how we believe our observations relate
+to the real phenomena and how we aggregate our observations into reduced
+measures.  Finally, we may perform our network science analyses with some
+confidence about what their results mean because we can compare those to the
+simulation inputs where we know truth (<em>model</em> truth, that is).</p>
+
+<p>If we are especially careful in our implementations of these models, we can isolate
+particular aspects, and then reuse them.  We might have, for example, agents that perform
+arbitrage.  That implementation, carefully abstracted, might be portable from an
+initial context of stock market actors to criminal gangs.  Clearly, the inputs
+are different, but if we believe the core mechanisms are the same, then
+we ought to implement it once and then reuse that element.  This has dual advantages.
+There is the practical matter of having more thoroughly vetted models faster.
+The second is that re-use process will gradually smooth the abstraction into
+what is actually conserved across those domains, and further highlight what
+differs between contexts.</p>
+
+<p>We demonstrate doing just this with applying simple community detection to a
+covert group embedded in a larger population.  The point of this effort is less
+about the results - they are predictably laughable given the simplicity of the
+behavior model and detection algorithm - and more about providing some guidelines
+about what constitutes a scientific approach to the problem, instead of scientism
+or inapplicable, if elegant, mathematics.</p>
+
+<p>Here we are going to use an augmentation model, where we take an empirical data
+set as the background and add to it synthetic data as the foreground.  We are
+assuming that the empirical data set has nothing interesting in it, based on the
+reasoning that for rare and difficult to observe phenomena, like the activities
+of covert groups, it is unlikely that these will meaningfully appear in any
+untargeted sample.   The synthetic model has whatever behavior we want to explore,
+<em>e.g.</em>, more or less cautious covert groups, and produces (among other measurements)
+at least whatever kind of interaction we have in the empirical data set.</p>
+
+<blockquote>
+  <h2 id="using-the-montreal-data">Using the Montreal Data</h2>
+
+  <p>Recall that the Montreal data is unique users joining and leaving unique
+hotspots, and that close examination of this data indicates there is regular
+turnover (immigration and emigration) in users and locations.  For our model, we
+will assume that the background actually has a constant number of actual
+locations, and that turnover represents those locations adopting or quitting the
+municipal service.</p>
+
+  <p>For users, we assume that their turnover represents entering and leaving the
+system. We might reasonably conclude that some changes represent identical users
+changing authentication credentials.  However, for simplicity we ignore that
+possibility in this model.</p>
+
+  <p>We will also aggregate wifi access data to a daily interval, <em>i.e.</em> a user
+accessed the system at particular location on a particular day.</p>
+
+  <p><em class="todo" title="yeah carl, why?">Why these assumptions?</em></p>
+</blockquote>
+
+<ul>
+  <li>covert group members (agents in the simulation) have some probability of turning over user ids</li>
+  <li>per unit time, pairs / groups receive direction to meet around a target time</li>
+  <li>within that window, they have exponentially distributed time-to-device log-ins,
+of course with possibility of drawing times outside window</li>
+</ul>
+
+<h3 id="augmenting-empirical-data">Augmenting Empirical Data</h3>
+
+<p>An easy approach to validating network-based covert group detection techniques
+would be to take some empirical network, add a covert group network, and
+then add some random connections between the two.  Remix a statistically satisfying
+number of times, and presto, suitable subject for analysis?</p>
+
+<p>Recall the Montreal data schema:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>user</td>
+      <td>location</td>
+      <td>log in time</td>
+      <td>log out time</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>ABC</td>
+      <td>123</td>
+      <td>mdy:hms</td>
+      <td>mdy:hms + <!-- begin MathToWeb -->
+<!-- (your LaTeX) $\delta$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>&delta;</mi>
+</mrow>
+</math>
+<!-- end MathToWeb --></td>
+    </tr>
+    <tr>
+      <td>etc</td>
+      <td>etc</td>
+      <td>etc</td>
+      <td>etc</td>
+    </tr>
+  </tfoot>
+</table>
+
+<p>Which exactly translates to a <em>time-dependent, bipartite network</em>.  If one collapses
+on location, that would produce a <em>time-dependent, unipartite network</em>.
+Then using a reasonable window, <em>e.g.</em> a day, one could aggregate events into a daily
+time series of networks.</p>
+
+<p>This is the way we will use the Montreal data, because this a typical starting
+point: an existing daily series for an empirical social network, to which we add
+a similar, synthetic times series of covert member network representations (also
+sourced elsewhere), and then test our detection scheme.  Instead of specific
+covert networks, we will be simulating covert group interaction events instead.</p>
+
+<p>Why not covert networks?</p>
+
+<p>In the scenario where the networks produced from the Montreal data as described
+above is treated as social network background truth for detecting covert groups
+against, the modelers have not carefully compared what the network means and is
+being treated as meaning.</p>
+
+<p>The implicit interpretation is that the network is a sample of which people meet
+at businesses on what days.</p>
+
+<p>The problem, however, is that this empirical data probably does not mean that,
+and that a network translation of would hide that fact.</p>
+
+<p>We could not know that without access to the raw event data,
+despite the forthright description of sensible transformations (not unlike what
+one might see for typical network datasets).  Even if we were careful about looking
+at network metrics, we would see results that typify ubiquitously cited networks:
+power law degree distributions, but with actual community structure beyond
+random graphs.</p>
+
+<p>When we start to delve into what the event data say, the inadequacy becomes apparent.
+If we think from what the data are first, login and logouts to hotspots, we can
+imagine the associated human activity that produces this data, and then put some
+boundaries on that image by comparing it to data.</p>
+
+<p>We can start with the typical session length, about 70 minutes.  That seems
+reasonable: we can imagine mixing the coffee-shop-email-checking set with the
+public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
+we dig any further, we find what should be unsettling results: roughly ten
+percent of the entries have zero duration sessions.  What does that mean?  More
+bizzarely, around one percent have a duration greater than a twelve hour working
+day.  Does it make sense to treat either of those sessions as a "person" that can meet
+with others?</p>
+
+<p>If our starting point is some extant network, we can hope that the authors were
+careful: they noticed these oddities, highlighted them, and provided an
+alternative network time series filtering out high and zero session duration
+events.  That is better than nothing, but which is the right one to use?  The event data would have to be
+checked against ground truth to answer that, since maybe the times are just reporting
+errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
+Montreal data, since investigating would rapidly become inconvenient for the
+supplier.  Alternatively, the researchers might have gone to some of the locations
+in the dataset, and directly observed behavior for comparison to the dataset.  For
+the Montreal data, they would have needed some specialized equipment (<em>e.g.</em>, connection
+sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
+the prospect of a working vacation in Montreal is no doubt appealing to some,
+what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
+A reality that makes so-called convenient data rapidly annoying.</p>
+
+<p>And this is just the first of many oddities in the source (<em>e.g.</em>, the number of
+locations that have one vistor ever indicates that just about everywhere in
+Montreal must be going out of business).  As stated, Before we can ever treat
+this series of events as serious scientific data, let alone reduce to a network
+representing social contact, we would need to do some serious empirical
+follow-up.  We are certain that what we find is that these oddities are rarely
+actually dismissable (and even in the case   of measurement errors, may needed
+to included in simulation as well), but they may represent cases that are far
+outside how our covert group will present. Thus, given this thorough follow-up,
+we would need to do some careful modeling of human activity to see if we could
+get a model of the activity we want - in this people visiting locations, some
+together and some not - to reproduce these events. At that point, we would have
+a suitable basis to start serious modeling of covert member behavior, which
+could then be synthetically added to the dataset, and finally an network-based.</p>
+
+<p>We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
+so that careful work is implausible.  Instead, we have use supposition about what
+is going on in background population.  Fortunately, we do have the event data to
+use.</p>
+
+<p>Based on the usage statistics and personal anecdote, we could reasonably infer
+that many of the users represent tourists, particular those that make a single
+login.  Those will probably not influence community structure, and might even be
+plausibly excluded from the false positive rate by excluding background users
+that have no future logins from FPR calculations.  We will retain them, however,
+to provide conservative estimates.  For locations that have short total hotspot
+availability, we can assume that businesses are not created and closed
+so quickly.</p>
+
+<h2 id="an-implementation">An Implementation</h2>
+
+<p>The Scala <code>TypedActor</code> paradigm allows us to define <code>traits</code>s and then mix those
+traits into our agent-based models.  We demonstrate
+several broad categories of traits with our simple model embedding a covert group
+in the Montreal data:</p>
+
+<ul>
+  <li>simulation hooks, such time-based iteration</li>
+  <li>re-useable state and dependencies, such as location-visiting</li>
+  <li>output, such as recording data to csv files</li>
+  <li>mathematical utilities, such as probabilistic generators</li>
+</ul>
+
+<hr />
+
+<p>Our simulation backbone, in this case following the passage of time:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
+
+  <span class="k">final</span> <span class="k">def</span> <span class="n">tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Future</span><span class="o">({</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span> <span class="o">})</span>
+
+  <span class="k">protected</span> <span class="k">def</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="n">when</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>This trait seems quite boring - it receives a time, and replies with that time.
+Recall, however, that traits are meant to be consumed:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">class</span> <span class="nc">AgentImpl</span><span class="o">(</span><span class="n">visProbPerTick</span><span class="k">:</span> <span class="kt">Double</span><span class="o">,</span> <span class="cm">/*...*/</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Agent</span> <span class="o">{</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(!</span><span class="nc">_traveled</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="nc">Math</span><span class="o">.</span><span class="n">random</span> <span class="o">&lt;</span> <span class="n">visProbPerTick</span><span class="o">))</span> <span class="o">{</span>
+      <span class="c1">// do something on this time step</span>
+      <span class="c1">// ...</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="nc">_clearTravel</span>
+    <span class="o">}</span>
+    <span class="k">super</span><span class="o">.</span><span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span></code></pre></div>
+
+<p>Here we provided agent behavior by overriding the default behavior.  In
+this particular case, we have intercepted the call, stochastically had
+the agent visit a location, then returned to behavior defined elsewhere by
+closing with <code>super._tick(when)</code>.</p>
+
+<p>Most notably, we have focused on what in particular the agent does relative to
+the passage of time in the simulation.  There are only two lines devoted to the
+program mechanics (the <code>override def ...</code> and <code>super._tick(when)</code>) as compared
+to the content devoted to the model mechanics.  We have also kept the details
+necessary to make this code functional in an asynchronous setting (<em>e.g.</em>, in
+cluster computation) in the trait itself, and out of the way of the researcher
+producing the simulation.  Finally, using a build tool (such as <code>sbt</code> or <code>make</code>) or the developmental
+<code>macro</code> feature in Scala could reduce that footprint even further, though we
+avoided these capabilities to best balance our discussion of model choices and
+the gory details of model implementation.</p>
+
+<p>If this agent had other traits that were also <code>TimeSensitive</code>, then the chain
+of execution would simply continue on those until finally hitting the root trait.  For example,
+we might want an agent that alters behavior with age, so we need a way of keeping
+track of age:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">Age</span> <span class="k">extends</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
+
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">var</span> <span class="nc">_age</span> <span class="k">=</span> <span class="mi">0</span>
+  <span class="n">public</span> <span class="k">def</span> <span class="n">age</span> <span class="k">=</span> <span class="nc">_age</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="nc">_age</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">super</span><span class="o">.</span><span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>This <code>agent.age</code> could then be used to, say, modify an agent’s tendency visit places.</p>
+
+<p>Researchers experienced with simulation will have noticed by now that <code>Age</code>
+shows some of the weaknesses in our <code>TimeSensitive</code> implementation, <em>e.g.</em> what
+happens if <code>agent.tick(when = 1)</code> is called repeatedly?  An agent with <code>Age</code>
+would grow older by multiple increments, despite actually being directed to
+respond to the same time-tick.</p>
+
+<p>That sort of command is a simple error to make in an entirely local simulation,
+so we ought to be addressing it purely from the standpoint of having simulation
+components that highlight logical errors.  However, once we start simulating
+agents on multiple nodes in a super-computer setting, it becomes a necessary
+concern even if our simulation is error-free.</p>
+
+<p>We have elected a simpler implementation to avoid distraction from other
+points.  But the structure of our implementation - <em>i.e.</em>, in a <code>trait</code> with
+a method that the adopting agent (and potentially other <code>trait</code>s of that agent)
+links into a chain of execution - means that we can fix this problem in the <code>trait</code>.
+With no changes to <em>scientific</em> meaning of this model, or other models re-using
+this trait, we can "upgrade" this aspect to do that error handling.</p>
+
+<p>And of course, if there was sufficient adoption in Scala,
+<em>e.g.</em> levels akin to the current R or Python modeling communities, we would see
+a distribution system and automatic version updates improving all of the dependent
+simulations.</p>
+
+<p>With that introductory discussion covered, we will more succinctly introduce the
+other traits we used in our particular implementation.</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">Travels</span><span class="o">[</span><span class="kt">ResultType</span><span class="o">]</span> <span class="o">{</span>
+
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">var</span> <span class="n">traveled</span> <span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="kc">false</span>
+  <span class="k">protected</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">def</span> <span class="n">travelResult</span><span class="o">(</span><span class="n">location</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">ts</span><span class="k">:</span><span class="kt">TimeStamp</span><span class="o">)</span> <span class="k">:</span> <span class="kt">ResultType</span>
+
+  <span class="k">def</span> <span class="nc">_traveled</span> <span class="k">=</span> <span class="n">traveled</span>
+
+  <span class="k">def</span> <span class="nc">_clearTravel</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">traveled</span> <span class="k">=</span> <span class="kc">false</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">travel</span><span class="o">(</span>
+    <span class="n">location</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span>
+    <span class="n">ts</span><span class="k">:</span> <span class="kt">TimeStamp</span>
+  <span class="o">)</span> <span class="k">=</span> <span class="nc">Future</span> <span class="o">{</span> <span class="nc">_travel</span><span class="o">(</span><span class="n">location</span><span class="o">,</span> <span class="n">ts</span><span class="o">)</span>  <span class="o">}</span>
+
+  <span class="k">protected</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">def</span> <span class="nc">_travel</span><span class="o">(</span>
+    <span class="n">location</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span>
+    <span class="n">ts</span><span class="k">:</span> <span class="kt">TimeStamp</span>
+  <span class="o">)</span> <span class="k">:</span> <span class="kt">ResultType</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">traveled</span> <span class="k">=</span> <span class="kc">true</span>
+    <span class="n">travelResult</span><span class="o">(</span><span class="n">location</span><span class="o">,</span> <span class="n">ts</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>This provides for agents visiting locations at particular times, and tracks if
+they have traveled "recently".</p>
+
+<p>These traits are sufficient to fully define our agent from a model perspective:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">class</span> <span class="nc">AgentImpl</span><span class="o">(</span>
+  <span class="k">val</span> <span class="n">id</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="k">val</span> <span class="n">normLocs</span><span class="k">:</span><span class="kt">Seq</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span>
+  <span class="k">val</span> <span class="n">visProbPerTick</span><span class="k">:</span><span class="kt">Probability</span><span class="o">,</span> <span class="k">val</span> <span class="n">fh</span><span class="k">:</span><span class="kt">BufferedWriter</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Agent</span> <span class="o">{</span>
+
+  <span class="c1">// ...</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(!</span><span class="nc">_traveled</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="nc">Math</span><span class="o">.</span><span class="n">random</span> <span class="o">&lt;</span> <span class="n">visProbPerTick</span><span class="o">))</span> <span class="o">{</span>
+      <span class="c1">// making own trip if not directed to take one</span>
+      <span class="n">log</span><span class="o">(</span> <span class="nc">_travel</span><span class="o">(</span> <span class="n">location</span> <span class="k">=</span> <span class="n">randomLocation</span><span class="o">,</span> <span class="n">ts</span> <span class="k">=</span> <span class="n">randomHour</span> <span class="o">).</span><span class="n">copy</span><span class="o">(</span> <span class="n">when</span> <span class="k">=</span> <span class="n">when</span> <span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="nc">_clearTravel</span>
+    <span class="o">}</span>
+    <span class="k">super</span><span class="o">.</span><span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span></code></pre></div>
+
+<p>The agent can be directed to travel, but if it has not, it randomly visits the
+normal haunts at some stochastic rate.  In addition to the components of the scientific model,
+there is also some obvious algorithmic infrastructure in the <code>CSVLogger</code> trait,
+which provides the <code>log(...)</code> method.  That trait is written to be re-usable
+for any type of agent that might need to record data, but it is also written in
+a way that a different sort of logger (<em>e.g.</em>, SQL database) or different format
+(<em>e.g.</em>, JSON) could be written in an analogous trait and the simulation could
+be re-run merely changing by merely changing the trait from <code>CSVLogger</code> to the
+new type.</p>
+
+<p>Finally, rather than use these agents directly in <code>main</code> method, we use a <code>Universe</code>
+"agent".  In agent-based simulations, we have detailed agents inside some boundary
+conditions.  Commonly, however, there are also exogenous forces that we need
+to evolve as part of the simulation.  That is, the boundary is not a collection
+of constants, but also an entity requiring updates as the simulation proceeds.
+When a simulation calls for both micro-simulation (<em>i.e.,</em> the agents) and an
+"external" macro-simulation, then having a <code>Universe</code> entity is an practical
+representation.  Our <code>Universe</code> is:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">class</span> <span class="nc">Universe</span><span class="o">(</span><span class="cm">/* simulation parameters */</span><span class="o">)</span>
+  <span class="k">extends</span> <span class="nc">TimeSensitive</span> <span class="k">with</span> <span class="nc">PoissonDraws</span> <span class="k">with</span> <span class="nc">CSVLogger</span><span class="o">[</span><span class="kt">TravelData</span><span class="o">]</span> <span class="o">{</span>
+
+  <span class="c1">// ...</span>
+
+  <span class="k">val</span> <span class="n">agents</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Agent</span><span class="o">]</span>
+    <span class="k">=</span> <span class="nc">Universe</span><span class="o">.</span><span class="n">createAgents</span><span class="o">(</span><span class="n">groupSize</span><span class="o">,</span> <span class="n">locationCount</span><span class="o">,</span> <span class="n">meetingLocations</span><span class="o">,</span> <span class="n">avgLocs</span><span class="o">,</span> <span class="n">visProb</span><span class="o">,</span> <span class="n">fh</span><span class="o">)</span>
+
+  <span class="k">var</span> <span class="n">daysToNextMeeting</span> <span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="n">nextDraw</span><span class="o">()</span>
+    <span class="c1">// initial days-to-next-covert meeting</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">daysToNextMeeting</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">daysToNextMeeting</span> <span class="k">=</span> <span class="n">nextDraw</span><span class="o">()</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">daysToNextMeeting</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// time to meet</span>
+        <span class="k">val</span> <span class="n">loc</span> <span class="k">=</span> <span class="n">shuffle</span><span class="o">(</span><span class="n">meetingLocations</span><span class="o">).</span><span class="n">apply</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+        <span class="k">val</span> <span class="n">ts</span> <span class="k">=</span> <span class="nc">TimeStamp</span><span class="o">(</span><span class="n">nextInt</span><span class="o">(</span><span class="mi">9</span><span class="o">)+</span><span class="mi">8</span><span class="o">,</span> <span class="n">nextInt</span><span class="o">(</span><span class="mi">60</span><span class="o">),</span> <span class="n">nextInt</span><span class="o">(</span><span class="mi">60</span><span class="o">)</span> <span class="o">)</span>
+        <span class="c1">// choose place, time</span>
+
+        <span class="nc">Await</span><span class="o">.</span><span class="n">result</span><span class="o">(</span>
+          <span class="nc">Future</span><span class="o">.</span><span class="n">sequence</span><span class="o">(</span>
+            <span class="n">shuffle</span><span class="o">(</span><span class="n">agents</span><span class="o">).</span><span class="n">take</span><span class="o">(</span><span class="mi">2</span><span class="o">).</span><span class="n">map</span><span class="o">(</span> <span class="n">agent</span> <span class="k">=&gt;</span> <span class="n">agent</span><span class="o">.</span><span class="n">travel</span><span class="o">(</span><span class="n">loc</span><span class="o">,</span> <span class="n">ts</span><span class="o">)</span> <span class="o">)</span>
+            <span class="c1">// randomly draw 2 agents to meet at a specific place, time</span>
+          <span class="o">),</span>
+          <span class="mi">400</span> <span class="n">millis</span>
+        <span class="o">)</span> <span class="n">foreach</span> <span class="o">{</span>
+          <span class="n">res</span> <span class="k">=&gt;</span> <span class="n">log</span><span class="o">(</span><span class="n">res</span><span class="o">)</span> <span class="c1">// record results</span>
+        <span class="o">}</span>
+
+      <span class="o">}</span>
+      <span class="n">daysToNextMeeting</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="o">}</span>
+
+    <span class="n">agents</span> <span class="n">foreach</span> <span class="o">{</span> <span class="n">a</span> <span class="k">=&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span> <span class="o">}</span>
+    <span class="k">super</span><span class="o">.</span><span class="nc">_tick</span><span class="o">(</span><span class="n">when</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>We use <code>Universe</code> as the root of the simulation, building the agents within
+itself, running the state of the external world - specifically, how often the covert group
+receives orders to meet - and handing off the <code>ticks</code> that drive the simulation.
+There is also a final utility trait, <code>PoissonDraws</code>, which handles the
+stochasticity for the external world:</p>
+
+<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">PoissonDraws</span> <span class="o">{</span>
+
+  <span class="k">val</span> <span class="n">expectedK</span> <span class="k">:</span> <span class="kt">Double</span>
+
+  <span class="k">lazy</span> <span class="k">val</span> <span class="n">poissonK</span> <span class="k">:</span> <span class="kt">Iterator</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">DiscreteCountStats</span><span class="o">.</span><span class="n">poissonK</span><span class="o">(</span><span class="n">expectedK</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">nextDraw</span><span class="o">()</span> <span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="n">poissonK</span><span class="o">.</span><span class="n">next</span><span class="o">()</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>This trait represents a particular strategy for choosing the duration between
+meetings.  If we wanted to use a different distribution (<em>e.g.</em>, binomial or
+exponential), then we could use a <code>Universe</code> with an alternative trait.</p>
+
+<p>Using these agents, we can generate a synthetic time series of events to augment
+the empirical data set.</p>
+
+<h3 id="characterizing-network-detection-methods">Characterizing Network Detection Methods</h3>
+
+<p>Now we consider a simple, but non-trivial community detection method against the
+augmented data.  The detector is not intended to detect a particular network
+signature of the covert group; our model is unlikely to have a realistic signature anyway.
+Instead, we analyze the detector performance assuming
+that some other technique accurately identifies a covert member at random, and then that random
+member’s associated community is then implicated as the covert group.</p>
+
+<p>How should we think about this performance?  We obviously want to characterize
+placing all of the covert group, and only members of that group, into a single
+community as perfect.  The worst possible performance would be completely
+dispersing the covert group into different communities, and for each community
+to have a covert group member.  The perfect case has a True Positive Rate (<!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->)
+of 1 - <em>i.e.</em> is absolutely sensitive - and a False Positive Rate (<!-- begin MathToWeb -->
+<!-- (your LaTeX) $FPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->) of 0 -
+<em>i.e.</em> is absolutely specific.  The worst case has a <!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR = 0$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>=</mo>
+	<mn>0</mn>
+</mrow>
+</math>
+<!-- end MathToWeb -->, but its not
+immediately obvious how to calculate FPR; the average community size is of
+course the total background population divided by the number of covert group
+members.  If we use the total population as the denominator, then the peak
+<!-- begin MathToWeb -->
+<!-- (your LaTeX) $FPR != 1$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>!</mo>
+	<mo>=</mo>
+	<mn>1</mn>
+</mrow>
+</math>
+<!-- end MathToWeb -->, and indeed is determined by the size of the covert group. There
+is some argument for having an error rate that would be independent of the
+covert group size, but we need not obsess on mathematical elegance for this
+demonstration.  We thus have our formal TPR and FPR:</p>
+
+<p><!-- begin MathToWeb -->
+<!-- (your LaTeX) \begin{equation}
+TPR = \sum_i\frac{n_i-1}{n_t-1} <br />
+\end{equation} -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable class="m-equation" displaystyle="true" style="display: block; margin-top: 1.0em; margin-bottom: 2.0em">
+	<mtr>
+		<mtd>
+			<mspace width="6.0em" />
+		</mtd>
+		<mtd columnalign="left">
+			<mi>T</mi>
+			<mi>P</mi>
+			<mi>R</mi>
+			<mo>=</mo>
+			<mstyle displaystyle="true">
+				<munder>
+					<mo>&sum;</mo>
+					<mi>i</mi>
+				</munder>
+			</mstyle>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>i</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>t</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+			</mfrac>
+			<mo>&lt;</mo>
+			<mi>b</mi>
+			<mi>r</mi>
+			<mo>&sol;</mo>
+			<mo>&gt;</mo>
+		</mtd>
+		<mtd columnalign="right" style="width: 100%">
+			<mtext id="">(1)</mtext>
+			<mspace width="6.0em" />
+		</mtd>
+	</mtr>
+</mtable>
+</math>
+<!-- end MathToWeb -->
+<!-- begin MathToWeb -->
+<!-- (your LaTeX) \begin{equation}
+FPR = \sum_i\frac{n_i-1}{n_t-1}\frac{b_i}{b_t}
+\end{equation} -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable class="m-equation" displaystyle="true" style="display: block; margin-top: 1.0em; margin-bottom: 2.0em">
+	<mtr>
+		<mtd>
+			<mspace width="6.0em" />
+		</mtd>
+		<mtd columnalign="left">
+			<mi>F</mi>
+			<mi>P</mi>
+			<mi>R</mi>
+			<mo>=</mo>
+			<mstyle displaystyle="true">
+				<munder>
+					<mo>&sum;</mo>
+					<mi>i</mi>
+				</munder>
+			</mstyle>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>i</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>n</mi>
+						<mi>t</mi>
+					</msub>
+					<mo>-</mo>
+					<mn>1</mn>
+				</mrow>
+			</mfrac>
+			<mfrac linethickness="1">
+				<mrow>
+					<msub>
+						<mi>b</mi>
+						<mi>i</mi>
+					</msub>
+				</mrow>
+				<mrow>
+					<msub>
+						<mi>b</mi>
+						<mi>t</mi>
+					</msub>
+				</mrow>
+			</mfrac>
+		</mtd>
+		<mtd columnalign="right" style="width: 100%">
+			<mtext id="">(2)</mtext>
+			<mspace width="6.0em" />
+		</mtd>
+	</mtr>
+</mtable>
+</math>
+<!-- end MathToWeb --></p>
+
+<p>With <!-- begin MathToWeb -->
+<!-- (your LaTeX) $TPR, FPR$ -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow>
+	<mi>T</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+	<mo>,</mo>
+	<mi>F</mi>
+	<mi>P</mi>
+	<mi>R</mi>
+</mrow>
+</math>
+<!-- end MathToWeb -->, and tunable process for community detection, we can create Receiver
+Operating Characteristic (ROC) curves, and associated statistics, <em>e.g.</em> discrimination.
+For our analysis, however, we did not attempt to tune detection.</p>
+
+<p>Since we have a time-dependent process, and in general we are interested in real
+time detection, we should of course be interested in the time evolution of the
+efficacy of detection.  This would provide us some qualitative insight on
+trade-offs between risk of the covert group executing some goal, opportunity
+cost (in terms of missed covert members), and downside (in terms of collateral
+population implicated).  Our initial demonstration analysis produced curves that
+contain this data, though we make no attempt to do subsequent meta-analysis like
+the trade-off consideration.</p>
+
+<p>If we had more basis for informing the model of the covert group, we could
+likewise propose detectors that used the more detailed data produced by the
+simulation, and revise our definition of what detection entailed.  If we had
+reliable data about covert group signature, then perhaps we might update our
+criteria to be correctly identifying the particular community, rather than
+couching performance in terms of another assumed process.</p>
+
+<h3 id="parameter-setting">Parameter Setting</h3>
+
+<p>If the covert group were detectable by non-network methods - <em>e.g.</em>, if they had
+statistically outlying behavior on frequency or diversity of activities - then
+the network analysis would be quite silly.  It may well be the case that they
+are noticeably different, but we are considering cases where network analysis
+methods provide valuable insight.  As such, we must inform the behavior of our
+simulated covert group by those values for this particular study. More
+generally, for any sort of augmentation study, we should seek to ensure that our
+synthetic group mimics the background in ways that would fool whatever
+techniques we would use ahead of the one we wish to validate.</p>
+
+<blockquote>
+  <h3 id="key-montreal-measures">Key Montreal Measures</h3>
+
+  <p>The Montreal data concerns user, locations, and wifi access.  The first
+analysis for interesting user activity should of course be to test for users
+that have very high or low numbers of locations visited, and likewise users
+that have very high or low frequency of use.  Given that the data forms a time
+series, it would probably also be useful to examine the distribution of visits
+- <em>e.g.</em> steady cycling between locations or highly skewed visitation, stable activity
+level versus long periods of no activity between very ones - however, we are not
+going into that level of detail for this study.</p>
+
+  <p>From the Montreal data, we must then obtain some crude measures:</p>
+
+  <ul>
+    <li>distribution of location counts visited by users</li>
+    <li>distribution of visitation rate for users</li>
+  </ul>
+
+  <p>From those distributions, we can select mean values for the covert group to
+abide.  If we were being more sophisticated in our model, we might sample from
+the distribution for our covert group.</p>
+
+  <p>Thus, we will have our group members target their overall behavior against
+these means, where the covert group activity (rate of clandestine meetings,
+number of meeting locations) deduct from these background-typical behaviors.</p>
+</blockquote>
+
+<h3 id="results">Results</h3>
+
+<h2 id="afterthoughts">Afterthoughts</h2>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+
+<p>We would like to thank <a href="github.com/tjhladish">Thomas J. Hladish</a> and
+<a href="github.com/jrcpulliam">Juliet R. C. Pulliam</a> for their
+feedback getting the voice right for this piece.</p>
+
+<h2 id="hold-section">HOLD SECTION</h2>
 
 <h2 id="assumptions-gone-wild">Assumptions Gone Wild</h2>
 
@@ -484,7 +1188,7 @@ We will demonstrate this shortly using <a href="http://www.scala-lang.org/">Scal
 
 <p>REDO</p>
 
-<h3 id="modeling-in-code">Modeling in Code</h3>
+<h3 id="modeling-in-code-1">Modeling in Code</h3>
 
 <p>Given the extreme heterogeneity in kinds for most social science
 questions, we contend that adopting the equation-based formalism to model those
@@ -624,544 +1328,6 @@ providing benefit of compiled, strongly typed language.</p>
 
 <p>basic approach: agents mixin in traits (in this approach, all agents mixin the
   same traits, but those traits have state which make them inactive)</p>
-
-<h2 id="an-implementation">An Implementation</h2>
-
-<p><a href="http://dx.doi.org/10.1016/j.socnet.2009.02.004" title="optional title">Snijders <em>et al.</em></a> argue for agent-based models, but argue
-explicitly for avoiding the <em>event based</em> perspective.  We propose that the
-transient <em>events</em> (<em>e.g.</em>, individuals meet), <em>state changes</em> (<em>e.g.</em>, an
-individual gains or expends money), and <em>observation</em> process of how those are
-recorded (<em>e.g.</em>, people appear together at particular locations) are precisely
-what we should focus on modeling.</p>
-
-<p>Implementing an agent from this perspective requires a model that is inherently
-possible to reason about and argue with.  The events and state changes should
-correspond to phenomena we could observe, and likely do observe, if perhaps not
-very easily for the covert members.  We have models of such individual and
-small-group behavior, even if perhaps those are simply story-telling models.
-Likewise, we can engage critically with an explicitly modeled observation process.
-Are we monitoring wifi logins?  We can grapple with the details of such a system:
-how are accounts obtained?  Do people rotate accounts?  Do businesses rotate accounts?
-Maybe we cannot practically answer these questions, and maybe we do not include
-all of them in our model - but we can at least acknowledge them.</p>
-
-<p>None of this discounts the value of network science techniques.  We suggest that
-instead one must be cautious in their application when there is not a very
-complete, clear, and uniform translation of observed phenomena into a network, for
-the previously discussed formal issues with network representations.
-One way to take that caution is to step back into the messier details - the
-events, states, and observations - and simulate those as a ground truth.  When
-we do that, we must clearly state the ways we believe the system might work. We
-may take those simulation results, and then translate them into networks. Again,
-to accomplish that, we must clearly state how we believe our observations relate
-to the real phenomena and how we aggregate our observations into reduced
-measures.  Finally, we may perform our network science analyses with some
-confidence about what their results mean because we can compare those to the
-simulation inputs where we know truth (<em>model</em> truth, that is).</p>
-
-<p>If we are especially careful in our implementations of these models, we can isolate
-particular aspects, and then reuse them.  We might have, for example, agents that perform
-arbitrage.  That implementation, carefully abstracted, might be portable from an
-initial context of stock market actors to criminal gangs.  Clearly, the inputs
-are different, but if we believe the core mechanisms are the same, then
-we ought to implement it once and then reuse that element.  This has dual advantages.
-There is the practical matter of having more thoroughly vetted models faster.
-The second is that re-use process will gradually smooth the abstraction into
-what is actually conserved across those domains, and further highlight what
-differs between contexts.</p>
-
-<p>We demonstrate doing just this with applying simple community detection to a
-covert group embedded in a larger population.  The point of this effort is less
-about the results - they are predictably laughable given the simplicity of the
-behavior model and detection algorithm - and more about providing some guidelines
-about what constitutes a scientific approach to the problem, instead of scientism
-or inapplicable, if elegant, mathematics.</p>
-
-<p>Here we are going to use an augmentation model, where we take an empirical data
-set as the background and add to it synthetic data as the foreground.  We are
-assuming that the empirical data set has nothing interesting in it, based on the
-reasoning that for rare and difficult to observe phenomena, like the activities
-of covert groups, it is unlikely that these will meaningfully appear in any
-untargeted sample.   The synthetic model has whatever behavior we want to explore,
-<em>e.g.</em>, more or less cautious covert groups, and produces (among other measurements)
-at least whatever kind of interaction we have in the empirical data set.</p>
-
-<blockquote>
-  <h2 id="using-the-montreal-data">Using the Montreal Data</h2>
-
-  <p>Recall that the Montreal data is unique users joining and leaving
-unique hotspots, and that close examination of this data indicates there is regular
-turnover (immigration and emigration) in users and locations.  For our model, we
-will assume that the background actually has a constant number of actual locations,
-and that turnover is locations adopting or quitting the municipal service.</p>
-
-  <p>For users, we assume that their turnover represents entering and leaving the system.
-We might reasonably conclude that some changes represent identical users changing
-authentication credentials.  However, for simplicity we ignore that at this stage.</p>
-
-  <p>We will also aggregate wifi access data to a daily interval, <em>i.e.</em> a user
-accessed the system at particular location on a particular day.</p>
-
-  <p><em class="todo" title="yeah carl, why?">Why these assumptions?</em></p>
-</blockquote>
-
-<ul>
-  <li>covert group members (agents in the simulation) have some probability of turning over user ids</li>
-  <li>per unit time, pairs / groups receive direction to meet around a target time</li>
-  <li>they have exponentially distributed pre-arrival and post-departure times</li>
-  <li>within that window, they have exponentially distributed time-to-device log-ins, of course with possibility of drawing
-times outside window</li>
-</ul>
-
-<h3 id="traits">Traits</h3>
-
-<p>The Scala <code>TypedActor</code> paradigm allows us to define <code>traits</code>s and then mix those
-traits into our agent based models implemented in that paradigm.  We demonstrate
-several broad categories of traits with our simple model embedding a covert group
-in the Montreal data:</p>
-
-<p>We have a simulation backbone, in this case following the passage of time:</p>
-
-<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
-
-  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">var</span> <span class="n">was</span> <span class="k">=</span> <span class="mi">0</span>
-  <span class="k">protected</span> <span class="k">def</span> <span class="n">last</span> <span class="k">=</span> <span class="n">was</span>
-
-  <span class="k">final</span> <span class="k">def</span> <span class="n">tick</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Try</span><span class="o">[</span><span class="kt">Reply</span><span class="o">]]</span> <span class="k">=</span>
-    <span class="nc">Future</span><span class="o">({</span> <span class="n">resolve</span><span class="o">(</span><span class="n">when</span><span class="o">)</span> <span class="o">}).</span><span class="n">andThen</span><span class="o">({</span>
-      <span class="k">case</span> <span class="nc">Success</span><span class="o">(</span><span class="n">res</span><span class="o">)</span> <span class="k">=&gt;</span>
-        <span class="n">was</span> <span class="k">=</span> <span class="n">when</span>
-        <span class="n">res</span>
-      <span class="k">case</span> <span class="n">f</span> <span class="k">=&gt;</span> <span class="n">f</span>
-    <span class="o">})</span>
-
-
-  <span class="k">protected</span> <span class="k">def</span> <span class="n">resolve</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">:</span> <span class="kt">Try</span><span class="o">[</span><span class="kt">Reply</span><span class="o">]</span> <span class="k">=</span>
-    <span class="nc">Success</span><span class="o">(</span><span class="nc">Ack</span><span class="o">)</span>
-
-<span class="o">}</span></code></pre></div>
-
-<p>while this trait itself may seem incomprehensible, this definition is what tool
-developers would use, not typical modelers.  Instead, modelers would add the traits
-to their entities, like</p>
-
-<div class="highlight"><pre><code class="scala"><span class="k">class</span> <span class="nc">AgentImpl</span><span class="o">(</span><span class="cm">/*...*/</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Agent</span> <span class="o">{</span>
-
-  <span class="c1">// ...</span>
-  <span class="k">private</span> <span class="k">var</span> <span class="n">visited</span> <span class="k">=</span> <span class="kc">false</span>
-
-  <span class="k">override</span> <span class="k">def</span> <span class="n">resolve</span><span class="o">(</span><span class="n">when</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(!</span><span class="n">visited</span> <span class="o">&amp;&amp;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">random</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">visProbPerDay</span><span class="o">)</span> <span class="o">{</span>
-      <span class="c1">// taking own trip if not directed to take one</span>
-      <span class="c1">// ...</span>
-    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-      <span class="n">visited</span> <span class="k">=</span> <span class="kc">false</span>
-    <span class="o">}</span>
-    <span class="k">super</span><span class="o">.</span><span class="n">resolve</span><span class="o">(</span><span class="n">when</span><span class="o">)</span>
-  <span class="o">}</span>
-<span class="o">}</span></code></pre></div>
-
-<p>Pushing this approach to get to something akin to the current community behind,
-<em>e.g.</em> R or Python modeling</p>
-
-<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">GoesToLocations</span> <span class="k">extends</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
-  <span class="c1">// draw an exponentially distributed time for visit, random sample for locations</span>
-  <span class="c1">// stash (location, time)</span>
-  <span class="c1">// as ticks proceed, deduct time from (location, time)</span>
-  <span class="c1">// when time = 0, visit location</span>
-<span class="o">}</span></code></pre></div>
-
-<div class="highlight"><pre><code class="scala"><span class="k">trait</span> <span class="nc">GetsDirections</span> <span class="k">extends</span> <span class="nc">GoesToLocations</span> <span class="o">{</span>
-  <span class="c1">// occasionally receive orders to go somewhere</span>
-  <span class="c1">//  re-use GoesToLocations machinery for recording visit</span>
-<span class="o">}</span></code></pre></div>
-
-<p>We also need a <code>Universe</code> - an entity outside of the data we could plausibly
-attain - to provide direction on meetings.</p>
-
-<div class="highlight"><pre><code class="scala"><span class="k">class</span> <span class="nc">Universe</span> <span class="k">extends</span> <span class="nc">Actor</span> <span class="k">with</span> <span class="nc">TimeSensitive</span> <span class="o">{</span>
-  <span class="c1">// knows about group membership, clandestine locations</span>
-  <span class="c1">// with exponentially distributed times, direct randomly selected members</span>
-  <span class="c1">//  to go to randomly selected clandestine location</span>
-<span class="o">}</span></code></pre></div>
-
-<p>Using these agents, we can generate a synthetic time series of events to augment
-the empirical data set.</p>
-
-<h3 id="characterizing-network-detection-methods">Characterizing Network Detection Methods</h3>
-
-<p>Now we consider a simple, but non-trivial community detection method against the
-augmented data.  The detector is not intended to detect a particular network
-signature of the covert group; our model is unlikely to have a realistic signature anyway.
-Instead, we analyze the detector performance assuming
-that some other technique accurately identifies a covert member at random, and then that random
-member’s associated community is then implicated as the covert group.</p>
-
-<p>How should we think about this performance?  We obviously want to characterize
-placing all of the covert group, and only members of that group, into a single
-community as perfect.  The worst possible performance would be completely
-dispersing the covert group into different communities, and for each community
-to have a covert group member.  The perfect case has a True Positive Rate (<!-- begin MathToWeb -->
-<!-- (your LaTeX) $TPR$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>T</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-</mrow>
-</math>
-<!-- end MathToWeb -->)
-of 1 - <em>i.e.</em> is absolutely sensitive - and a False Positive Rate (<!-- begin MathToWeb -->
-<!-- (your LaTeX) $FPR$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>F</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-</mrow>
-</math>
-<!-- end MathToWeb -->) of 0 -
-<em>i.e.</em> is absolutely specific.  The worst case has a <!-- begin MathToWeb -->
-<!-- (your LaTeX) $TPR = 0$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>T</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-	<mo>=</mo>
-	<mn>0</mn>
-</mrow>
-</math>
-<!-- end MathToWeb -->, but its not
-immediately obvious how to calculate FPR; the average community size is of
-course the total background population divided by the number of covert group
-members.  If we use the total population as the denominator, then the peak
-<!-- begin MathToWeb -->
-<!-- (your LaTeX) $FPR != 1$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>F</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-	<mo>!</mo>
-	<mo>=</mo>
-	<mn>1</mn>
-</mrow>
-</math>
-<!-- end MathToWeb -->, and indeed is determined by the size of the covert group. There
-is some argument for having an error rate that would be independent of the
-covert group size, but we need not obsess on mathematical elegance for this
-demonstration.  We thus have our formal TPR and FPR:</p>
-
-<p><!-- begin MathToWeb -->
-<!-- (your LaTeX) \begin{align}
-TPR = \sum_i \frac{n_i-1}{n_t-1} <br />
-FPR = \sum_i \frac{n_i-1}{n_t-1} \frac{b_i}{b_t}
-\end{align} -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mtable class="m-align" displaystyle="true" style="display: block; margin-top: 1.0em; margin-bottom: 2.0em">
-	<mtr>
-		<mtd rowspan="1">
-			<mspace width="6.0em" />
-		</mtd>
-		<mtd columnalign="right">
-			<mi>T</mi>
-			<mi>P</mi>
-			<mi>R</mi>
-			<mo>=</mo>
-			<mstyle displaystyle="true">
-				<munder>
-					<mo>&sum;</mo>
-					<mi>i</mi>
-				</munder>
-			</mstyle>
-			<mfrac linethickness="1">
-				<mrow>
-					<msub>
-						<mi>n</mi>
-						<mi>i</mi>
-					</msub>
-					<mo>-</mo>
-					<mn>1</mn>
-				</mrow>
-				<mrow>
-					<msub>
-						<mi>n</mi>
-						<mi>t</mi>
-					</msub>
-					<mo>-</mo>
-					<mn>1</mn>
-				</mrow>
-			</mfrac>
-			<mo>&lt;</mo>
-			<mi>b</mi>
-			<mi>r</mi>
-			<mo>&sol;</mo>
-			<mo>&gt;</mo>
-			<mi>F</mi>
-			<mi>P</mi>
-			<mi>R</mi>
-			<mo>=</mo>
-			<mstyle displaystyle="true">
-				<munder>
-					<mo>&sum;</mo>
-					<mi>i</mi>
-				</munder>
-			</mstyle>
-			<mfrac linethickness="1">
-				<mrow>
-					<msub>
-						<mi>n</mi>
-						<mi>i</mi>
-					</msub>
-					<mo>-</mo>
-					<mn>1</mn>
-				</mrow>
-				<mrow>
-					<msub>
-						<mi>n</mi>
-						<mi>t</mi>
-					</msub>
-					<mo>-</mo>
-					<mn>1</mn>
-				</mrow>
-			</mfrac>
-			<mfrac linethickness="1">
-				<mrow>
-					<msub>
-						<mi>b</mi>
-						<mi>i</mi>
-					</msub>
-				</mrow>
-				<mrow>
-					<msub>
-						<mi>b</mi>
-						<mi>t</mi>
-					</msub>
-				</mrow>
-			</mfrac>
-		</mtd>
-		<mtd columnalign="right" style="width: 100%">
-			<mtext id="">(1)</mtext>
-			<mspace width="6.0em" />
-		</mtd>
-	</mtr>
-</mtable>
-</math>
-<!-- end MathToWeb --></p>
-
-<p>With <!-- begin MathToWeb -->
-<!-- (your LaTeX) $TPR, FPR$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>T</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-	<mo>,</mo>
-	<mi>F</mi>
-	<mi>P</mi>
-	<mi>R</mi>
-</mrow>
-</math>
-<!-- end MathToWeb -->, and tunable process for community detection, we can create Receiver
-Operating Characteristic (ROC) curves, and associated statistics, <em>e.g.</em> discrimination.</p>
-
-<p>Since we have a time-dependent process, and in general we are interested in real
-time detection, we should of course be interested in the time evolution of our
-discrimination statistic.  This would provide us some qualitative insight on
-trade-offs between risk of the covert group executing some goal, opportunity
-cost (in terms of missed covert members), and downside (in terms of collateral
-population implicated).  Thus, our initial analysis will be to produce curves
-that contain this data, though we make no attempt to do subsequent meta-analysis
-like the trade-off consideration.</p>
-
-<p>As we had more basis for informing the model of the covert group, we could
-likewise propose detectors that used the more detailed data produced by the
-simulation, and revise our definition of what detection entailed.  If we had
-reliable data about covert group signature, then perhaps we might update our
-criteria to be correctly identifying the particular community, rather than
-couching performance in terms of another assumed process.</p>
-
-<h3 id="augmenting-empirical-data">Augmenting Empirical Data</h3>
-
-<p>An easy approach to validating network-based covert group detection techniques
-would be to take some empirical network, add a covert group network, and
-then add some random connections between the two.  Remix a statistically satisfying
-number of times, and presto, suitable subject for analysis?</p>
-
-<p>Recall the Montreal data schema:</p>
-
-<table>
-  <tbody>
-    <tr>
-      <td>user</td>
-      <td>location</td>
-      <td>log in time</td>
-      <td>log out time</td>
-    </tr>
-  </tbody>
-  <tfoot>
-    <tr>
-      <td>ABC</td>
-      <td>123</td>
-      <td>mdy:hms</td>
-      <td>mdy:hms + <!-- begin MathToWeb -->
-<!-- (your LaTeX) $\delta$ -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-<mrow>
-	<mi>&delta;</mi>
-</mrow>
-</math>
-<!-- end MathToWeb --></td>
-    </tr>
-    <tr>
-      <td>etc</td>
-      <td>etc</td>
-      <td>etc</td>
-      <td>etc</td>
-    </tr>
-  </tfoot>
-</table>
-
-<p>Which exactly translates to a <em>time-dependent, bipartite network</em>.  If one collapses
-on location, that would produce a <em>time-dependent, unipartite network</em>.
-Then using a reasonable window, <em>e.g.</em> a day, one could aggregate events into a daily
-time series of networks.</p>
-
-<p>This is the way we will use the Montreal data, because this a typical starting
-point: an existing daily series for an empirical social network, to which we add
-a similar, synthetic times series of covert member network representations (also
-sourced elsewhere), and then test our detection scheme.  Instead of specific
-covert networks, we will be simulating covert group interaction events instead.</p>
-
-<p>Why not covert networks?</p>
-
-<p>In the scenario where the networks produced from the Montreal data as described
-above is treated as social network background truth for detecting covert groups
-against, the modelers have not carefully compared what the network means and is
-being treated as meaning.</p>
-
-<p>The implicit interpretation is that the network is a sample of which people meet
-at businesses on what days.</p>
-
-<p>The problem, however, is that this empirical data probably does not mean that,
-and that a network translation of would hide that fact.</p>
-
-<p>We could not know that without access to the raw event data,
-despite the forthright description of sensible transformations (not unlike what
-one might see for typical network datasets).  Even if we were careful about looking
-at network metrics, we would see results that typify ubiquitously cited networks:
-power law degree distributions, but with actual community structure beyond
-random graphs.</p>
-
-<p>When we start to delve into what the event data say, the inadequacy becomes apparent.
-If we think from what the data are first, login and logouts to hotspots, we can
-imagine the associated human activity that produces this data, and then put some
-boundaries on that image by comparing it to data.</p>
-
-<p>We can start with the typical session length, about 70 minutes.  That seems
-reasonable: we can imagine mixing the coffee-shop-email-checking set with the
-public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
-we dig any further, we find what should be unsettling results: roughly ten
-percent of the entries have zero duration sessions.  What does that mean?  More
-bizzarely, around one percent have a duration greater than a twelve hour working
-day.  Does it make sense to treat either of those sessions as a "person" that can meet
-with others?</p>
-
-<p>If our starting point is some extant network, we can hope that the authors were
-careful: they noticed these oddities, highlighted them, and provided an
-alternative network time series filtering out high and zero session duration
-events.  That is better than nothing, but which is the right one to use?  The event data would have to be
-checked against ground truth to answer that, since maybe the times are just reporting
-errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
-Montreal data, since investigating would rapidly become inconvenient for the
-supplier.  Alternatively, the researchers might have gone to some of the locations
-in the dataset, and directly observed behavior for comparison to the dataset.  For
-the Montreal data, they would have needed some specialized equipment (<em>e.g.</em>, connection
-sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
-the prospect of a working vacation in Montreal is no doubt appealing to some,
-what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
-A reality that makes so-called convenient data rapidly annoying.</p>
-
-<p>And this is just the first of many oddities in the source (<em>e.g.</em>, the number of
-locations that have one vistor ever indicates that just about everywhere in
-Montreal must be going out of business).  As stated, Before we can ever treat
-this series of events as serious scientific data, let alone reduce to a network
-representing social contact, we would need to do some serious empirical
-follow-up.  We are certain that what we find is that these oddities are rarely
-actually dismissable (and even in the case   of measurement errors, may needed
-to included in simulation as well), but they may represent cases that are far
-outside how our covert group will present. Thus, given this thorough follow-up,
-we would need to do some careful modeling of human activity to see if we could
-get a model of the activity we want - in this people visiting locations, some
-together and some not - to reproduce these events. At that point, we would have
-a suitable basis to start serious modeling of covert member behavior, which
-could then be synthetically added to the dataset, and finally an network-based.</p>
-
-<p>We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
-so that careful work is implausible.  Instead, we have use supposition about what
-is going on in background population.  Fortunately, we do have the event data to
-use.</p>
-
-<p>Based on the usage statistics and personal anecdote, we could reasonably infer
-that many of the users represent tourists, particular those that make a single
-login.  Those will probably not influence community structure, and might even be
-plausibly excluded from the false positive rate by excluding background users
-that have no future logins from FPR calculations.  We will retain them, however,
-to provide conservative estimates.  For locations that have short total hotspot
-availability, we can assume that businesses are not created and closed
-so quickly.</p>
-
-<h3 id="parameter-setting">Parameter Setting</h3>
-
-<p>If the covert group were detectable by non-network methods - <em>e.g.</em>, if they had
-statistically outlying behavior on frequency or diversity of activities - then
-the network analysis would be quite silly.  It may well be the case that they
-are noticeably different, but we are considering cases where network analysis
-methods provide valuable insight.  As such, we must inform the behavior of our
-simulated covert group by those values for this particular study. More
-generally, for any sort of augmentation study, we should seek to ensure that our
-synthetic group mimics the background in ways that would fool whatever
-techniques we would use ahead of the one we wish to validate.</p>
-
-<blockquote>
-  <h3 id="key-montreal-measures">Key Montreal Measures</h3>
-
-  <p>The Montreal data concerns user, locations, and wifi access.  The first
-analysis for interesting user activity should of course be to test for users
-that have very high or low numbers of locations visited, and likewise users
-that have very high or low frequency of use.  Given that the data forms a time
-series, it would probably also be useful to examine the distribution of visits
-- <em>e.g.</em> steady cycling between locations or highly skewed visitation, stable activity
-level versus long periods of no activity between very ones - however, we are not
-going into that level of detail for this study.</p>
-
-  <p>From the Montreal data, we must then obtain some crude measures:</p>
-
-  <ul>
-    <li>distribution of location counts visited by users</li>
-    <li>distribution of visitation rate for users</li>
-  </ul>
-
-  <p>From those distributions, we can select mean values for the covert group to
-abide.  If we were being more sophisticated in our model, we might sample from
-the distribution for our covert group.</p>
-
-  <p>Thus, we will have our group members target their overall behavior against
-these means, where the covert group activity (rate of clandestine meetings,
-number of meeting locations) deduct from these background-typical behaviors.</p>
-</blockquote>
-
-<h3 id="results">Results</h3>
-
-<h2 id="afterthoughts">Afterthoughts</h2>
-
-<h2 id="acknowledgements">Acknowledgements</h2>
-
-<p>We would like to thank <a href="github.com/tjhladish">Thomas J. Hladish</a> and
-<a href="github.com/jrcpulliam">Juliet R. C. Pulliam</a> for their
-feedback getting the voice right for this piece.</p>
-
 
 </div>
 </body>
