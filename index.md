@@ -48,21 +48,22 @@ The natural and social sciences, however, consider phenomena more sensitive to
 context and variation. For those phenomena, lumping elements into the same
 categorical types can be an unreliable assumption.
 
-One such questionable application is *dark networks* - the social
-network representation of covert groups, often used to model criminal
+One such questionable application is *dark networks* - the social network
+representation of covert groups, often used as a means to model criminal
 organizations.  By focusing on the network reduction of these groups and
 associated network metrics, we may forget that the network is not the phenomena.
 The phenomena is the interactions between and individual changes in the members
 of that covert enterprise over the life of their collaboration, and the effect
 those have internal and external to that organization.  Indeed, these are the
 observations we actually make - not some network - and the outcomes we actually
-care to understand.  Further complicated such a treatment, these groups exist as
-foreground alongside a background population.
+care to understand.  Further complicating such a treatment, these groups exist
+as foreground alongside a background population, with the populations largely
+indistinguishable.
 
 We should expect that representing such groups as a concise set of equations is
 an implausible task, and as such we propose that concise mathematical models are
-the wrong formal representation. Rather, concise *programmatic* models are a
-useful and practical representation. This approach is not new; it is essentially
+the wrong formal representation.  Rather, concise *programmatic* models are a
+useful and practical representation.  This approach is not new; it is essentially
 advocating for agent-based modeling.  We reiterate some insights from the
 software engineering discipline on how to proceed in a reuse-able, replicable
 fashion, and discard some past emphasis on embedding those agents in a network.
@@ -111,11 +112,13 @@ possible to reason about and argue with.  The events and state changes should
 correspond to phenomena we could observe, and likely do observe, if perhaps not
 very easily for the covert members.  We have models of such individual and
 small-group behavior, even if perhaps those are simply story-telling models.
-Likewise, we can engage critically with an explicitly modeled observation process.
-Are we monitoring wifi logins?  We can grapple with the details of such a system:
-how are accounts obtained?  Do people rotate accounts?  Do businesses rotate accounts?
-Maybe we cannot practically answer these questions, and maybe we do not include
-all of them in our model - but we can at least acknowledge them.
+Likewise, we can engage critically with an explicitly modeled observation
+process. Are we monitoring wifi logins?  We can grapple with the details of such
+a system: how are accounts obtained?  Do people rotate accounts?  Do businesses
+rotate accounts? Maybe we cannot practically answer these questions, and maybe
+we do not include all of them in our model - but we can at least acknowledge
+them.  These sort of challenges reflect those traditionally possible with good
+equation-based models.
 
 None of this discounts the value of network science techniques.  We suggest that
 instead one must be cautious in their application when there is not a very
@@ -160,15 +163,17 @@ at least whatever kind of interaction we have in the empirical data set.
 
 > ##Using the Montreal Data
 >
-> Recall that the Montreal data is unique users joining and leaving
-unique hotspots, and that close examination of this data indicates there is regular
+> Recall that the Montreal data is unique users joining and leaving unique
+hotspots, and that close examination of this data indicates there is regular
 turnover (immigration and emigration) in users and locations.  For our model, we
-will assume that the background actually has a constant number of actual locations,
-and that turnover is locations adopting or quitting the municipal service.
+will assume that the background actually has a constant number of actual
+locations, and that turnover represents those locations adopting or quitting the
+municipal service.
 >
-> For users, we assume that their turnover represents entering and leaving the system.
-We might reasonably conclude that some changes represent identical users changing
-authentication credentials.  However, for simplicity we ignore that at this stage.
+> For users, we assume that their turnover represents entering and leaving the
+system. We might reasonably conclude that some changes represent identical users
+changing authentication credentials.  However, for simplicity we ignore that
+possibility in this model.
 >
 > We will also aggregate wifi access data to a daily interval, *i.e.* a user
 accessed the system at particular location on a particular day.
@@ -177,9 +182,111 @@ accessed the system at particular location on a particular day.
 
 - covert group members (agents in the simulation) have some probability of turning over user ids
 - per unit time, pairs / groups receive direction to meet around a target time
-- they have exponentially distributed pre-arrival and post-departure times
-- within that window, they have exponentially distributed time-to-device log-ins, of course with possibility of drawing
-times outside window
+- within that window, they have exponentially distributed time-to-device log-ins,
+of course with possibility of drawing times outside window
+
+### Augmenting Empirical Data
+
+An easy approach to validating network-based covert group detection techniques
+would be to take some empirical network, add a covert group network, and
+then add some random connections between the two.  Remix a statistically satisfying
+number of times, and presto, suitable subject for analysis?
+
+Recall the Montreal data schema:
+
+| user | location | log in time | log out time |
+|:====:|:========:|============:|=============:|
+| ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
+| etc  | etc      | etc         | etc |
+
+Which exactly translates to a *time-dependent, bipartite network*.  If one collapses
+on location, that would produce a *time-dependent, unipartite network*.
+Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
+time series of networks.
+
+This is the way we will use the Montreal data, because this a typical starting
+point: an existing daily series for an empirical social network, to which we add
+a similar, synthetic times series of covert member network representations (also
+sourced elsewhere), and then test our detection scheme.  Instead of specific
+covert networks, we will be simulating covert group interaction events instead.
+
+Why not covert networks?
+
+In the scenario where the networks produced from the Montreal data as described
+above is treated as social network background truth for detecting covert groups
+against, the modelers have not carefully compared what the network means and is
+being treated as meaning.
+
+The implicit interpretation is that the network is a sample of which people meet
+at businesses on what days.
+
+The problem, however, is that this empirical data probably does not mean that,
+and that a network translation of would hide that fact.
+
+We could not know that without access to the raw event data,
+despite the forthright description of sensible transformations (not unlike what
+one might see for typical network datasets).  Even if we were careful about looking
+at network metrics, we would see results that typify ubiquitously cited networks:
+power law degree distributions, but with actual community structure beyond
+random graphs.
+
+When we start to delve into what the event data say, the inadequacy becomes apparent.
+If we think from what the data are first, login and logouts to hotspots, we can
+imagine the associated human activity that produces this data, and then put some
+boundaries on that image by comparing it to data.
+
+We can start with the typical session length, about 70 minutes.  That seems
+reasonable: we can imagine mixing the coffee-shop-email-checking set with the
+public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
+we dig any further, we find what should be unsettling results: roughly ten
+percent of the entries have zero duration sessions.  What does that mean?  More
+bizzarely, around one percent have a duration greater than a twelve hour working
+day.  Does it make sense to treat either of those sessions as a \"person\" that can meet
+with others?
+
+If our starting point is some extant network, we can hope that the authors were
+careful: they noticed these oddities, highlighted them, and provided an
+alternative network time series filtering out high and zero session duration
+events.  That is better than nothing, but which is the right one to use?  The event data would have to be
+checked against ground truth to answer that, since maybe the times are just reporting
+errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
+Montreal data, since investigating would rapidly become inconvenient for the
+supplier.  Alternatively, the researchers might have gone to some of the locations
+in the dataset, and directly observed behavior for comparison to the dataset.  For
+the Montreal data, they would have needed some specialized equipment (*e.g.*, connection
+sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
+the prospect of a working vacation in Montreal is no doubt appealing to some,
+what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
+A reality that makes so-called convenient data rapidly annoying.
+
+And this is just the first of many oddities in the source (*e.g.*, the number of
+locations that have one vistor ever indicates that just about everywhere in
+Montreal must be going out of business).  As stated, Before we can ever treat
+this series of events as serious scientific data, let alone reduce to a network
+representing social contact, we would need to do some serious empirical
+follow-up.  We are certain that what we find is that these oddities are rarely
+actually dismissable (and even in the case   of measurement errors, may needed
+to included in simulation as well), but they may represent cases that are far
+outside how our covert group will present. Thus, given this thorough follow-up,
+we would need to do some careful modeling of human activity to see if we could
+get a model of the activity we want - in this people visiting locations, some
+together and some not - to reproduce these events. At that point, we would have
+a suitable basis to start serious modeling of covert member behavior, which
+could then be synthetically added to the dataset, and finally an network-based.
+
+We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
+so that careful work is implausible.  Instead, we have use supposition about what
+is going on in background population.  Fortunately, we do have the event data to
+use.
+
+Based on the usage statistics and personal anecdote, we could reasonably infer
+that many of the users represent tourists, particular those that make a single
+login.  Those will probably not influence community structure, and might even be
+plausibly excluded from the false positive rate by excluding background users
+that have no future logins from FPR calculations.  We will retain them, however,
+to provide conservative estimates.  For locations that have short total hotspot
+availability, we can assume that businesses are not created and closed
+so quickly.
 
 ## An Implementation
 
@@ -250,7 +357,7 @@ track of age:
 trait Age extends TimeSensitive {
 
   private[this] var _age = 0
-  public def age = _age
+  def age = _age
 
   override def _tick(when:Int) = {
     _age += 1
@@ -452,133 +559,32 @@ is some argument for having an error rate that would be independent of the
 covert group size, but we need not obsess on mathematical elegance for this
 demonstration.  We thus have our formal TPR and FPR:
 
-\begin{align}
-TPR = \sum_i\frac{n_i-1}{n_t-1}\n
+\begin{equation}
+TPR = \sum_i\frac{n_i-1}{n_t-1} \\
+\end{equation}
+\begin{equation}
 FPR = \sum_i\frac{n_i-1}{n_t-1}\frac{b_i}{b_t}
-\end{align}
+\end{equation}
 
 With $TPR, FPR$, and tunable process for community detection, we can create Receiver
 Operating Characteristic (ROC) curves, and associated statistics, *e.g.* discrimination.
+For our analysis, however, we did not attempt to tune detection.
 
 Since we have a time-dependent process, and in general we are interested in real
-time detection, we should of course be interested in the time evolution of our
-discrimination statistic.  This would provide us some qualitative insight on
+time detection, we should of course be interested in the time evolution of the
+efficacy of detection.  This would provide us some qualitative insight on
 trade-offs between risk of the covert group executing some goal, opportunity
 cost (in terms of missed covert members), and downside (in terms of collateral
-population implicated).  Thus, our initial analysis will be to produce curves
-that contain this data, though we make no attempt to do subsequent meta-analysis
-like the trade-off consideration.
+population implicated).  Our initial demonstration analysis produced curves that
+contain this data, though we make no attempt to do subsequent meta-analysis like
+the trade-off consideration.
 
-As we had more basis for informing the model of the covert group, we could
+If we had more basis for informing the model of the covert group, we could
 likewise propose detectors that used the more detailed data produced by the
 simulation, and revise our definition of what detection entailed.  If we had
 reliable data about covert group signature, then perhaps we might update our
 criteria to be correctly identifying the particular community, rather than
 couching performance in terms of another assumed process.
-
-### Augmenting Empirical Data
-
-An easy approach to validating network-based covert group detection techniques
-would be to take some empirical network, add a covert group network, and
-then add some random connections between the two.  Remix a statistically satisfying
-number of times, and presto, suitable subject for analysis?
-
-Recall the Montreal data schema:
-
-| user | location | log in time | log out time |
-|:====:|:========:|============:|=============:|
-| ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
-| etc  | etc      | etc         | etc |
-
-Which exactly translates to a *time-dependent, bipartite network*.  If one collapses
-on location, that would produce a *time-dependent, unipartite network*.
-Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
-time series of networks.
-
-This is the way we will use the Montreal data, because this a typical starting
-point: an existing daily series for an empirical social network, to which we add
-a similar, synthetic times series of covert member network representations (also
-sourced elsewhere), and then test our detection scheme.  Instead of specific
-covert networks, we will be simulating covert group interaction events instead.
-
-Why not covert networks?
-
-In the scenario where the networks produced from the Montreal data as described
-above is treated as social network background truth for detecting covert groups
-against, the modelers have not carefully compared what the network means and is
-being treated as meaning.
-
-The implicit interpretation is that the network is a sample of which people meet
-at businesses on what days.
-
-The problem, however, is that this empirical data probably does not mean that,
-and that a network translation of would hide that fact.
-
-We could not know that without access to the raw event data,
-despite the forthright description of sensible transformations (not unlike what
-one might see for typical network datasets).  Even if we were careful about looking
-at network metrics, we would see results that typify ubiquitously cited networks:
-power law degree distributions, but with actual community structure beyond
-random graphs.
-
-When we start to delve into what the event data say, the inadequacy becomes apparent.
-If we think from what the data are first, login and logouts to hotspots, we can
-imagine the associated human activity that produces this data, and then put some
-boundaries on that image by comparing it to data.
-
-We can start with the typical session length, about 70 minutes.  That seems
-reasonable: we can imagine mixing the coffee-shop-email-checking set with the
-public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
-we dig any further, we find what should be unsettling results: roughly ten
-percent of the entries have zero duration sessions.  What does that mean?  More
-bizzarely, around one percent have a duration greater than a twelve hour working
-day.  Does it make sense to treat either of those sessions as a \"person\" that can meet
-with others?
-
-If our starting point is some extant network, we can hope that the authors were
-careful: they noticed these oddities, highlighted them, and provided an
-alternative network time series filtering out high and zero session duration
-events.  That is better than nothing, but which is the right one to use?  The event data would have to be
-checked against ground truth to answer that, since maybe the times are just reporting
-errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
-Montreal data, since investigating would rapidly become inconvenient for the
-supplier.  Alternatively, the researchers might have gone to some of the locations
-in the dataset, and directly observed behavior for comparison to the dataset.  For
-the Montreal data, they would have needed some specialized equipment (*e.g.*, connection
-sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
-the prospect of a working vacation in Montreal is no doubt appealing to some,
-what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
-A reality that makes so-called convenient data rapidly annoying.
-
-And this is just the first of many oddities in the source (*e.g.*, the number of
-locations that have one vistor ever indicates that just about everywhere in
-Montreal must be going out of business).  As stated, Before we can ever treat
-this series of events as serious scientific data, let alone reduce to a network
-representing social contact, we would need to do some serious empirical
-follow-up.  We are certain that what we find is that these oddities are rarely
-actually dismissable (and even in the case   of measurement errors, may needed
-to included in simulation as well), but they may represent cases that are far
-outside how our covert group will present. Thus, given this thorough follow-up,
-we would need to do some careful modeling of human activity to see if we could
-get a model of the activity we want - in this people visiting locations, some
-together and some not - to reproduce these events. At that point, we would have
-a suitable basis to start serious modeling of covert member behavior, which
-could then be synthetically added to the dataset, and finally an network-based.
-
-We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
-so that careful work is implausible.  Instead, we have use supposition about what
-is going on in background population.  Fortunately, we do have the event data to
-use.
-
-Based on the usage statistics and personal anecdote, we could reasonably infer
-that many of the users represent tourists, particular those that make a single
-login.  Those will probably not influence community structure, and might even be
-plausibly excluded from the false positive rate by excluding background users
-that have no future logins from FPR calculations.  We will retain them, however,
-to provide conservative estimates.  For locations that have short total hotspot
-availability, we can assume that businesses are not created and closed
-so quickly.
-
 
 ### Parameter Setting
 
