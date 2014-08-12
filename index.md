@@ -17,15 +17,18 @@ measures like degree distributions, paths, centralities, and so on.
 
 That may be true in some cases, but the central assumption of network analyses,
 that the represented entities and interactions are of a small set of formal
-types, have limited empirical basis for covert groups.  As such, we should be
-skeptical attempting network-based techniques on these covert groups.
+types, has limited empirical basis for covert groups.  Therefore, we should be
+skeptical of applying network-based techniques to covert groups.
 
-If we wish to more confidently characterize the performance of these assorted network criteria, we
-must acknowledge they are applied to shadows of the true phenomena.
-We can make guesses about the underlying mechanisms, simulate them, and then project those
-observations of those mechanics into a network representation for analysis.
+If we wish to more confidently use network-based analysis, we should ground the
+performance of those techniques against more detailed models of underlying
+phenomena. These detailed models suffer from a knowledge problem as well, but we
+may reason about them in a more principled way and may consider many alternative
+scenarios.  With these guesses about the underlying mechanisms, we can simulate
+activity and then project observations of that activity into a network
+representation for analysis.
 
-We demonstrate just such an approach by augmenting an empirical dataset with
+We demonstrate such an approach by augmenting an empirical dataset with
 synthetic results for simulated covert groups.  We discuss the results and
 implications for naive application of social network analyses to covert groups.
 
@@ -34,8 +37,9 @@ implications for naive application of social network analyses to covert groups.
 ##Introduction
 
 Some network science approaches to social phenomena seem to amount to looking
-for statistically significant differences on degree distributions, paths,
-centrality measures, *et cetera* between scenarios.
+for statistically significant differences on convenient mathematical metrics -
+degree distributions, paths, centrality measures, *et cetera* - between
+scenarios.
 
 Network models, however, make strong assumptions - that the things we represent
 as vertices are formally all the same *kind* of thing, that the interactions
@@ -48,17 +52,23 @@ The natural and social sciences, however, consider phenomena more sensitive to
 context and variation. For those phenomena, lumping elements into the same
 categorical types can be an unreliable assumption.
 
-One such questionable application is *dark networks* - the social network
-representation of covert groups, often used as a means to model criminal
-organizations.  By focusing on the network reduction of these groups and
-associated network metrics, we may forget that the network is not the phenomena.
+One such questionable application is *dark networks*, the social network
+representation of covert groups, which are often used as a means to model
+criminal organizations, and then predict which individuals make the best
+subjects for close observation or intervention.  By focusing on the network
+reduction of these groups and associated network metrics, we may forget that the
+network is a convenient representation and is not in fact the phenomena itself.
+
 The phenomena is the interactions between and individual changes in the members
 of that covert enterprise over the life of their collaboration, and the effect
 those have internal and external to that organization.  Indeed, these are the
 observations we actually make - not some network - and the outcomes we actually
 care to understand.  Further complicating such a treatment, these groups exist
 as foreground alongside a background population, with the populations largely
-indistinguishable.
+indistinguishable.  All of those concerns imply that mis-prediction by overzealous
+application of network analysis could lead to erroneous action, and assorted
+negative consequences, *e.g.* waste of resources, failure to counter threats,
+creation of new threats via mis-identified individuals.
 
 We should expect that representing such groups as a concise set of equations is
 an implausible task, and as such we propose that concise mathematical models are
@@ -66,12 +76,16 @@ the wrong formal representation.  Rather, concise *programmatic* models are a
 useful and practical representation.  This approach is not new; it is essentially
 advocating for agent-based modeling.  We reiterate some insights from the
 software engineering discipline on how to proceed in a reuse-able, replicable
-fashion, and discard some past emphasis on embedding those agents in a network.
+fashion, then discuss how these practices relate to more traditional equation-based
+models.
 
-To motivate this discussion of the *dark network* approach, with a large
+We motivate this discussion of the *dark network* approach, with a large
 empirical dataset and its interpretations, using shorthand like *the Montreal
-data* or *the Montreal network*.  For longer notes, we will embrace an aside
-format as follows:
+data* or *the Montreal network*.  We ultimately demonstrate characterizing
+a simple network analysis - community detection - in terms of micro-simulation
+of the covert group augmenting this dataset.
+
+For longer notes, we will embrace an aside format as follows:
 
 >##The Montreal Municipal WiFi Service Data & A Basic Model
 >
@@ -93,10 +107,6 @@ self loops.
 >
 >The data spans roughly five years, a few hundred thousand entries of login data
 with around 200k users and roughly 350 hotspot locations.
-
-Ultimately, we will use the *Montreal data* to highlight some of the issues with
-network-based approaches in a simulation, and discuss what sort of steps should
-be taken with *dark network* research questions.
 
 ## Modeling in Code
 
