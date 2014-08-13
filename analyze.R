@@ -1,54 +1,9 @@
-## read in synthetic files, add them source data and analyze
-
 require(data.table)
 require(igraph)
 args <- commandArgs(trailingOnly = T)
-args <- c(10,10,1)
 cnt <- args[1]
 inter <- args[2]
 locs <- args[3]
-# src <- "~/scala-commsim/simdata/"
-# stopifnot(!is.na(src))
-# setwd(src)
-
-# memberCount <- seq(10,20,2)
-# meetInterval <- seq(30,10,-10)
-# meetLocations <- 1:3
-
-# getfiles <- function(count, intervals, locations) list.files(pattern=paste(count, intervals, locations, ".+csv", sep = "-"))
-# procfile<-function(filename, orig, u.offset, ref.dt) {
-#   #read in table, convert times
-#   res <- data.table(read.csv(filename, header = F, col.names = c("day","user.id","loc.id","login.dt")))
-#   res$login = as.numeric(as.POSIXlt(paste(format(orig + res$day*24*3600), res$login.dt)), tz="EST") - as.numeric(orig)
-#   res[,logout:=login+30*60]
-#   res <- res[,list(user.id=user.id+u.offset, loc.id, login, logout)]
-#   setkey(res, login, logout, user.id, loc.id)
-#   
-#   # identify which times will be trimmed, because empirical data indicates that site not using wifi at that time
-#   trimtimes <- ref.dt[loc.id %in% unique(res[,loc.id]),list(first=min(login), last=max(logout)), by="loc.id"]
-#   setkey(trimtimes, loc.id, first, last)
-#   
-#   # join those times to res, then keep only sessions that falls inside them
-#   thing <- merge(res, trimtimes, by="loc.id")[login < last & first < logout, list(user.id, loc.id, login, logout)]
-#   setkey(thing, login, logout, user.id, loc.id)
-#   
-#   thing
-#   write.table(thing, gsub("\\.csv", ".sim", filename), row.names=F, col.names=F)
-# }
-
-
-# mapply(function(count, intervals, locations, orig, u.offset, ref.dt) {
-#     fs<-getfiles(count, intervals, locations)
-#     for (f in fs) {
-#       procfile(f, orig, u.offset, ref.dt)
-#     }
-#     cat("done: ", count,":", intervals,":", locations, "\n")
-#   },
-#   rep(memberCount, each=length(meetInterval)*length(meetLocations)),
-#   rep(meetInterval, each=length(meetLocations), times=length(memberCount)),
-#   rep(meetLocations, times=length(meetInterval)*length(meetLocations)), MoreArgs=list(orig = neworig, u.offset=max.uid, ref.dt = src.dt))
-
-## process files into user-to-user graphs - .uu ext?
 
 getCCPairs <- function(count, intervals, locations) list.files(path = "./cc_files", pattern=paste(count, intervals, locations, ".+cc", sep = "-"))
 getCUPairs <- function(count, intervals, locations) list.files(path = "./cu_files", pattern=paste(count, intervals, locations, ".+cu", sep = "-"))
@@ -103,12 +58,4 @@ resolve <- function(count, intervals, locations) {
   }, cc.pairs, cu.pairs)
 }
 
-# 1482
-
 resolve(cnt, inter, locs)
-# ,
-# rep(memberCount, each=length(meetInterval)*length(meetLocations)),
-# rep(meetInterval, each=length(meetLocations), times=length(memberCount)),
-# rep(meetLocations, times=length(meetInterval)*length(meetLocations)), MoreArgs=list(orig = neworig, u.offset=max.uid, ref.dt = src.dt))
-
-
