@@ -58,6 +58,16 @@ criminal organizations, and then predict which individuals make the best
 subjects for close observation or intervention.  By focusing on the network
 reduction of these groups and associated network metrics, we may forget that the
 network is a convenient representation and is not in fact the phenomena itself.
+Even the aspects which have obvious translations into network representations
+(*e.g.*, who knows whom) and have well-established options for data-gathering
+(*e.g.*, snowball sampling) may be problematic for certain classes of covert
+networks: snowball sampling may make [reasonable in-roads][biernacki1981snowball] for consumers and distributors of illegal
+substances or persons with persecuted sexual preferences, but the techniques
+required for successful snowball sampling are impractical for academics studying
+violent terrorist organizations or state espionage apparati.  In some cases,
+these groups may even be structured in a way - high compartmentalization, with
+multiple layers of indirection - such that fundamental assumptions of snowball
+sampling about the relationship structure are violated.
 
 The phenomena is the interactions between and individual changes in the members
 of that covert enterprise over the life of their collaboration, and the effect
@@ -191,18 +201,42 @@ and [Partial Least Squares (PLS)][geladi1986partial] for exploring and character
 would be a reasonable approach to trying to reproduce the features of the Montreal
 data itself.
 
+One final thought on the general advantage of this approach: we focus explicitly
+on the *explanatory* aspect of science.  Alone, that is not sufficient to be
+science: we must also commit to prediction and testing.  Or, in practical
+circles, we are going to engage in interventions based on our analysis, and
+monitor the consequences.  Those interventions may have a clearer translation to
+a non-network perspective.  For example, if the intervention is to interfere
+with financial transactions, presumably an individual then has less money to use
+and that can be captured in a resource accumulation and expenditure model.  It
+is less clear what that means in terms of a model that is only about the
+creation and destruction of ties - does it mean fewer ties given less money to
+distribute?  Does it mean more ties as the individual ramps up work to get
+money?
+
 ## Modeling in Code
+
+It may appear daunting to model agents in terms of many potentially interacting
+behaviors.  Not just as a theoretical matter, but as a practical one - there is
+little by way of easily accessible and reusable behavior libraries to mix into
+agents. Many of the agent-based frameworks could potentially support behavior
+libraries, but a [\"CRAN\"][cran]-like resource has yet to emerge.  However, there is
+substantial value to had if something akin to that did appear.
 
 If we are especially careful in our implementations of these models, we can isolate
 particular aspects, and then reuse them.  We might have, for example, agents that perform
 arbitrage.  That implementation, carefully abstracted, might be portable from an
-initial context of stock market actors to criminal gangs.  Clearly, the inputs
+initial context of stock market actors to criminals dealing in black market goods.  Clearly, the inputs
 are different, but if we believe the core mechanisms are the same, then
 we ought to implement it once and then reuse that element.  This has dual advantages.
 There is the practical matter of having more thoroughly vetted models faster.
-The second is that re-use process will gradually smooth the abstraction into
+The second is that re-use process could gradually smooth the abstraction into
 what is actually conserved across those domains, and further highlight what
 differs between contexts.
+
+This would also make agent-based modeling begin to look a lot more what happens
+in the software engineering community.  Particular behaviors and recurring scenarios
+in software are isolated into re-usable objects and design patterns.
 
 We demonstrate doing just this with applying simple community detection to a
 covert group embedded in a larger population.  The point of this effort is less
@@ -713,120 +747,6 @@ feedback getting the voice right for this piece.
 [wigner1960unreasonable]: <http://math.northwestern.edu/~theojf/FreshmanSeminar2014/Wigner1960.pdf> "Unreasonable effectiveness of Mathematics in the Natural Sciences."
 
 ## HOLD SECTION
-
-##Assumptions Gone Wild
-
-The strongest assumptions in most network analyses concern homogeneity and
-observational accuracy.
-
-Homogeneity assumptions take many forms, some obvious, some subtle.  We will
-focus on the assumption of homogeneity in kinds, as that is perhaps the most
-fundamental assumption in network models: that edges are edges are edges, and
-likewise with vertices.  In some systems, this is quite reasonable, but when
-the network is organized (by design or spontaneously) to accomplish some task,
-the parts and their interactions are not typically universally interchangeable.
-We will also highlight the problems with aggregation in time, from the standpoint
-of scientific analysis as well as practical application.
-
-Observation assumptions come in levels of strength.  The strongest being of
-course that what is observed is the whole truth and nothing but the truth.  This
-is typically weakened to some censoring of events (*i.e.*, false negatives) and
-some mislabeling of non-events (*i.e., false positives*), but with errors that
-independent and identical distributed (usually according to a simple distribution, as well).
-However, with covert groups, the (non-)observation process is censored in a
-deliberate, but unknown, manner for the covert actors, and confounded by
-overlapping behavior in the background population.
-
-The issues with these assumptions can be mitigated by adding complexity to
-traditional equation- and network-based models.  However, at some point this
-complexity becomes impractical for scientific work - it clouds reasoning about
-those formal systems, can be source of implementation error, or can simply
-overwhelm the abilities of researchers.
-
-###Homogeniety
-
-*Homogeniety in kinds* is the modeling assumption that is
-that pieces of some kind in the model are identical (and often, therefore,
-interchangeable).  To be clear, this an assumption about the model entities and
-inputs, not an assumption that, say, all vertices have identical degrees or
-centralities.  Indeed, the assumption is critical in many analyses that we
-expect to measure different values, like centralities or module membership.
-
-Most centrality metrics and modularization schemes are expressed in terms of
-unweighted, undirected edges.  Some of these measures have generalizations
-to account for weighting and direction, though an unscientific survey of
-publications indicates these are rarely used.  But these all still rely on edges
-and vertices being the same *kind* - there are fewer methods for computing
-these metrics when edges are of *different kinds*{: .todo title="venice marriage-trade block model work?"}.
-The typical resolution is to simply create separate networks for each tie-type,
-re-run the metrics on each distinct network, and then speculate about the results.
-
-As with edges, homogenizing assumptions are typically made for vertices as well.
-Contact distribution studies are replete with this sort of assumption.  Extreme
-differences in contacts for flight attendants versus theoretical mathematicians can become
-artificially interesting when we treat those jobs and the kind of interactions
-they entail as the same kind of thing.  Certainly for some questions, this
-homogenization might be reasonable.  But for many others, valuable insight
-arises when our model preserves distinctions.  This lets us highlight [Erdos][grossman1995portion]
-among mathematicians and differentiate flight attendants on private, regional, and hub-to-hub flights.
-
-Bipartite networks may appear to address this problem, but are often simply
-adding another *kind*. Having two kinds of interactions still homogenizes those
-interactions - *e.g.*, a white collar worker (person kind) visiting a coffeeshop
-(location kind) en route to work in morning is a very different sort of
-interaction than even that same white collar worker visiting an alley in the
-dead of night.
-
-> ###Homogeniety in the Montreal Network
->
-> The Montreal source data homogenizes on several key aspects:
->
-> - all user logins are treated as equal
-> - all locations are treated as equal
->
-> We can imagine and even find indications in the data of potentially meaningful
-censoring that occurs due to this homogenization.  In the context of
-transmissible disease:
->
-> - some of the *users* might simply be shared business connections (the data has
-several high utilization users that are consistent with this sort of use)
-> - some users or locations may in fact be identical, simply with new credentials
-> - some of the locations might have many ways for co-users to transmit disease,
-while others might be relatively sterile (though not included in the published data,
-the raw data includes geo-location of hotspots, which can in turn be tied to very
-different sorts of businesses)
->
-> Previous work using this data treats connections as homogeneous
-in terms of their capability to serve as a transmission route.  But there is quite
-a range of variability in the co-location times: some users overlap mere seconds,
-while others overlap for hours.
->
-> Indeed, transmission for pathogens like influenza that can persist in the
-environment, introducing a directed edge between users that visit a location
-one after the other is quite sensible relative to the process being modeled.
-
-The physical sciences reliably enjoy this (typically unacknowledged) simplifying
-assumption.  As far and wide as we have looked, one hydrogen atom is the same as
-another (give or take a few nucleons, but in a very simply described way).  Prominent
-publications on networks by scientists from that background often adopt this
-assumption implicitly.  Sometimes, this assumption is generally reasonable (e.g.,
-Ising models of phase transitions in a physical material), and sometimes it's acceptable given the
-specific question (e.g., the growth of the world wide web or citation networks).
-Sometimes [posterior analyses][barabasi1999] find this assumption is not
-obviously precluded (though they may argue a stronger conclusion), though do not
-necessarily follow up with prediction and validation.
-
-This homogeneity in kinds, however, seems suspect for many questions in social
-science.  Several of the other chapters in these proceedings highlight such
-questions and discuss ways to reduce these assumptions in network models.  We
-approach the problem from the complementary direction, by treating the network
-as the observation rather than the phenomena.  More on that in a moment.
-
-Another subtle advantage of homogeneity in kinds is the ability to smooth over
-observation difficulties.  Can't find the Higgs boson?  Get another 300 trillion
-[samples][atlas2012].  We should hope we cannot get 300 independent samples of
-terrorist cells, let alone a trillion times that, but the few samples we do have
-are further fraught with observation issues.
 
 ###Observation
 
