@@ -108,41 +108,90 @@ self loops.
 >The data spans roughly five years, a few hundred thousand entries of login data
 with around 200k users and roughly 350 hotspot locations.
 
+## Behind Network Modeling
+
+[Snijders *et al.*][Snijders201044] provide an outline of stochastic simulation
+using agent-based models.  They advocate for this perspective as a useful
+approach to longitudinal data, and they explicitly commit to the network
+representation and to expressing dynamics in terms of network features.
+
+However, we think it is strange to think in terms of, *e.g.*, triadic closures
+instead of friendly introductions.  We propose that the transient *events*
+(*e.g.*, individuals meet), *state changes* (*e.g.*, an individual gains or
+expends money), and *observation* process of how those are recorded (*e.g.*,
+people record transactions at particular locations at overlapping times) are
+precisely what we should focus on modeling.
+
+This is not to discount the value of network science techniques.  We suggest
+that instead one must be cautious in their application when there is not a very
+complete, clear, and uniform translation of observed phenomena into a network,
+for the previously discussed formal issues with network representations.  One
+way to take that caution is to step back into the messier details - the events,
+states, and their observations - and simulate those as a ground truth.  When we do
+that, we must clearly state the ways we believe the system might work.  We may
+take those simulation results, and then translate them into networks.  Again, to
+accomplish that, we must clearly state how we believe our observations relate to
+the real phenomena and how we aggregate our observations into reduced measures.
+Finally, we may perform our network science analyses and compare those results to the simulation inputs
+where we know truth (*model* truth, that is).
+
+In a very loose sense, we are performing a Bayesian analysis by integrating over
+our priors (the space of our plausible individual models) to characterize our
+confidence in the outcome of some network-based metric.
+
+Implementing an agent-based simulation in this mode can actually be more intuitive.  The
+events and state changes should correspond to phenomena we could observe, and
+likely do observe, if perhaps not very easily for the covert members.  We have a
+long history of models of such individual and small-group behavior, even if
+perhaps those are simply story-telling models. Likewise, we can engage
+critically with an explicitly modeled observation process.
+
+> ### What is happening in the Montreal Data?
+>
+> The Montreal dataset comprises entries of unique user id login and logout
+times to the publicly provisioned wifi system at a unique hotspot hardware id.
+>
+> We could very easily flatten this dataset into a time-aggregated,
+person-to-person network and then perform some network-based analysis.  This is
+precisely what the initial purveyors of the data did.
+>
+> Instead, we choose to view the data not as a network, but as the series of events
+they represent, that *might* be able to inform us about a particular group.  To do
+we have to model what the data mean.  For example, we could work backwards:
+>
+> - people near enough to some physical location take action to access the wifi
+system; how often do they login if they are at that location?  how often does
+the login represent that person being within the location?
+> - people go to that location; are they going to meet particular other people?
+if they are going to meet other people versus for some product or service, does that influence their use of the hotspot?
+> - people with relationships (*e.g.*, friendship, work collaboration) interact
+in a way correlated with that relationship; how often does that interaction manifest
+as going to locations like those with the municipal wifi service?  likewise, people
+go places for individual purposes as well; what is that behavior like?
+> - locations adopt or leave the municipal wifi service; how do they decide to do so?
+> - businesses open and close, and people join and leave the municipal population; what do
+those turnover rates look like?
+
+Thinking about what a dataset means and how it came to be gives us a potential
+model to reproduce these events.  Some of the model components probably look
+like traditional network descriptions (people that work together, what locations
+a person likes to visit), but many may not.  Those that do correspond to network
+relationships might be unlikely to manifest in the available data - *e.g.*, in
+the case of the Montreal data, ignoring your boss while out together for coffee
+to check your email might be unwise.
+
+In Snijders *et al*, this mechanically-oriented aspect appears in the objective
+function, framed in terms of network change events as determined by current
+network and individual traits.  Their overall perspective is about model
+selection (which objective function to use) and parameter fitting (what values
+for the coefficients in the objective function).  Our emphasis differs - we want
+to build some practical sensitivities and confidence about various approaches - but model selection and parameter fitting are just as
+possible using, *e.g.*, [Algorithmic Bayesian Computation (ABC)][toni2009approximate]
+and [Partial Least Squares (PLS)][geladi1986partial] for exploring and characterizing parameter space.  Indeed, that
+would be a reasonable approach to trying to reproduce the features of the Montreal
+data itself.
+
 ## Modeling in Code
-
-[Snijders *et al.*][Snijders201044] argue for agent-based models, but argue
-explicitly for avoiding the *event based* perspective.  We propose that the
-transient *events* (*e.g.*, individuals meet), *state changes* (*e.g.*, an
-individual gains or expends money), and *observation* process of how those are
-recorded (*e.g.*, people appear together at particular locations) are precisely
-what we should focus on modeling.
-
-Implementing an agent from this perspective requires a model that is inherently
-possible to reason about and argue with.  The events and state changes should
-correspond to phenomena we could observe, and likely do observe, if perhaps not
-very easily for the covert members.  We have models of such individual and
-small-group behavior, even if perhaps those are simply story-telling models.
-Likewise, we can engage critically with an explicitly modeled observation
-process. Are we monitoring wifi logins?  We can grapple with the details of such
-a system: how are accounts obtained?  Do people rotate accounts?  Do businesses
-rotate accounts? Maybe we cannot practically answer these questions, and maybe
-we do not include all of them in our model - but we can at least acknowledge
-them.  These sort of challenges reflect those traditionally possible with good
-equation-based models.
-
-None of this discounts the value of network science techniques.  We suggest that
-instead one must be cautious in their application when there is not a very
-complete, clear, and uniform translation of observed phenomena into a network, for
-the previously discussed formal issues with network representations.
-One way to take that caution is to step back into the messier details - the
-events, states, and observations - and simulate those as a ground truth.  When
-we do that, we must clearly state the ways we believe the system might work. We
-may take those simulation results, and then translate them into networks. Again,
-to accomplish that, we must clearly state how we believe our observations relate
-to the real phenomena and how we aggregate our observations into reduced
-measures.  Finally, we may perform our network science analyses with some
-confidence about what their results mean because we can compare those to the
-simulation inputs where we know truth (*model* truth, that is).
 
 If we are especially careful in our implementations of these models, we can isolate
 particular aspects, and then reuse them.  We might have, for example, agents that perform
