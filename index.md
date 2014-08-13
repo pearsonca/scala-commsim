@@ -97,9 +97,9 @@ of the covert group augmenting this dataset.
 
 For longer notes, we will embrace an aside format as follows:
 
->##The Montreal Municipal WiFi Service Data & A Basic Model
+> ## The Montreal Municipal WiFi Service Data & A Basic Model
 >
->In a [forthcoming publication][montreal], epidemiological modelers use data on
+> In a [forthcoming publication][montreal], epidemiological modelers use data on
 access to the Montreal Municipal WiFi service to build a contact network and
 then consider the spread of flu-like pathogens on that network.  That work
 focuses on a theoretical epidemiological question - whether or not a unique
@@ -108,12 +108,15 @@ relationship between the data and that network model, however, is ideal for
 exploring many of the issues present in attempting to analyze covert social
 groups with dark networks.
 >
->The anonymized raw data is straightforward to understand.  Users have log on
+> The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
 are translated into a network for the epidemiological analysis is also simple:
 users that logged into the same location at the same time are joined by an edge.
 Those edges are then aggregated into a contact network, removing duplicates and
 self loops.
+>
+> However, the raw data also be viewed directly as a time-sensitive (based on login-logout pairs),
+bipartite (person-to-hotspot) graph.
 >
 >The data spans roughly five years, a few hundred thousand entries of login data
 with around 200k users and roughly 350 hotspot locations.
@@ -223,20 +226,118 @@ agents. Many of the agent-based frameworks could potentially support behavior
 libraries, but a [\"CRAN\"][cran]-like resource has yet to emerge.  However, there is
 substantial value to had if something akin to that did appear.
 
-If we are especially careful in our implementations of these models, we can isolate
-particular aspects, and then reuse them.  We might have, for example, agents that perform
-arbitrage.  That implementation, carefully abstracted, might be portable from an
-initial context of stock market actors to criminals dealing in black market goods.  Clearly, the inputs
-are different, but if we believe the core mechanisms are the same, then
-we ought to implement it once and then reuse that element.  This has dual advantages.
-There is the practical matter of having more thoroughly vetted models faster.
-The second is that re-use process could gradually smooth the abstraction into
-what is actually conserved across those domains, and further highlight what
-differs between contexts.
+If we are especially careful in our implementations of these models, we can
+isolate particular aspects, and then reuse them.  We might have, for example,
+agents that perform arbitrage.  That implementation, carefully abstracted, might
+be portable from an initial context of stock market actors to criminals dealing
+in black market goods.  Clearly, the inputs are different, but if we believe the
+core mechanisms are the same, then we ought to implement it once and then reuse
+that element.  This has dual advantages. There is the practical matter of having
+more thoroughly vetted models faster. The second is that re-use could gradually
+smooth the abstraction into what is actually conserved across those domains, and
+further highlight what differs between contexts.
 
-This would also make agent-based modeling begin to look a lot more what happens
-in the software engineering community.  Particular behaviors and recurring scenarios
-in software are isolated into re-usable objects and design patterns.
+This would also make agent-based modeling begin to look a lot more like what
+happens in the software engineering community, and in particular quite a bit
+like the videogame industry.  Particular behaviors and recurring situations in
+software are isolated into re-usable objects and design patterns.  While a game like,
+say, \"The Sims\" might not be useful as a scientific model, the underlying implementation
+may provide substantially more practical insight than traditional numerical models.
+
+Certainly, our ambitions with any particular agent-based model are narrower than a massive
+entertainment franchise.  We must formally specify a practical model that can
+produce the kind of data we have.  At marginally less coarse level, we need a
+description of the actors (agents) over time, their interactions, how those interactions
+are recorded as the events comparable to our data.  We should start with an anecdotal, natural language
+description, which must then be translated into exact syntax.  Traditionally,
+that has been equation-based mathematics, but a computer program can also be exact.
+
+Good equation-based models have some recognizable features, like parameter
+choices that elucidate mechanics, consistency with typical domain labeling, and
+forms that are easily computable.  Indeed, these models often continue to parse
+very closely to a reasonable natural language description.  For some phenomena and levels of realism, however, the equation-based expressions
+become to convoluted or arcane.  This is where an approach like agent-based modeling
+becomes the appropriate exact abstraction.  Those features of traditional models remain desirable, however.
+This sort of programming was initially described by Knuth as [\"literate programming\"][knuth1984literate],
+and essentially aims to achieve code that is as close to a natural language story
+as practical.  The intent being that people who were algorithmically inclined -
+scientists, engineers, mathematicians - would be able to comprehend what the
+program represented without having to be expert in the hard syntax constraints.
+For more complex programs, the more complex code required can be enhanced for
+these lay readers by adopting [test-driven design (TDD)][janzen2005test] practices.  The test code
+can then communicate additional essential perspective on what various pieces are *meant* to
+do.  Finally, for commonly recurring problems, adopting generic solution templates - typical referred to as [design patterns][gofbook] -
+can do for a program what tropes do for television: provide huge context with compact
+shorthand.
+
+There have been several decades of trends driving those software engineering
+practices, independent of any directed impetus to enhance agent-based modeling.
+Initially, most general purpose languages reflected
+what actually occurred in computer memory with the syntax improvements limited to
+abstractions for convenient creation and manipulation of numerical types, and
+for flow control.  The [development and promulgation][dahl1966simula] of object-oriented concepts
+shifted how we reasoned about programs, leading to languages and libraries
+designed for those concepts.  Modern programming languages bring even-more-natural
+language syntax while maintaining the precision necessary to direct a computer.
+We will demonstrate using this approach for agent-based modeling using [Scala][scala]
+and the Actor library developed by [Akka][akka].
+
+## Aside: Augmenting Empirical Data
+
+An easy approach to validating network-based covert group detection techniques
+would be to take some empirical network, add a covert group network, and
+then add some random connections between the two.  Remix a statistically satisfying
+number of times, and presto, suitable subject for analysis?
+
+Recall the Montreal data schema:
+
+| user | location | log in time | log out time |
+|:====:|:========:|============:|=============:|
+| ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
+| etc  | etc      | etc         | etc |
+
+Which exactly translates to a *time-dependent, bipartite network*.  If one collapses
+on location, that would produce a *time-dependent, unipartite network*.
+Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
+time series of networks.
+
+This is the way we will use the Montreal data, because this a typical starting
+point: an existing daily series for an empirical social network, to which we add
+a similar, synthetic times series of covert member network representations (also
+sourced elsewhere), and then test our detection scheme.  Instead of specific
+covert networks, we will be simulating covert group interaction events instead.
+A detailed review of that data, which we can unfortunately not include in this publication
+due to data release issues, would serve to further highlight why the event-based
+approach is preferrable.  There are many aspects of the dataset which indicate
+that accepting the data as what it presents itself to be - the presence of people
+at locations - is naive, but that an approach that discards outliers would also
+be censoring valuable information.
+
+Why data augmentation?  For starters, convenience - it eliminates the need to simulate
+the background and guarantee realistic features.  It also encourages tailoring
+approaches that are suitable to actual data that might be available for these
+detection methods.  Finally, it is the nature of the particular groups that we
+are looking to find that they are rare in the wild, thus is unlikely that one
+is actually present in the data and would interfere would analysis.
+
+When we augment the data with the covert groups, we impose a few additional
+constraints.  The point of this analysis is to particularly characterize network
+approaches when, presumably, those approaches are required.  If the covert group
+were obviously distinct in some other fashion (bizarre login times, anomalously
+frequent usage or location counts, *etc*.), then there would be no point to a specifically network-based
+analysis and we should expect the results to be uninteresting anyway.  The
+R script `investigate.R` in the source for this publication covers calculation
+of ensuring that the covert members look like normal users in terms of
+frequency of visits and number of locations visited.
+
+## An Implementation
+
+As discussed earlier, the Montreal data series is a time-sensitive, bipartite graph
+derived from particular users accessing particular hotspots for particular times.
+Our goal is characterize detection schemes against a covert group generating that kind of data.
+
+As such, our simulation agents will need to, as part of their routine, also create
+access records.  They will also need to have some group-specific directed behavior.
 
 We demonstrate doing just this with applying simple community detection to a
 covert group embedded in a larger population.  The point of this effort is less
@@ -278,112 +379,9 @@ accessed the system at particular location on a particular day.
 - within that window, they have exponentially distributed time-to-device log-ins,
 of course with possibility of drawing times outside window
 
-### Augmenting Empirical Data
-
-An easy approach to validating network-based covert group detection techniques
-would be to take some empirical network, add a covert group network, and
-then add some random connections between the two.  Remix a statistically satisfying
-number of times, and presto, suitable subject for analysis?
-
-Recall the Montreal data schema:
-
-| user | location | log in time | log out time |
-|:====:|:========:|============:|=============:|
-| ABC  | 123      | mdy:hms     | mdy:hms + $\delta$ |
-| etc  | etc      | etc         | etc |
-
-Which exactly translates to a *time-dependent, bipartite network*.  If one collapses
-on location, that would produce a *time-dependent, unipartite network*.
-Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
-time series of networks.
-
-This is the way we will use the Montreal data, because this a typical starting
-point: an existing daily series for an empirical social network, to which we add
-a similar, synthetic times series of covert member network representations (also
-sourced elsewhere), and then test our detection scheme.  Instead of specific
-covert networks, we will be simulating covert group interaction events instead.
-
-Why not covert networks?
-
-In the scenario where the networks produced from the Montreal data as described
-above is treated as social network background truth for detecting covert groups
-against, the modelers have not carefully compared what the network means and is
-being treated as meaning.
-
-The implicit interpretation is that the network is a sample of which people meet
-at businesses on what days.
-
-The problem, however, is that this empirical data probably does not mean that,
-and that a network translation of would hide that fact.
-
-We could not know that without access to the raw event data,
-despite the forthright description of sensible transformations (not unlike what
-one might see for typical network datasets).  Even if we were careful about looking
-at network metrics, we would see results that typify ubiquitously cited networks:
-power law degree distributions, but with actual community structure beyond
-random graphs.
-
-When we start to delve into what the event data say, the inadequacy becomes apparent.
-If we think from what the data are first, login and logouts to hotspots, we can
-imagine the associated human activity that produces this data, and then put some
-boundaries on that image by comparing it to data.
-
-We can start with the typical session length, about 70 minutes.  That seems
-reasonable: we can imagine mixing the coffee-shop-email-checking set with the
-public-library-job-hunting set.  Maybe some weekday versus weekend use.  But if
-we dig any further, we find what should be unsettling results: roughly ten
-percent of the entries have zero duration sessions.  What does that mean?  More
-bizzarely, around one percent have a duration greater than a twelve hour working
-day.  Does it make sense to treat either of those sessions as a \"person\" that can meet
-with others?
-
-If our starting point is some extant network, we can hope that the authors were
-careful: they noticed these oddities, highlighted them, and provided an
-alternative network time series filtering out high and zero session duration
-events.  That is better than nothing, but which is the right one to use?  The event data would have to be
-checked against ground truth to answer that, since maybe the times are just reporting
-errors.  It is unlikely, however, that authors using convenience-sourced datasets, like the
-Montreal data, since investigating would rapidly become inconvenient for the
-supplier.  Alternatively, the researchers might have gone to some of the locations
-in the dataset, and directly observed behavior for comparison to the dataset.  For
-the Montreal data, they would have needed some specialized equipment (*e.g.*, connection
-sniffers) and planned to visit multiple locations for a few weeks, and so on and so forth.  While
-the prospect of a working vacation in Montreal is no doubt appealing to some,
-what we want to emphasize is the reality of the nit details that apply to validating any convenience data.
-A reality that makes so-called convenient data rapidly annoying.
-
-And this is just the first of many oddities in the source (*e.g.*, the number of
-locations that have one vistor ever indicates that just about everywhere in
-Montreal must be going out of business).  As stated, Before we can ever treat
-this series of events as serious scientific data, let alone reduce to a network
-representing social contact, we would need to do some serious empirical
-follow-up.  We are certain that what we find is that these oddities are rarely
-actually dismissable (and even in the case   of measurement errors, may needed
-to included in simulation as well), but they may represent cases that are far
-outside how our covert group will present. Thus, given this thorough follow-up,
-we would need to do some careful modeling of human activity to see if we could
-get a model of the activity we want - in this people visiting locations, some
-together and some not - to reproduce these events. At that point, we would have
-a suitable basis to start serious modeling of covert member behavior, which
-could then be synthetically added to the dataset, and finally an network-based.
-
-We, unfortunately, are only theorists working with a third-hand, unpublished dataset and a deadline,
-so that careful work is implausible.  Instead, we have use supposition about what
-is going on in background population.  Fortunately, we do have the event data to
-use.
-
-Based on the usage statistics and personal anecdote, we could reasonably infer
-that many of the users represent tourists, particular those that make a single
-login.  Those will probably not influence community structure, and might even be
-plausibly excluded from the false positive rate by excluding background users
-that have no future logins from FPR calculations.  We will retain them, however,
-to provide conservative estimates.  For locations that have short total hotspot
-availability, we can assume that businesses are not created and closed
-so quickly.
-
 ## An Implementation
 
-The Scala `TypedActor` paradigm allows us to define `traits`s and then mix those
+The Scala-Akka `TypedActor` paradigm allows us to define `traits`s and then mix those
 traits into our agent-based models.  We demonstrate
 several broad categories of traits with our simple model embedding a covert group
 in the Montreal data:
@@ -745,6 +743,9 @@ feedback getting the voice right for this piece.
 [facebook]: <http://dx.doi.org/10.1371/journal.pone.0090315> "facebook thing"
 [dahl1966simula]: <http://dx.doi.org/10.1145/365813.365819> "simula"
 [wigner1960unreasonable]: <http://math.northwestern.edu/~theojf/FreshmanSeminar2014/Wigner1960.pdf> "Unreasonable effectiveness of Mathematics in the Natural Sciences."
+[cran]: <http://cran.us.r-project.org/> "The Comprehensive R Archive Network"
+[scala]: <http://www.scala-lang.org/> "The Scala Language"
+
 
 ## HOLD SECTION
 
@@ -770,18 +771,6 @@ allowing us to represent complex models with [literate code][knuth1984literate].
 We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
 ###Modeling in Code
-
-Given the extreme heterogeneity in kinds for most social science
-questions, we contend that adopting the equation-based formalism to model those
-problems is fundamentally flawed.  Yes, there are important numerical
-measurements.  Yes, quantitative statistical analysis of the models is still
-important.  But we should accept that many social science models are most naturally expressed
-with the tools of mathematical logic, which are today most practically
-implemented in general purpose programming languages.  While the physical
-and natural sciences have a successful history with numerical models, and
-certainly a tradition of model selection worth consideration, the best source of
-practical model insight looks more like the videogame industry than physicists
-working on statistical mechanics.
 
 However, the traits of good equation-based models have analogies in code,
 particularly modularity and clear mechanism.  These two were difficult to put into
