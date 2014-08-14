@@ -266,9 +266,11 @@ program represented without having to be expert in the hard syntax constraints.
 For more complex programs, the more complex code required can be enhanced for
 these lay readers by adopting [test-driven design (TDD)][janzen2005test] practices.  The test code
 can then communicate additional essential perspective on what various pieces are *meant* to
-do.  Finally, for commonly recurring problems, adopting generic solution templates - typical referred to as [design patterns][gofbook] -
+do.  Finally, for commonly recurring problems, adopting generic solution
+templates - typically called [design patterns][gofbook] -
 can do for a program what tropes do for television: provide huge context with compact
-shorthand.
+shorthand.  Though we do not delve into the details, the implementation we provide
+shortly embraces several of these patterns, most notably Chain of Responsibility and Strategy.
 
 There have been several decades of trends driving those software engineering
 practices, independent of any directed impetus to enhance agent-based modeling.
@@ -597,7 +599,7 @@ trait PoissonDraws {
 
   lazy val poissonK : Iterator[Int] = DiscreteCountStats.poissonK(expectedK)
 
-  def nextDraw() : Int = poissonK.next()
+  def nextDraw : Int = poissonK.next()
 
 }
 {% endhighlight %}
