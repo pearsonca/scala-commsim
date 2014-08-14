@@ -18,7 +18,7 @@ measures like degree distributions, paths, centralities, and so on.
 That may be true in some cases, but the central assumption of network analyses,
 that the represented entities and interactions are of a small set of formal
 types, has limited empirical basis for covert groups.  Therefore, we should be
-skeptical of applying network-based techniques to covert groups.
+skeptical of applying network-based techniques to modeling and detection of covert groups.
 
 If we wish to more confidently use network-based analysis, we should ground the
 performance of those techniques against more detailed models of underlying
@@ -28,24 +28,27 @@ scenarios.  With these guesses about the underlying mechanisms, we can simulate
 activity and then project observations of that activity into a network
 representation for analysis.
 
-We demonstrate such an approach by augmenting an empirical dataset with
-synthetic results for simulated covert groups.  We discuss the results and
-implications for naive application of social network analyses to covert groups.
+We demonstrate such an approach by augmenting an empirical dataset: we embed
+synthetic covert groups in a real general population dataset.  We discuss the
+results and implications for naive application of social network analyses to
+covert groups.
 
 * * *
 
 ##Introduction
 
-Some network science approaches to social phenomena seem to amount to looking
-for statistically significant differences on convenient mathematical metrics -
-degree distributions, paths, centrality measures, *et cetera* - between
-scenarios.
+Some network science approaches to social phenomena emphasize searching for
+statistically significant differences between well-defined populations or scenarios on
+convenient mathematical metrics - *e.g.*, degree distributions, path lengths, centrality
+measures.
 
-Network models, however, make strong assumptions - that the things we represent
-as vertices are formally all the same *kind* of thing, that the interactions
-between them are all of the same flavor.  Such assumptions can be reasonable,
-and when they are, compact descriptions can usefully cover a broad array of
-phenomena.  This is largely the basis for the success of [mathematics in the physical sciences][wigner1960unreasonable],
+Network models usually make strong assumptions - that the things we represent as
+vertices are formally all of a small set of the same *kind* of thing (often a
+single kind), and that the interactions between them are likewise drawn from a
+few or one type category. Such assumptions can be reasonable, and when they are,
+compact descriptions can usefully cover a broad array of phenomena, and seeking
+these pure network statistics can be a useful exercise.  Indeed, this is largely
+the basis for the success of [mathematics in the physical sciences][wigner1960unreasonable],
 whether one subscribes to scientific realist or instrumentalist philosophies.
 
 The natural and social sciences, however, consider phenomena more sensitive to
@@ -57,43 +60,50 @@ representation of covert groups, which are often used as a means to model
 criminal organizations, and then predict which individuals make the best
 subjects for close observation or intervention.  By focusing on the network
 reduction of these groups and associated network metrics, we may forget that the
-network is a convenient representation and is not in fact the phenomena itself.
-Even the aspects which have obvious translations into network representations
-(*e.g.*, who knows whom) and have well-established options for data-gathering
-(*e.g.*, snowball sampling) may be problematic for certain classes of covert
-networks: snowball sampling may make [reasonable in-roads][biernacki1981snowball] for consumers and distributors of illegal
-substances or persons with persecuted sexual preferences, but the techniques
-required for successful snowball sampling are impractical for academics studying
-violent terrorist organizations or state espionage apparati.  In some cases,
-these groups may even be structured in a way - high compartmentalization, with
-multiple layers of indirection - such that fundamental assumptions of snowball
-sampling about the relationship structure are violated.
+network is a convenient representation and is not in fact the what actually
+happens or how it is observed.  Even the aspects which have obvious translations
+into network representations (*e.g.*, who knows whom) and have well-established
+options for data-gathering (*e.g.*, various respondent-driven sampling
+techniques) may be problematic for certain classes of covert networks.  These
+methods may make [reasonable in-roads][salganik2004sampling] for consumers and
+distributors of illegal substances or persons with persecuted sexual preferences
+or disease status, but the techniques required for successful respondent-driven
+sampling are impractical for academics studying violent terrorist organizations
+or state espionage apparati.  In some cases, these groups may even be structured
+in a way - high compartmentalization, with multiple layers of indirection, high
+probability of failing to refer - such that fundamental assumptions from
+conventional methods about the relationship structure are violated.
 
-The phenomena is the interactions between and individual changes in the members
-of that covert enterprise over the life of their collaboration, and the effect
-those have internal and external to that organization.  Indeed, these are the
-observations we actually make - not some network - and the outcomes we actually
-care to understand.  Further complicating such a treatment, these groups exist
-as foreground alongside a background population, with the populations largely
-indistinguishable.  All of those concerns imply that mis-prediction by overzealous
-application of network analysis could lead to erroneous action, and assorted
-negative consequences, *e.g.* waste of resources, failure to counter threats,
-creation of new threats via mis-identified individuals.
+Rather, the actual phenomena are the interactions between and individual changes
+in the members of a covert enterprise over the life of that collaboration, and
+the effect those have internal and external to that organization.  Indeed,
+events of diverse types involving multiple individuals (and sometimes
+individuals) are the observations we actually make - not some network - and the
+outcomes we actually care to understand.  Further complicating a treatment of
+covert groups is the fact that these groups exist as foreground alongside a
+background population, with the populations largely indistinguishable.  All of
+those concerns imply that mis-prediction by overzealous application of network
+analysis could lead to erroneous action, and assorted negative consequences,
+*e.g.* waste of resources, failure to counter threats, creation of new threats
+via mis-identified individuals.
 
-We should expect that representing such groups as a concise set of equations is
-an implausible task, and as such we propose that concise mathematical models are
-the wrong formal representation.  Rather, concise *programmatic* models are a
-useful and practical representation.  This approach is not new; it is essentially
-advocating for agent-based modeling.  We reiterate some insights from the
-software engineering discipline on how to proceed in a reuse-able, replicable
-fashion, then discuss how these practices relate to more traditional equation-based
-models.
+We should expect that representing covert groups by a concise set of equations
+is an implausible task.  Thus, we propose that such mathematical models,
+including the integro-differential, discrete difference, and network dynamic variety, are not especially
+useful for formal representation of the dynamics of covert groups.  Rather, concise *programmatic* models are a basis for useful and practical
+representation. This is the position of most agent-based model enthusiasts, but
+we are further advocating adaptation of some ideas and methods from software
+engineering to the modeling of dynamics of covert groups.  In particular, we
+emphasize thinking about behaviors as a modular, composable, and re-useable language
+within agent-based models.  We reiterate some insights from the software engineering
+discipline on how to proceed in creating entities in such a language, and
+discuss how these practices relate to, and are more advantageous than traditional equation-based models.
 
-We motivate this discussion of the *dark network* approach, with a large
-empirical dataset and its interpretations, using shorthand like *the Montreal
-data* or *the Montreal network*.  We ultimately demonstrate characterizing
-a simple network analysis - community detection - in terms of micro-simulation
-of the covert group augmenting this dataset.
+We motivate this comparison of the *dark group* versus *dark network* approaches, with a large empirical
+dataset and its interpretations, using shorthand like *the Montreal data* or
+*the Montreal network*.  We ultimately frame a *dark network* analysis - community
+detection - in terms of micro-simulation of the *dark group* augmenting this
+dataset.
 
 For longer notes, we will embrace an aside format as follows:
 
@@ -104,9 +114,9 @@ access to the Montreal Municipal WiFi service to build a contact network and
 then consider the spread of flu-like pathogens on that network.  That work
 focuses on a theoretical epidemiological question - whether or not a unique
 network structure could explain a specific kind of epidemic dynamic.  The
-relationship between the data and that network model, however, is ideal for
+relationship between the data and the network model, however, is ideal for
 exploring many of the issues present in attempting to analyze covert social
-groups with dark networks.
+groups with dark network representations.
 >
 > The anonymized raw data is straightforward to understand.  Users have log on
 and log off times at WiFi hotspots associated with the service.  How the data
@@ -115,44 +125,45 @@ users that logged into the same location at the same time are joined by an edge.
 Those edges are then aggregated into a contact network, removing duplicates and
 self loops.
 >
-> However, the raw data also be viewed directly as a time-sensitive (based on login-logout pairs),
-bipartite (person-to-hotspot) graph.
+> However, the raw data can also be represented exactly as a time-sensitive
+(based on login-logout pairs), bipartite (person-to-hotspot) graph.
 >
->The data spans roughly five years, a few hundred thousand entries of login data
-with around 200k users and roughly 350 hotspot locations.
+>The data spans roughly five years.  It contains a few hundred thousand entries
+of login data with around 200k users and roughly 350 hotspot locations.
 
 ## Behind Network Modeling
 
 [Snijders *et al.*][Snijders201044] provide an outline of stochastic simulation
-using agent-based models.  They advocate for this perspective as a useful
-approach to longitudinal data, and they explicitly commit to the network
-representation and to expressing dynamics in terms of network features.
+of social networks using agent-based models.  They advocate for this perspective
+as a useful approach to longitudinal data, and they explicitly commit to the
+network representation and to expressing dynamics in terms of network features.
 
-However, we think it is strange to think in terms of, *e.g.*, triadic closures
-instead of friendly introductions.  We propose that the transient *events*
-(*e.g.*, individuals meet), *state changes* (*e.g.*, an individual gains or
-expends money), and *observation* process of how those are recorded (*e.g.*,
-people record transactions at particular locations at overlapping times) are
-precisely what we should focus on modeling.
+However, we think it is premature when initiating covert group representations
+and detection strategies to think in terms of, *e.g.*, triadic closures rates
+instead of making marriage arrangements for acquaintances.  We propose that the
+transient *events* (*e.g.*, individuals meet), *state changes* (*e.g.*, an
+individual gains or expends money), and *observation* process of how those are
+recorded (*e.g.*, people record transactions at particular locations at
+overlapping times) are precisely what we should focus on modeling.
 
 This is not to discount the value of network science techniques.  We suggest
 that instead one must be cautious in their application when there is not a very
 complete, clear, and uniform translation of observed phenomena into a network,
-for the previously discussed formal issues with network representations.  One
-way to take that caution is to step back into the messier details - the events,
-states, and their observations - and simulate those as a ground truth.  When we do
-that, we must clearly state the ways we believe the system might work.  We may
-take those simulation results, and then translate them into networks.  Again, to
+because those are the implicit assumptions of most network analyses.  One way to
+take that caution is to step back into the messier details - the events, states,
+and their observations - and simulate those as a ground truth.  When we do that,
+we must clearly state the ways we believe the system might work.  We may take
+those simulation results, and then translate them into networks.  To
 accomplish that, we must clearly state how we believe our observations relate to
 the real phenomena and how we aggregate our observations into reduced measures.
-Finally, we may perform our network science analyses and compare those results to the simulation inputs
-where we know truth (*model* truth, that is).
+Finally, we may perform our network science analyses and compare those results
+to the simulation inputs where we know truth (*model* truth, that is).
 
 In a very loose sense, we are performing a Bayesian analysis by integrating over
 our priors (the space of our plausible individual models) to characterize our
 confidence in the outcome of some network-based metric.
 
-Implementing an agent-based simulation in this mode can actually be more intuitive.  The
+Implementing an agent-based simulation in this mode can be quite intuitive.  The
 events and state changes should correspond to phenomena we could observe, and
 likely do observe, if perhaps not very easily for the covert members.  We have a
 long history of models of such individual and small-group behavior, even if
@@ -168,9 +179,10 @@ times to the publicly provisioned wifi system at a unique hotspot hardware id.
 person-to-person network and then perform some network-based analysis.  This is
 precisely what the initial purveyors of the data did.
 >
-> Instead, we choose to view the data not as a network, but as the series of events
-they represent, that *might* be able to inform us about a particular group.  To do
-we have to model what the data mean.  For example, we could work backwards:
+> Instead, we choose to view the data not as a network, but as the series of
+events they represent, that *might* be able to inform us about a particular
+group.  To do this we have to model what the data mean.  For example, we could
+work backwards:
 >
 > - people near enough to some physical location take action to access the wifi
 system; how often do they login if they are at that location?  how often does
@@ -193,7 +205,7 @@ relationships might be unlikely to manifest in the available data - *e.g.*, in
 the case of the Montreal data, ignoring your boss while out together for coffee
 to check your email might be unwise.
 
-In Snijders *et al*, this mechanically-oriented aspect appears in the objective
+In Snijders *et al*, this mechanically-oriented aspect appears in an objective
 function, framed in terms of network change events as determined by current
 network and individual traits.  Their overall perspective is about model
 selection (which objective function to use) and parameter fitting (what values
@@ -204,18 +216,18 @@ and [Partial Least Squares (PLS)][geladi1986partial] for exploring and character
 would be a reasonable approach to trying to reproduce the features of the Montreal
 data itself.
 
-One final thought on the general advantage of this approach: we focus explicitly
-on the *explanatory* aspect of science.  Alone, that is not sufficient to be
-science: we must also commit to prediction and testing.  Or, in practical
-circles, we are going to engage in interventions based on our analysis, and
-monitor the consequences.  Those interventions may have a clearer translation to
-a non-network perspective.  For example, if the intervention is to interfere
-with financial transactions, presumably an individual then has less money to use
-and that can be captured in a resource accumulation and expenditure model.  It
-is less clear what that means in terms of a model that is only about the
-creation and destruction of ties - does it mean fewer ties given less money to
-distribute?  Does it mean more ties as the individual ramps up work to get
-money?
+One final thought on the general advantage of our approach in the context of
+covert groups.  In this work, we focus explicitly on the *explanatory* aspect of
+science.  Alone, that is not sufficient to be science: we must also commit to
+predict and test, or if applying our results, we must intervene and monitor the
+consequences.  Those interventions may have a clearer translation to a
+non-network perspective.  For example, if the intervention is to interfere with
+financial transactions, presumably an individual then has less money to use and
+that can be captured in an existing resource accumulation and expenditure model.
+It is less clear what that means in terms of a model that is only about the
+creation and destruction of ties - does it mean eliminating particular ties or
+tie types given less money to distribute?  Does it mean more ties or more
+diverse ties as the individual ramps up work to get money?
 
 ## Modeling in Code
 
@@ -223,8 +235,9 @@ It may appear daunting to model agents in terms of many potentially interacting
 behaviors.  Not just as a theoretical matter, but as a practical one - there is
 little by way of easily accessible and reusable behavior libraries to mix into
 agents. Many of the agent-based frameworks could potentially support behavior
-libraries, but a [\"CRAN\"][cran]-like resource has yet to emerge.  However, there is
-substantial value to had if something akin to that did appear.
+libraries, but the sort of large, well-advertised scientific package repositories and
+development communities (*e.g.*, [\"CRAN\"][cran] for R) has yet to emerge.
+However, there is substantial value to be had if something akin to that did appear.
 
 If we are especially careful in our implementations of these models, we can
 isolate particular aspects, and then reuse them.  We might have, for example,
@@ -237,12 +250,13 @@ more thoroughly vetted models faster. The second is that re-use could gradually
 smooth the abstraction into what is actually conserved across those domains, and
 further highlight what differs between contexts.
 
-This would also make agent-based modeling begin to look a lot more like what
-happens in the software engineering community, and in particular quite a bit
-like the videogame industry.  Particular behaviors and recurring situations in
-software are isolated into re-usable objects and design patterns.  While a game like,
-say, \"The Sims\" might not be useful as a scientific model, the underlying implementation
-may provide substantially more practical insight than traditional numerical models.
+This general trajectory would also make agent-based modeling begin to look
+a lot more like what happens in the software engineering community, and in
+particular quite a bit like the videogame industry.  Particular behaviors and
+recurring situations in software are isolated into re-usable objects and design
+patterns.  While a game like, say, \"The Sims\" might not be useful as a
+scientific model, the underlying implementation may provide substantially more
+practical insight than traditional numerical models.
 
 Certainly, our ambitions with any particular agent-based model are narrower than a massive
 entertainment franchise.  We must formally specify a practical model that can
@@ -256,7 +270,7 @@ Good equation-based models have some recognizable features, like parameter
 choices that elucidate mechanics, consistency with typical domain labeling, and
 forms that are easily computable.  Indeed, these models often continue to parse
 very closely to a reasonable natural language description.  For some phenomena and levels of realism, however, the equation-based expressions
-become to convoluted or arcane.  This is where an approach like agent-based modeling
+become too convoluted or arcane.  This is where an approach like agent-based modeling
 becomes the appropriate exact abstraction.  Those features of traditional models remain desirable, however.
 This sort of programming was initially described by Knuth as [\"literate programming\"][knuth1984literate],
 and essentially aims to achieve code that is as close to a natural language story
@@ -272,17 +286,22 @@ can do for a program what tropes do for television: provide huge context with co
 shorthand.  Though we do not delve into the details, the implementation we provide
 shortly embraces several of these patterns, most notably Chain of Responsibility and Strategy.
 
-There have been several decades of trends driving those software engineering
+There have been several decades of trends driving these software engineering
 practices, independent of any directed impetus to enhance agent-based modeling.
-Initially, most general purpose languages reflected
-what actually occurred in computer memory with the syntax improvements limited to
-abstractions for convenient creation and manipulation of numerical types, and
-for flow control.  The [development and promulgation][dahl1966simula] of object-oriented concepts
-shifted how we reasoned about programs, leading to languages and libraries
-designed for those concepts.  Modern programming languages bring even-more-natural
-language syntax while maintaining the precision necessary to direct a computer.
-We will demonstrate using this approach for agent-based modeling using [Scala][scala]
-and the Actor library developed by [Akka][akka].
+Initially, most general purpose languages reflected what actually occurred in
+computer memory with the syntax improvements limited to abstractions for
+convenient creation and manipulation of numerical types, and for flow control.
+The [initial development][dahl1966simula] of object-oriented concepts -
+essentially, thinking about programmatic representations in the way we think
+about entities in the real world, as composition of how they respond to change,
+their relationships to similar and dissimilar entities, *etc* and how to use that
+kind of representation in succinct, formal ways - shifted how we
+reasoned about programs, leading to languages and libraries designed for those
+concepts (see [Stefik and Bobrow][stefik1985object] for some history).  Modern
+programming languages bring even-more-natural language syntax while maintaining
+the precision necessary to direct a computer.  We will demonstrate using this
+approach for agent-based modeling using [Scala][scala] and the Actor library
+developed by [Akka][akka].
 
 ## Aside: Augmenting Empirical Data
 
@@ -303,24 +322,25 @@ on location, that would produce a *time-dependent, unipartite network*.
 Then using a reasonable window, *e.g.* a day, one could aggregate events into a daily
 time series of networks.
 
-This is the way we will use the Montreal data, because this a typical starting
-point: an existing daily series for an empirical social network, to which we add
-a similar, synthetic times series of covert member network representations (also
-sourced elsewhere), and then test our detection scheme.  Instead of specific
-covert networks, we will be simulating covert group interaction events instead.
-A detailed review of that data, which we can unfortunately not include in this publication
-due to data release issues, would serve to further highlight why the event-based
-approach is preferrable.  There are many aspects of the dataset which indicate
-that accepting the data as what it presents itself to be - the presence of people
-at locations - is naive, but that an approach that discards outliers would also
-be censoring valuable information.
+This is the way we will use the Montreal data, because this is comparable to
+typical starting points for pure network analyses: an existing daily series for
+an empirical social network, to which is added a similar, synthetic times series
+of covert member network representations (also sourced elsewhere), and then testing
+a detection scheme.  Instead of specific covert networks, we will be
+simulating covert group interaction events instead.  A detailed review of that
+data, which we can unfortunately not include in this publication due to data
+release issues, would serve to further highlight why this agent-with-events approach is
+preferrable.  There are many aspects of the dataset which indicate that
+accepting the data as what it presents itself to be - the presence of people at
+locations - is naive, but that an approach that discards outliers would also be
+censoring valuable information.
 
 Why data augmentation?  For starters, convenience - it eliminates the need to simulate
-the background and guarantee realistic features.  It also encourages tailoring
+the background and guarantees realistic features.  It also encourages tailoring
 approaches that are suitable to actual data that might be available for these
 detection methods.  Finally, it is the nature of the particular groups that we
-are looking to find that they are rare in the wild, thus is unlikely that one
-is actually present in the data and would interfere would analysis.
+are looking to find that they are rare in the wild.  Thus, it is unlikely that one
+is actually present in the data and would interfere with analysis.
 
 When we augment the data with the covert groups, we impose a few additional
 constraints.  The point of this analysis is to particularly characterize network
