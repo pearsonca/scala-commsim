@@ -615,54 +615,55 @@ the `Demo.scala` file in the source directory.
 
 ## The Detection Test
 
-Now we consider a simple, but non-trivial community detection method against the
-augmented data.  This algorithm is not intended to detect a particular network
-signature of the covert group; any model is unlikely to have a realistic signature anyway.
-Instead, we analyze the detector performance assuming
-that some other technique accurately identifies a covert member at random, and then that random
-member's associated community is then implicated as the covert group.
+For the community detection assessment, we take as a given that in the real
+application one covert group member can be identified by independent means.  The
+active group members are assumed to have equal probability of being caught.
+This caught member in turn implicates the associated community.
 
-How should we think about this performance?  We obviously want to characterize
-placing all of the covert group, and only members of that group, into a single
-community as perfect.  The worst possible performance would be completely
-dispersing the covert group into different communities, and for each community
-to have a covert group member.  The perfect case has a True Positive Rate ($TPR$)
-of 1 - *i.e.* is absolutely sensitive - and a False Positive Rate ($FPR$) of 0 -
-*i.e.* is absolutely specific.  The worst case has a $TPR = 0$, but its not
-immediately obvious how to calculate FPR; the average community size is of
-course the total background population divided by the number of covert group
-members.  If we use the total population as the denominator, then the peak
-$FPR != 1$, and indeed is determined by the size of the covert group. There
-is some argument for having an error rate that would be independent of the
-covert group size, but we need not obsess on mathematical elegance for this
-demonstration.  We thus have our formal TPR and FPR:
+Our approaches applies a packaged community detection method designed for
+reasonable run times against [large networks][clauset2004finding].  Other
+approaches rely on detecting particular network signatures, which assumes
+accurate understanding of the organization structure and how that structure is
+revealed via observation. That is not always a useful assumption, and we opt to
+use a simpler scheme in our demonstration, but certainly the agent-event based
+approach could be encoded with particular organizational arrangements.
+
+How should we think about this performance of this detection scheme?
+Placing all of the covert group, and only members of that group, into a single
+community is obviously ideal.  The complementary worst possible performance would be
+dispersing one member into each different community.  The traditional True Positive Rate (TPR), or
+sensitivity, and False Positive Rate ($FPR$), or non-specificity, are suitable
+for this assessment, as our primary interests are how much of the group do we expect
+to identify at any time, and how much of the background population will we mis-identify.
+There are a variety of other statistics that can be derived from TPR and FPR, using
+assorted complements and combinations, as well as measures like Receiver
+Operating Characteristic (ROC) curves that we could derive if we had a tunable
+detection methods.
+
+Given communities, $i$, with covert and background populations for those
+communities $(n_i, b_i)$, total populations $(n_t = \sum n_i, b_t = \sum b_i)$, and
+our uniform probability of selecting any member as the initial member caught,
+the probability of selecting community $i$ is $\frac{n_i}{\sum_i n_i}$.  Once
+selected, a particular community yields $\frac{n_i-1}{\sum_i n_i - 1}$ as we are not
+including our \"\" catch in the $TPR$.  Therefore, the expected $TPR$ is
 
 \begin{equation}
-TPR = \sum_i\frac{n_i-1}{n_t-1} \\
-\end{equation}
-\begin{equation}
-FPR = \sum_i\frac{n_i-1}{n_t-1}\frac{b_i}{b_t}
+TPR = \frac{1}{n_t(n_t-1)}\sum_i n_i(n_i-1) \\
 \end{equation}
 
-With $TPR, FPR$, and tunable process for community detection, we can create Receiver
-Operating Characteristic (ROC) curves, and associated statistics, *e.g.* discrimination.
-For our analysis, however, we did not attempt to tune detection.
+Similarly, the expected FPR is
+
+\begin{equation}
+FPR = \frac{1}{n_t b_t}\sum_i n_i *b_i
+\end{equation}
 
 Since we have a time-dependent process, and in general we are interested in real
 time detection, we should of course be interested in the time evolution of the
 efficacy of detection.  This would provide us some qualitative insight on
 trade-offs between risk of the covert group executing some goal, opportunity
 cost (in terms of missed covert members), and downside (in terms of collateral
-population implicated).  Our initial demonstration analysis produced curves that
-contain this data, though we make no attempt to do subsequent meta-analysis like
-the trade-off consideration.
-
-If we had more basis for informing the model of the covert group, we could
-likewise propose detectors that used the more detailed data produced by the
-simulation, and revise our definition of what detection entailed.  If we had
-reliable data about covert group signature, then perhaps we might update our
-criteria to be correctly identifying the particular community, rather than
-couching performance in terms of another assumed process.
+population implicated).  However, such subsequent meta-analysis like
+these trade-off considerations is beyond the scope of this work.
 
 ## Results
 
