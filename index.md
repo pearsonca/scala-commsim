@@ -282,7 +282,15 @@ these lay readers by adopting [test-driven design (TDD)][janzen2005test] practic
 can then communicate additional essential perspective on what various pieces are *meant* to
 do.  
 
-## TODO expand on TDD as a way to do method of decreasing abstraction / something like koopman inductive-deductive loop
+Taking a test-driven development approach is also consistent with approaches
+to science such as the [method of decreasing abstraction][lindenberg1992method] or the iterated modeling
+approaches [advocated for ecological systems][koopman].  Test driven design
+encourages incremental development of narrow, independent behaviors, and as new
+behavior added to a module, or modules integrated, that test infrastructure can
+be used to verify that the components still obeys constraints and context expressed by tests.
+Though less pertinent for software engineering, for simulation code we might also
+reasonably include statistical performance against particular datasets as part
+of the test criteria.
 
 Finally, for commonly recurring problems, adopting generic solution
 templates - typically called [design patterns][gofbook] -
@@ -756,17 +764,18 @@ We would like to thank [Thomas J. Hladish](github.com/tjhladish) and
 [Juliet R. C. Pulliam](github.com/jrcpulliam) for their
 feedback.
 
+[salganik2004sampling]: <http://dx.doi.org/10.1111/j.0081-1750.2004.00152.x> "optional title"
 [janzen2005test]: <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac> "optional title"
 [biernacki1981snowball]: <http://smr.sagepub.com/content/10/2/141.full.pdf> "optional title"
 [knuth1984literate]: <http://dx.doi.org/10.1093/comjnl/27.2.97> "optional title"
 [Ionides05122006]: <http://dx.doi.org/10.1073/pnas.0603181103> "optional title"
 [volz2013inferring]: <http://dx.doi.org/10.1371/journal.pcbi.1003397> "optional title"
 [Snijders201044]: <http://dx.doi.org/10.1016/j.socnet.2009.02.004> "optional title"
-[gofbook]: <> "Design Patterns"
+[gofbook]: <file://> "Design Patterns"
 [breiman2001statistical]: <http://projecteuclid.org/download/pdf_1/euclid.ss/1009213726> "optional title"
 [shmueli2010explain]: <http://projecteuclid.org/download/pdfview_1/euclid.ss/1294167961> "optional title"
 [akka]: <http://akka.io> "Akka"
-[montreal]: <> "Montreal Network"
+[montreal]: <file://> "Montreal Network"
 [epidemics4]: <https://github.com/pearsonca/epidemics4-talk/blob/master/poster.pdf?raw=true> "Epidemics 4 Poster"
 [grossman1995portion]: <> "On a portion of the well-known collaboration graph"
 [koopman]: <http://publichealthpractice.com/project-detail/transforming-public-health-surveillance-2/> "forthcoming chapter"
@@ -775,74 +784,15 @@ feedback.
 [wigner1960unreasonable]: <http://math.northwestern.edu/~theojf/FreshmanSeminar2014/Wigner1960.pdf> "Unreasonable effectiveness of Mathematics in the Natural Sciences."
 [cran]: <http://cran.us.r-project.org/> "The Comprehensive R Archive Network"
 [scala]: <http://www.scala-lang.org/> "The Scala Language"
-
+[toni2009approximate]: <http://dx.doi.org/10.1098%2Frsif.2008.0172> "ABC"
+[geladi1986partial]: <http://dx.doi.org/10.1016/0003-2670(86)80028-9> "PLS"
+[lindenberg1992method]: <http://www.ppsw.rug.nl/~lindenb/documents/articles/1992_lindenberg_method_of_decreasing_abstraction.pdf> "optional title"
+[stefik1985object]: <http://dx.doi.org/10.1609/aimag.v6i4.508> "optional title"
+[clauset2004finding]: <http://dx.doi.org/10.1103/PhysRevE.70.066111> "optional title"
 
 ## HOLD SECTION
 
 ###Modeling in Code
-
-However, the traits of good equation-based models have analogies in code,
-particularly modularity and clear mechanism.  These two were difficult to put into
-practice until recently.  Historically, most general purpose languages reflected
-what actually occurred in computer memory with the syntax improvements limited to
-abstractions for convenient creation and manipulation of numerical types, and
-for flow control.  The development and promulgation of object-oriented concepts
-shifted how we reasoned about programs, leading to languages and libraries
-designed for those concepts.  Modern programming languages bring even-more-natural
-language syntax while maintaining the precision necessary to direct a computer,
-allowing us to represent complex models with [literate code][knuth1984literate].
-We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
-
-First, there are some other practical considerations to modeling in code, also
-analogous to features of good modeling with equations.
-
-Providing a complete overview of that discipline is best left to other venues.
-We will instead focus on few lessons from a [seminal work in this area][gofbook],
-a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
-
-The principle lessons of the [Design Patterns book][gofbook] are that we should
-build objects - in this case, Agents - by composing capabilities and that we
-should couple those capabilities as loosely as possible.  That work, and
-subsequent innovation built upon it, describes many ways to achieve that end.
-In our demonstration, we will focus on a few -- *Delegate*, *State*, and
-*Chain of Responsibility* -- which reflect the way scientific models achieve
-reuse.
-
-Delegate
-: agent has some capability, executes it by plugging in some module then handing off
-queries / method calls to that module.
-
-State
-: response sets are driven by historical exposure.  allows agents to have different
-responses to the same events without model having to create entirely new objects
-
-Chain of Responsibility
-: concept allows single event to trigger many responses from different
-aspects of agent behavior.
-
-Test-driven design is also a natural fit for scientific modeling.  As
-[Janzen and Saiedian highlight in their review][janzen2005test], test driven design
-encourages incremental development of narrow, independent behaviors, which is
-consistent with [iterative model evalution practices][koopman].  As new
-behavior added to a module, or modules integrated, can use test infrastructure
-to verify that model still obeys constraints / context expressed by tests.  This
-looks quite similar to good modeling practice: develop simplest conceivable
-alternative models (which has many, many simplifying assumptions baked in).
-those model results will suggest two routes: either experiments to distinguish
-models, or that it is time to relax the assumptions and see if results hold.
-
-in addition to
-providing confidence in implementation details, the test-based approach provides
-additional specification of what the model component does.
-
-> it is possible to implement these by implementing many small models first, then
-copy pasting that code into a bigger models, and so on.  copy-pasting and making
-things play nice takes a lot of effort.  using object oriented concepts, we can
-avoid copy-pasta.  there are several other advantages: partitioning work allows
-domain experts to develop models in parallel, those partitioned components can
-be the subject of rigorous testing (itself a way to improve the formal
-expression of a model beyond the syntactic constraints of a language) and
-independent pre-parameterization, and of course reuse.
 
 > want to code in a way the minimizes rework - not just for practical reasons,
 but so that we may be confident of the foundation.  Reuse means we gain all the
@@ -856,46 +806,3 @@ number of advantages - easier to test, easier to get domain experts to reason
 about their piece, easier to upgrade pieces (both computationally and
 representationally). The principle disadvantage appears when we want those
 pieces to talk to each other.
-
-> modular pieces - design patterns book suggests many ways to achieve these ends.
-We suggest one based strongly on those concepts (mixing chain of responsibility,
-delegation, and state) and another based on those concepts, but relying on the
-scala syntax and multiple inheritance resolution.  We prefer the latter, since
-it achieves many of the desirable aspects of reuse without requiring as much
-tinkering to get up and running.  It does not preclude some problems (e.g.,
-namespace collisions), but the sort of modeling care needed to avoid those is
-far lower than the sort of care to properly apply the design patterns.
-
-There are several approaches to achieve the aforementioned design patterns.  One
-typical approach is via inheritance.  In some parent representation, we describe
-all the actions our agents can take, and then we have child classes that
-implement, override, or extend those actions.  
-
-However, traditional linear
-inheritance is problematic for reusability if we want to have different kinds.
-If we very carefully implement state + delegation, and chain of responsibility,
-then linear inheritance can work.  Careful implementation of those is hard.
-
-That also looks exactly like composition, but composition is often syntactically
-hard (lots of boilerplate code to do delegation).  Indeed, both of those options
-feature lots of boilerplate code, and boilerplate to maintain flexibility
-obscures our ability to read the code directly as the model.
-
-Scala to the rescue: multiple inheritence via traits which can contain
-implementations eliminates most of the boilerplate.  It is even reasonable to
-imagine distributing these traits as modeling packages, and then a particular
-model could import the trait package, declare agents using it and other traits,
-then define their particular behavior in terms of those trait properties / methods.
-
-Also non-trivial advantage of scala: has an actor model baked in the standard
-language library, which handles the boilerplate of distributed computing for the
-modeler.
-
-Scala not necessarily for everyone.  key point to keep in mind: build actors
-by composition (allows rigorous independent testing, development, comprehension
-of bite size bits rather than the whole pie, reuse, etc).  Other languages can
-do composition, though authors not aware of any that do so as easily while still
-providing benefit of compiled, strongly typed language.
-
-basic approach: agents mixin in traits (in this approach, all agents mixin the
-  same traits, but those traits have state which make them inactive)
