@@ -400,7 +400,7 @@ Quite boring, right? It receives a time, and replies with that time.
 Recall, however, that traits are meant to be consumed:
 
 {% highlight scala %}
-class AgentImpl(visProbPerTick: Double, /*...*/) extends Agent {
+class AgentImpl(visProbPerTick: Probability, /*...*/) extends Agent {
 
   override def _tick(when:Int) = {
     if (!_traveled && (Math.random < visProbPerTick)) {
@@ -697,27 +697,6 @@ feedback getting the voice right for this piece.
 
 
 ## HOLD SECTION
-
-The scientific and engineering literature are replete with these sort models,
-and while the balance of good and bad will vary, these general themes persist.
-They have analogies in code-based models, even when those models go beyond
-representing equation-based models, and these analogies are well-captured by
-general software engineering patterns and principles developed over many years
-in that industry.
-
-Providing a complete overview of that discipline is best left to other venues.
-We will instead focus on few lessons from a [seminal work in this area][gofbook],
-a particular technique known as [Test-Driven Design (TDD)][janzen2005test].
-
-Initially, most general purpose languages reflected
-what actually occurred in computer memory with the syntax improvements limited to
-abstractions for convenient creation and manipulation of numerical types, and
-for flow control.  The [development and promulgation][dahl1966simula] of object-oriented concepts
-shifted how we reasoned about programs, leading to languages and libraries
-designed for those concepts.  Modern programming languages bring even-more-natural
-language syntax while maintaining the precision necessary to direct a computer,
-allowing us to represent complex models with [literate code][knuth1984literate].
-We will demonstrate this shortly using [Scala](http://www.scala-lang.org/).
 
 ###Modeling in Code
 
