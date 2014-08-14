@@ -32,9 +32,9 @@ for (i in 1:length(meetInterval)) {
 }
 
 plotres <- function(res, red, blu) {
-  means <- -log(1-apply(res[,,-1], 2:3, median))
-  maxes <- -log(1-apply(res[,,-1], 2:3, quantile, probs=0.75, names=F))
-  mines <- -log(1-apply(res[,,-1], 2:3, quantile, probs=0.25, names=F))
+  means <- apply(res[,,-1], 2:3, median) #-log(1-)
+  maxes <- apply(res[,,-1], 2:3, quantile, probs=0.75, names=F) #-log(1-)
+  mines <- apply(res[,,-1], 2:3, quantile, probs=0.25, names=F) #-log(1-)
   
   lines(res[1,,1], maxes[,1], col=red, pch=6, lty="dotted", lwd=0.5)
   lines(res[1,,1], means[,1], col=red)
@@ -63,7 +63,7 @@ log.locs <- -log(1-rate.ticks)
 
 rate.axis <- function(.side, .col, .name, .padj= 1.5) {
   mtext(.name, side=.side, col=.col, padj=.padj, cex = 0.75*par("cex.axis"), adj=0.9, line = -1)
-  axis(.side, at = log.locs, labels=rate.ticks, col = .col, tcl = -0.2, las=2, cex = 0.5, line = -1)
+  axis(.side, at = seq(0,1,0.1), labels=seq(0,1,0.1), col = .col, tcl = -0.2, las=2, cex = 0.5, line = -1)
 }
 
 for (loc in locCounts) {
@@ -145,10 +145,10 @@ for (loc in locCounts) {
         for (i in 1:dim(memtab)[1]) {
           rr <- rle(sort.int(memtab[i,-1], method = "quick"))
           tot <- cnt-1
-          ps <- (rr$lengths - 1)/tot
-          TPR <- mean(ps) + (1/tot)
-          sizes <- siztab[i, names(rr$values)]
-          FPR <- sum(ps * sizes / pop[i])
+          ps <- rr$lengths / cnt
+          TPR <- sum(ps * (rr$lengths - 1)) / tot
+          sizes <- siztab[i, names(rr$values)] - rr$lengths
+          FPR <- sum(ps * sizes) / pop[i]
           res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
         }
       }
