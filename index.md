@@ -280,7 +280,11 @@ program represented without having to be expert in the hard syntax constraints.
 For more complex programs, the more complex code required can be enhanced for
 these lay readers by adopting [test-driven design (TDD)][janzen2005test] practices.  The test code
 can then communicate additional essential perspective on what various pieces are *meant* to
-do.  Finally, for commonly recurring problems, adopting generic solution
+do.  
+
+## TODO expand on TDD as a way to do method of decreasing abstraction / something like koopman inductive-deductive loop
+
+Finally, for commonly recurring problems, adopting generic solution
 templates - typically called [design patterns][gofbook] -
 can do for a program what tropes do for television: provide huge context with compact
 shorthand.  Though we do not delve into the details, the implementation we provide
@@ -663,9 +667,9 @@ detection methods.
 Given communities, $i$, with covert and background populations for those
 communities $(n_i, b_i)$, total populations $(n_t = \sum n_i, b_t = \sum b_i)$, and
 our uniform probability of selecting any member as the initial member caught,
-the probability of selecting community $i$ is $\frac{n_i}{\sum_i n_i}$.  Once
-selected, a particular community yields $\frac{n_i-1}{\sum_i n_i - 1}$ as we are not
-including our \"\" catch in the $TPR$.  Therefore, the expected $TPR$ is
+the probability of selecting community $i$ is $\frac{n_i}{n_t}$.  Once
+selected, a particular community yields $\frac{n_i-1}{n_t - 1}$ as we are not
+including our initially caught member in the $TPR$.  Therefore, the expected $TPR$ is
 
 \begin{equation}
 TPR = \frac{1}{n_t(n_t-1)}\sum_i n_i(n_i-1) \\
@@ -687,23 +691,77 @@ these trade-off considerations is beyond the scope of this work.
 
 ## Results
 
+<figure style="width:100%; margin:0">
+<img src="results.png" alt="Results" style="width:100%">
+<figcaption style="margin-top:1em">
+Figure 1: this figure combines the three parameterization dimensions: number of
+covert members (row dimension, smallest groups at the top, largest at the
+bottom), number of covert meeting locations (column dimension, fewest to most
+going left to right), and frequency of covert meetings (tint of lines, lightest
+being most frequent to darkest least frequent).
+</br>
+The plotted lines are quartiles, the median as a solid line, 75% as dotted, and
+25% as dashed.  The red lines are TPRs, the blues FPRs.
+</figcaption>
+</figure>
+
+The results for the same network detection measure show startling differences
+across the underlying parameters of covert group behavior.  The groups go from
+poorly detectable even for long observation periods (top left - fewest meeting
+locations, smallest group) to reliably detectable after a short monitoring period
+(bottom right - most meeting locations, largest group).  Based on the change in order on ramp up times
+for the different meeting frequencies, we can infer there is still substantial noise
+in the medians, as should be expected limited ourselves to a hundred samples for
+each parameter combination.  This is somewhat contrary to what might be our
+intuition about meeting frequency - more frequent covert meetings seems like it
+should imply a higher information rate about that group.  While that seems to
+be mostly true of the series, it is not universally so.
+
+The FPRs rather blandly march upwards (peaking around 10% for most cases, which
+corresponds to around 10k individuals from the background population), but for
+several parameter combinations, the TPRs form a distinct lump.  The implication
+being that, with no evolution in group behavior, monitoring can become *less* effective!
+
+We suspect that this is another indicator of a strong need to be aware of what
+the background data means.  Near the end of the time series, there appears to
+be an increasing trend in background user turnover, which could certainly lead to
+more transient communities, and perhaps effectively dispersing the covert
+members among those rapidly shifting communities.  That sort of effect would be
+present in any data source that was growing (or decaying) over the course
+of the analysis, due to increased adoption, competing technologies, new markets,
+*etc*.
+
 ## Afterthoughts
+
+We demonstrated augmenting an empirical dataset with synthetic group activity,
+then applying a community detection algorithm to the resulting combination.  The
+results indicate that the performance of this algorithm is very sensitive to
+the underlying group activity, despite the members having conserved behavior relative to
+event generation, like total activity rate and location diversity.
+
+So what?
+
+Certainly, not all social network analyses would be so spectacularly variable.
+Nor should we be particularly impressed with this result, our group model being quite unsophisticated.
+Rather, we encourage caution, when approaching seemingly useful data and when applying
+seemingly useful network analyses.  We think that an approach of modeling at a higher
+level of detail, and then considering the projection back to the social network analyses
+is a reasonable way to undertake such caution.  We think that higher-level modeling is best achieved
+in the agent-based framework without being in the network mindset, and that there
+is an opportunity to adopt a powerful, re-usable vocabulary for such an approach.
 
 ## Acknowledgements
 
 We would like to thank [Thomas J. Hladish](github.com/tjhladish) and
 [Juliet R. C. Pulliam](github.com/jrcpulliam) for their
-feedback getting the voice right for this piece.
+feedback.
 
 [janzen2005test]: <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac> "optional title"
-[barabasi1999]: <http://dx.doi.org/10.1126/science.286.5439.509> "optional title"
-[atlas2012]: <http://www.sciencedirect.com/science/article/pii/S0370269312001852> "optional title"
 [biernacki1981snowball]: <http://smr.sagepub.com/content/10/2/141.full.pdf> "optional title"
 [knuth1984literate]: <http://dx.doi.org/10.1093/comjnl/27.2.97> "optional title"
 [Ionides05122006]: <http://dx.doi.org/10.1073/pnas.0603181103> "optional title"
 [volz2013inferring]: <http://dx.doi.org/10.1371/journal.pcbi.1003397> "optional title"
 [Snijders201044]: <http://dx.doi.org/10.1016/j.socnet.2009.02.004> "optional title"
-[morincomrie2010]: <http://dx.doi.org/10.1007/s00484-010-0349-6> "optional title"
 [gofbook]: <> "Design Patterns"
 [breiman2001statistical]: <http://projecteuclid.org/download/pdf_1/euclid.ss/1009213726> "optional title"
 [shmueli2010explain]: <http://projecteuclid.org/download/pdfview_1/euclid.ss/1294167961> "optional title"
