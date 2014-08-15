@@ -211,7 +211,7 @@ network and individual traits.  Their overall perspective is about model
 selection (which objective function to use) and parameter fitting (what values
 for the coefficients in the objective function).  Our emphasis differs - we want
 to build some practical sensitivities and confidence about various approaches - but model selection and parameter fitting are just as
-possible using, *e.g.*, [Algorithmic Bayesian Computation (ABC)][toni2009approximate]
+possible using, *e.g.*, [Approximate Bayesian Computation (ABC)][toni2009approximate]
 and [Partial Least Squares (PLS)][geladi1986partial] for exploring and characterizing parameter space.  Indeed, that
 would be a reasonable approach to trying to reproduce the features of the Montreal
 data itself.
@@ -762,7 +762,8 @@ is an opportunity to adopt a powerful, re-usable vocabulary for such an approach
 
 We would like to thank [Thomas J. Hladish](github.com/tjhladish) and
 [Juliet R. C. Pulliam](github.com/jrcpulliam) for their
-feedback.
+feedback.  We thank the Army Research Office Multidisciplinary Research Initiative for financial support under
+MURI Grant #58153-MA-MUR, Prime Award #W91 INF-11-1-0036.
 
 [salganik2004sampling]: <http://dx.doi.org/10.1111/j.0081-1750.2004.00152.x> "optional title"
 [janzen2005test]: <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1034&context=csse_fac> "optional title"
