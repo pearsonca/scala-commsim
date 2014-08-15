@@ -17,10 +17,10 @@ for (p in 1:49) {
   pop[p] <- src.dt[(p-1)*shift < login & login <= ((p-1)*shift+end),length(unique(user.id))]
 }
 
-png("~/scala-commsim/results.png", width = 2000, height = 2000)
+png("~/scala-commsim/results.png", width = 1500, height = 2500)
 
 nf <- layout(matrix(1:(length(memCounts)*length(locCounts)), ncol=length(locCounts)) )
-old.par <- par( bty = "n", mar=c(0,0,0,0), mgp = c(0.5, 0.5, 0), cex.axis=1.5 )
+old.par <- par( bty = "n", mar=c(0,0,0,0), mgp = c(0.5, 0.5, 0), cex.axis=3 )
 
 loc.colors.red <- list()
 loc.colors.blu <- list()
@@ -51,9 +51,9 @@ axis.wid <- 3
 day.ticks <- c(365, seq(400, 1800, 50))
 day.labels <- c(365, rep(NA,length(day.ticks)-3),1750,NA)
 
-day.axis <- function(.side) {
-  axis(.side, at = day.ticks, labels = day.labels, tcl = -0.2, line = -1)
-  mtext("...day from start...", side = .side, line = -0.5, cex = 0.75*par("cex.axis"), adj=0.25)
+day.axis <- function(.side, .padj = 0) {
+  axis(.side, at = day.ticks, labels = day.labels, tcl = -0.2, line = -1, padj=.padj)
+  mtext("...day from start...", side = .side, line = -0.5, cex = 0.75*par("cex.axis"), adj=0.25, padj=.padj)
   #title( xlab="day" )
   #mtext("day", side = .side, cex=0.5, adj=0.1, padj = ifelse(.side==3,0,1))
 }
@@ -61,68 +61,70 @@ day.axis <- function(.side) {
 rate.ticks <- seq(0, 0.6, 0.1)
 log.locs <- -log(1-rate.ticks)
 
-rate.axis <- function(.side, .col, .name, .padj= 1.5) {
-  mtext(.name, side=.side, col=.col, padj=.padj, cex = 0.75*par("cex.axis"), adj=0.9, line = -1)
+rate.axis <- function(.side, .col, .name, .padj= 1.5, .adj=0.9) {
+  mtext(.name, side=.side, col=.col, padj=.padj, cex = 0.75*par("cex.axis"), adj=.adj, line = -1)
   axis(.side, at = seq(0,1,0.1), labels=seq(0,1,0.1), col = .col, tcl = -0.2, las=2, cex = 0.5, line = -1)
 }
+
+.squeeze <- 0.2
 
 for (loc in locCounts) {
   for (cnt in memCounts) {
     if (plot.count == 1) {
-      par(mar = axis.wid*c(1/3,1,1,1/3))
+      par(mar = axis.wid*c(0,2-.squeeze,2-.squeeze,0))
       ## top left
     } else if (plot.count == 2) {
-      par(mar = axis.wid*c(2/3,1,2/3,1/3))
+      par(mar = axis.wid*c(.squeeze/2,2-.squeeze,.squeeze/2,0))
       ## left
     } else if (plot.count == 6) {
-      par(mar = axis.wid*c(1,1,1/3,1/3))
+      par(mar = axis.wid*c(2-.squeeze,2-.squeeze,0,0))
       ## bottom left
     } else if (plot.count == 7) {
-      par(mar = axis.wid*c(1/3,2/3,1,2/3))
+      par(mar = axis.wid*c(0,.squeeze/2,2-.squeeze,.squeeze/2))
       ## top mid
     } else if (plot.count == 8) {
-      par(mar = axis.wid*c(2/3,2/3,2/3,2/3))
+      par(mar = axis.wid*c(.squeeze/2,.squeeze/2,.squeeze/2,.squeeze/2))
       ## mid
     } else if (plot.count == 12) {
-      par(mar = axis.wid*c(1,2/3,1/3,2/3))
+      par(mar = axis.wid*c(2-.squeeze,.squeeze/2,0,.squeeze/2))
       ## bottom mid
     } else if (plot.count == 13) {
-      par(mar = axis.wid*c(1/3,1/3,1,1))
+      par(mar = axis.wid*c(0,0,2-.squeeze,2-.squeeze))
       ## top right
     } else if (plot.count == 14) {
-      par(mar = axis.wid*c(2/3,1/3,2/3,1))
+      par(mar = axis.wid*c(.squeeze/2,0,.squeeze/2,2-.squeeze))
       ## right
     } else if (plot.count == 18) {
-      par(mar = axis.wid*c(1,1/3,1/3,1))
+      par(mar = axis.wid*c(2-.squeeze,0,0,2-.squeeze))
       ## bottom right
     }
     plot(NULL, NULL, ylim = c(0, 1), xlim = c(365, 1800), ylab="", xlab="", xaxt="n", yaxt="n")
     
     if (plot.count == 1) {
-      mtext("# of meeting locations = ", side = 3, cex = 0.75*par("cex.axis"), padj = -2.5, adj=0.1, line=-1)
+      mtext("# of meeting locations = ", side = 3, cex = 0.75*par("cex.axis"), padj = -2.1, adj=0.1, line = -1.5)
     }
     if (plot.count %in% c(1,7,13)) {
-      mtext(loc, side = 3, cex = 0.75*par("cex.axis"), padj = -2.5, line = -1)
+      mtext(loc, side = 3, cex = 0.75*par("cex.axis"), adj=0.75, padj = -2.1, line = -1.5)
       day.axis(3)
     }
     
     if (plot.count == 6) {
-      mtext("# of members = ", side = 2, cex = 0.75*par("cex.axis"), padj = -2.7, adj = 0, line = -1)
+      mtext("# of members = ", side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0, line = -1.5)
     }
     
     if (plot.count %in% 1:6) {
-      mtext(cnt, side = 2, cex = 0.75*par("cex.axis"), padj = -2.7, adj = 0.7, line = -1)
+      mtext(cnt, side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0.8, line = -1.5)
       rate.axis(2, "red", "TPR")
       #axis(2, at = seq(0,1,.1), col = "red" , line=0, tcl=0.2)
       #mtext("TPR", side=2, col="red")
     }
     if (plot.count %in% 13:18) {
-      rate.axis(4, "blue", "FPR", -1.5)
+      rate.axis(4, "blue", "FPR", -1, 0.3)
 #       axis(4, at = seq(0,1,.1), col = "blue", line=0, tcl=0.2)
 #       mtext("FPR", side=4, col="blue")
     }
     if (plot.count %in% c(6,12,18)) {
-      day.axis(1)
+      day.axis(1, 1.5)
     }
     
     plot.count <- plot.count + 1
