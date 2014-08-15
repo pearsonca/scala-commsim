@@ -652,13 +652,21 @@ application one covert group member can be identified by independent means.  The
 active group members are assumed to have equal probability of being caught.
 This caught member in turn implicates the associated community.
 
-Our approaches applies a packaged community detection method designed for
-reasonable run times against [large networks][clauset2004finding].  Other
-approaches rely on detecting particular network signatures, which assumes
-accurate understanding of the organization structure and how that structure is
-revealed via observation. That is not always a useful assumption, and we opt to
-use a simpler scheme in our demonstration, but certainly the agent-event based
-approach could be encoded with particular organizational arrangements.
+Our approach applies a packaged community detection method (from the R package
+[`igraph`][igraph], the `fastgreedy.community` method) designed for fast run times against
+[large networks][clauset2004finding] without requiring criteria like community
+number or size.  Briefly, this method is *divisive*: it discovers communities by
+edge deletions - edge betweeness is iteratively recalculated, and the most between edge is removed.
+This removal process can continue until no graph is left, forming a dendrogram,
+which is then evaluated for maximal modularity to choose the appropriate community
+division.
+
+Other approaches rely on detecting particular network
+signatures, which assumes accurate understanding of the organization structure
+and how that structure is revealed via observation. That is not always a useful
+assumption, and we opt to use a simpler scheme in our demonstration, but
+certainly the agent-event based approach could be encoded with particular
+organizational arrangements.
 
 How should we think about this performance of this detection scheme?
 Placing all of the covert group, and only members of that group, into a single
@@ -790,6 +798,7 @@ MURI Grant #58153-MA-MUR, Prime Award #W91 INF-11-1-0036.
 [lindenberg1992method]: <http://www.ppsw.rug.nl/~lindenb/documents/articles/1992_lindenberg_method_of_decreasing_abstraction.pdf> "optional title"
 [stefik1985object]: <http://dx.doi.org/10.1609/aimag.v6i4.508> "optional title"
 [clauset2004finding]: <http://dx.doi.org/10.1103/PhysRevE.70.066111> "optional title"
+[igraph]: <http://igraph.org> "igraph"
 
 ## HOLD SECTION
 
