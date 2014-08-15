@@ -653,13 +653,14 @@ active group members are assumed to have equal probability of being caught.
 This caught member in turn implicates the associated community.
 
 Our approach applies a packaged community detection method (from the R package
-[`igraph`][igraph], the `fastgreedy.community` method) designed for fast run times against
-[large networks][clauset2004finding] without requiring criteria like community
-number or size.  Briefly, this method is *divisive*: it discovers communities by
-edge deletions - edge betweeness is iteratively recalculated, and the most between edge is removed.
-This removal process can continue until no graph is left, forming a dendrogram,
-which is then evaluated for maximal modularity to choose the appropriate community
-division.
+[`igraph`][igraph], the `fastgreedy.community` method) designed for fast run
+times against [large networks][clauset2004finding] without requiring criteria
+like community number or size.  Briefly, this method is *agglomerative*: it
+discovers communities by initially treating all vertices as separate
+communities, then iteratively combining them based on the best change in
+modularity (either great increase or least decrease). This continues until there
+is only one community, which provides a process dendrogram.  That dendrogram is
+then cut at the maximum modularity to choose the appropriate community division.
 
 Other approaches rely on detecting particular network
 signatures, which assumes accurate understanding of the organization structure
@@ -721,50 +722,71 @@ The plotted lines are quartiles, the median as a solid line, 75% as dotted, and
 </figcaption>
 </figure>
 
-The results for the same network detection measure show startling differences
-across the underlying parameters of covert group behavior.  The groups go from
-poorly detectable even for long observation periods (top left - fewest meeting
-locations, smallest group) to reliably detectable after a short monitoring period
-(bottom right - most meeting locations, largest group).  Based on the change in order on ramp up times
-for the different meeting frequencies, we can infer there is still substantial noise
-in the medians, as should be expected limited ourselves to a hundred samples for
-each parameter combination.  This is somewhat contrary to what might be our
-intuition about meeting frequency - more frequent covert meetings seems like it
-should imply a higher information rate about that group.  While that seems to
-be mostly true of the series, it is not universally so.
+The results the subject community detection procedure, agglomerative greedy
+modularity optimization, show startling differences across the underlying
+parameters of covert group behavior.  The groups go from poorly detectable even
+for long observation periods (top left - fewest meeting locations, smallest
+group) to reliably detectable after a short monitoring period (bottom right -
+most meeting locations, largest group).  Based on the change in order on ramp up
+times for the different meeting frequencies, we can infer there is still
+substantial noise in the medians, as should be expected given the limited sample
+size ($n=100$) for each parameter combination.  This is somewhat contrary to
+what might be our intuition about meeting frequency - more frequent covert
+meetings seems like it should imply a higher information rate about that group.
+While that seems to be mostly true of the series, it is not universally so.
 
 The FPRs rather blandly march upwards (peaking around 10% for most cases, which
 corresponds to around 10k individuals from the background population), but for
 several parameter combinations, the TPRs form a distinct lump.  The implication
-being that, with no evolution in group behavior, monitoring can become *less* effective!
+being that, with no evolution in group behavior, monitoring, at least with this
+particular community detection strategy, can become *less* effective!
 
 We suspect that this is another indicator of a strong need to be aware of what
-the background data means.  Near the end of the time series, there appears to
-be an increasing trend in background user turnover, which could certainly lead to
-more transient communities, and perhaps effectively dispersing the covert
-members among those rapidly shifting communities.  That sort of effect would be
-present in any data source that was growing (or decaying) over the course
-of the analysis, due to increased adoption, competing technologies, new markets,
-*etc*.
+the background data, which itself is changing over time, means. Near the end of
+the time series, there appears to be an increasing trend in background user
+turnover, which could certainly lead to more transient communities, and perhaps
+effectively dispersing the covert members among those rapidly shifting
+communities. That sort of effect would be present in any data source that was
+growing (or decaying) over the course of the detection process. It is a
+consequence of  increased adoption, competing technologies, new markets, etc.
+With apriori knowledge of this kind of dynamic in the background population,
+future analyses should involve detection algorithms that can adapt to in -and
+out-migration, including assessment of sudden signs of increase n migration in
+eityher direction.
 
 ## Afterthoughts
 
 We demonstrated augmenting an empirical dataset with synthetic group activity,
 then applying a community detection algorithm to the resulting combination.  The
-results indicate that the performance of this algorithm is very sensitive to
-the underlying group activity, despite the members having conserved behavior relative to
-event generation, like total activity rate and location diversity.
+results indicate that the performance of that algorithm, agglomerative greedy
+modularity optimization, is sensitive to the underlying group activity,
+despite the members having conserved behavior relative to event generation, like
+total activity rate and location diversity.
 
-So what?
+This is hardly a blanket indictment of applying the subject community detection
+to attempt to identify covert groups.  For much of the parameter space, the
+greedy search approach performed quite well: fairly quick increase in TPR,
+fairly steady plateau, and relatively low FPRs.
 
-Certainly, not all social network analyses would be so spectacularly variable.
-Nor should we be particularly impressed with this result, our group model being quite unsophisticated.
-Rather, we encourage caution, when approaching seemingly useful data and when applying
-seemingly useful network analyses.  We think that an approach of modeling at a higher
-level of detail, and then considering the projection back to the social network analyses
-is a reasonable way to undertake such caution.  We think that higher-level modeling is best achieved
-in the agent-based framework without being in the network mindset, and that there
-is an opportunity to adopt a powerful, re-usable vocabulary for such an approach.
+However, we have rapidly codified, via an easily modifiable simulation, an
+underlying space of covert group activity.  Using this kind of model
+(preferrably, covering the space of what the analyst considers possible) we can
+assess what it is about *individual behavior* that causes this detection scheme,
+or others, to fail.  Instead of attributing the community detection failure to
+abstract network properties, subject to the vagaries of collection and
+translation, we can be framing the study in terms of what are likely to be more
+general phenomena: human social mechanisms and observation error.
+
+The utility of such an approach will certainly vary between studies, but we hope
+these results encourage caution, when approaching seemingly useful data and when applying
+seemingly useful network analyses.
+
+Modeling at the phenomenological level, including the observation process, and
+then projecting those events into a networks that can be used to validate the
+network analysis approach is a reasonable way to undertake such caution.  We
+think that phenomenological modeling can be practically achieved in the
+agent-based framework, and that there is an opportunity to adopt a powerful,
+re-usable vocabulary for such an approach.
 
 ## Acknowledgements
 
