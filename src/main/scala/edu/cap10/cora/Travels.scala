@@ -8,14 +8,11 @@ import edu.cap10.util.TimeStamp
 trait Travels[ResultType] {
   
   private[this] var traveled : Boolean = false
-  protected[this] def travelResult(location:Int, ts:TimeStamp) : ResultType
-  
   def _traveled = traveled
-  
-  def _clearTravel = {
-    traveled = false
-  }
-  
+  def _clearTravel = traveled = false
+  def travelResult(location:Int, ts:TimeStamp) : ResultType
+    
+  // ...
   def travel(
     location: Int,
     ts: TimeStamp

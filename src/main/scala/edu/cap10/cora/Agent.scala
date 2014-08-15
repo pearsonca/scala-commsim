@@ -18,16 +18,17 @@ trait Agent extends TimeSensitive with Travels[TravelData] with CSVLogger[Travel
 class AgentImpl(
   val id:Int, val normLocs:Seq[Int],
   val visProbPerTick:Probability, val fh:BufferedWriter) extends Agent {
-   
+  /* ... */
+  // ...
   private def randomLocation = shuffle(normLocs).apply(0)
   
   private def randomHour = nextInt(9)+8
   
-  override def travelResult(location: Int, ts: TimeStamp) = TravelData(-1, id, location, ts)
+  override def travelResult(location: Int, ts: TimeStamp) =
+    TravelData(-1, id, location, ts)
    
   override def _tick(when:Int) = {
     if (!_traveled && (Math.random < visProbPerTick)) {
-      // making own trip if not directed to take one
       log( _travel( location = randomLocation, ts = randomHour ).copy( when = when ) )
     } else {
       _clearTravel

@@ -45,38 +45,33 @@ class Universe(
     avgLocs:Int,
     val fh:BufferedWriter) 
   extends TimeSensitive with PoissonDraws with CSVLogger[TravelData] {
-  
+  /* ... */
+  // ...
   val expectedK = expectedDaysBetweenMeets  // set the PoissonDraws parameter
   val meetingLocations = shuffle((0 to (locationCount-1))).take(meetingLocationCount)
   
   val agents : Seq[Agent]
     = Universe.createAgents(groupSize, locationCount, meetingLocations, avgLocs, visProb, fh)
   
-  var daysToNextMeeting : Int = nextDraw()
-    // get the initial days-to-next-covert meeting
+  var timeToNextMeeting : Int = nextDraw  
+  def timeToMeet = timeToNextMeeting == 0
   
   override def _tick(when:Int) = {
-
-    if (daysToNextMeeting < 0) {
-      daysToNextMeeting = nextDraw()
-    } else {
-      if (daysToNextMeeting == 0) { // time to meet
-        val loc = shuffle(meetingLocations).apply(0)
-        val ts = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )
-        // choose place, time
-
-        Await.result(
-          Future.sequence(
-            shuffle(agents).take(2).map( agent => agent.travel(loc, ts) )
-            // randomly draw 2 agents to meet at a specific place, time
-          ),
-          400 millis
-        ) foreach {
-          res => log(res) // record results
-        }
-
+    
+    if (timeToMeet) {
+      val place = shuffle(meetingLocations).apply(0)
+      val time = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )
+      Await.result(
+        Future.sequence(
+          shuffle(agents).take(2).map( agent => agent.travel(place, time) )
+        ),
+        400 millis
+      ) foreach {
+        res => log(res.copy( when = when ))
       }
-      daysToNextMeeting -= 1
+      timeToNextMeeting = nextDraw
+    } else {
+      timeToNextMeeting -= 1
     }
 
     agents foreach { a => a.tick(when) }
