@@ -68,97 +68,107 @@ rate.axis <- function(.side, .col, .name, .padj= 1.5, .adj=0.9) {
 
 .squeeze <- 0.2
 
-for (loc in locCounts) {
-  for (cnt in memCounts) {
-    if (plot.count == 1) {
-      par(mar = axis.wid*c(0,2-.squeeze,2-.squeeze,0))
-      ## top left
-    } else if (plot.count == 2) {
-      par(mar = axis.wid*c(.squeeze/2,2-.squeeze,.squeeze/2,0))
-      ## left
-    } else if (plot.count == 6) {
-      par(mar = axis.wid*c(2-.squeeze,2-.squeeze,0,0))
-      ## bottom left
-    } else if (plot.count == 7) {
-      par(mar = axis.wid*c(0,.squeeze/2,2-.squeeze,.squeeze/2))
-      ## top mid
-    } else if (plot.count == 8) {
-      par(mar = axis.wid*c(.squeeze/2,.squeeze/2,.squeeze/2,.squeeze/2))
-      ## mid
-    } else if (plot.count == 12) {
-      par(mar = axis.wid*c(2-.squeeze,.squeeze/2,0,.squeeze/2))
-      ## bottom mid
-    } else if (plot.count == 13) {
-      par(mar = axis.wid*c(0,0,2-.squeeze,2-.squeeze))
-      ## top right
-    } else if (plot.count == 14) {
-      par(mar = axis.wid*c(.squeeze/2,0,.squeeze/2,2-.squeeze))
-      ## right
-    } else if (plot.count == 18) {
-      par(mar = axis.wid*c(2-.squeeze,0,0,2-.squeeze))
-      ## bottom right
-    }
-    plot(NULL, NULL, ylim = c(0, 1), xlim = c(365, 1800), ylab="", xlab="", xaxt="n", yaxt="n")
-    
-    if (plot.count == 1) {
-      mtext("# of meeting locations = ", side = 3, cex = 0.75*par("cex.axis"), padj = -2.1, adj=0.1, line = -1.5)
-    }
-    if (plot.count %in% c(1,7,13)) {
-      mtext(loc, side = 3, cex = 0.75*par("cex.axis"), adj=0.75, padj = -2.1, line = -1.5)
-      day.axis(3)
-    }
-    
-    if (plot.count == 6) {
-      mtext("# of members = ", side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0, line = -1.5)
-    }
-    
-    if (plot.count %in% 1:6) {
-      mtext(cnt, side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0.8, line = -1.5)
-      rate.axis(2, "red", "TPR")
-      #axis(2, at = seq(0,1,.1), col = "red" , line=0, tcl=0.2)
-      #mtext("TPR", side=2, col="red")
-    }
-    if (plot.count %in% 13:18) {
-      rate.axis(4, "blue", "FPR", -1, 0.3)
-#       axis(4, at = seq(0,1,.1), col = "blue", line=0, tcl=0.2)
-#       mtext("FPR", side=4, col="blue")
-    }
-    if (plot.count %in% c(6,12,18)) {
-      day.axis(1, 1.5)
-    }
-    
-    plot.count <- plot.count + 1
-    
-    for (interval in meetInterval) {
-      membershipSamples <- list.files(pattern = paste(cnt, interval, loc,".*-members.csv", sep="-"))
-      sizeSamples <- list.files(pattern = paste(cnt, interval, loc,".*-sizes.csv", sep="-"))
+setborders <- function(pcount) {
+  if (pcount == 1) {
+    par(mar = axis.wid*c(0,2-.squeeze,2-.squeeze,0))
+    ## top left
+  } else if (pcount == 2) {
+    par(mar = axis.wid*c(.squeeze/2,2-.squeeze,.squeeze/2,0))
+    ## left
+  } else if (pcount == 6) {
+    par(mar = axis.wid*c(2-.squeeze,2-.squeeze,0,0))
+    ## bottom left
+  } else if (pcount == 7) {
+    par(mar = axis.wid*c(0,.squeeze/2,2-.squeeze,.squeeze/2))
+    ## top mid
+  } else if (pcount == 8) {
+    par(mar = axis.wid*c(.squeeze/2,.squeeze/2,.squeeze/2,.squeeze/2))
+    ## mid
+  } else if (pcount == 12) {
+    par(mar = axis.wid*c(2-.squeeze,.squeeze/2,0,.squeeze/2))
+    ## bottom mid
+  } else if (pcount == 13) {
+    par(mar = axis.wid*c(0,0,2-.squeeze,2-.squeeze))
+    ## top right
+  } else if (pcount == 14) {
+    par(mar = axis.wid*c(.squeeze/2,0,.squeeze/2,2-.squeeze))
+    ## right
+  } else if (pcount == 18) {
+    par(mar = axis.wid*c(2-.squeeze,0,0,2-.squeeze))
+    ## bottom right
+  }
+}
+
+setaxes <- function(pcount, loc, cnt) {
+  if (pcount == 1) {
+    mtext("# of meeting locations = ", side = 3, cex = 0.75*par("cex.axis"), padj = -2.1, adj=0.1, line = -1.5)
+  }
+  if (pcount %in% c(1,7,13)) {
+    mtext(loc, side = 3, cex = 0.75*par("cex.axis"), adj=0.75, padj = -2.1, line = -1.5)
+    day.axis(3)
+  }
+  
+  if (pcount == 6) {
+    mtext("# of members = ", side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0, line = -1.5)
+  }
+  
+  if (pcount %in% 1:6) {
+    mtext(cnt, side = 2, cex = 0.75*par("cex.axis"), padj = -2.3, adj = 0.8, line = -1.5)
+    rate.axis(2, "red", "TPR")
+    #axis(2, at = seq(0,1,.1), col = "red" , line=0, tcl=0.2)
+    #mtext("TPR", side=2, col="red")
+  }
+  if (pcount %in% 13:18) {
+    rate.axis(4, "blue", "FPR", -1, 0.3)
+    #       axis(4, at = seq(0,1,.1), col = "blue", line=0, tcl=0.2)
+    #       mtext("FPR", side=4, col="blue")
+  }
+  if (pcount %in% c(6,12,18)) {
+    day.axis(1, 1.5)
+  }
+}
+plotter <- function() {
+  for (loc in locCounts) {
+    for (cnt in memCounts) {
+      setborders(plot.count)
       
-      res <- array(0,
-          dim = c(length(membershipSamples), 49, 3),
-          dimnames = list(
-            sample=1:length(membershipSamples),
-            obs=1:49,
-            dat=c("day","TPR","FPR")
-          )
-      )
-      for (j in 1:length(membershipSamples)) {
-        memtab <- as.matrix(read.table(membershipSamples[j], header = F))
-        siztab <- as.matrix(read.table(sizeSamples[j], header = F))
-        for (i in 1:dim(memtab)[1]) {
-          rr <- rle(sort.int(memtab[i,-1], method = "quick"))
-          tot <- cnt-1
-          ps <- rr$lengths / cnt
-          TPR <- sum(ps * (rr$lengths - 1)) / tot
-          sizes <- siztab[i, names(rr$values)] - rr$lengths
-          FPR <- sum(ps * sizes) / pop[i]
-          res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
+      plot(NULL, NULL, ylim = c(0, 1), xlim = c(365, 1800), ylab="", xlab="", xaxt="n", yaxt="n")
+      
+      setaxes(plot.count, loc, cnt)
+      
+      plot.count <- plot.count + 1
+      
+      for (interval in meetInterval) {
+        membershipSamples <- list.files(pattern = paste(cnt, interval, loc,".*-members.csv", sep="-"))
+        sizeSamples <- list.files(pattern = paste(cnt, interval, loc,".*-sizes.csv", sep="-"))
+        
+        res <- array(0,
+            dim = c(length(membershipSamples), 49, 3),
+            dimnames = list(
+              sample=1:length(membershipSamples),
+              obs=1:49,
+              dat=c("day","TPR","FPR")
+            )
+        )
+        for (j in 1:length(membershipSamples)) {
+          memtab <- as.matrix(read.table(membershipSamples[j], header = F))
+          siztab <- as.matrix(read.table(sizeSamples[j], header = F))
+          for (i in 1:dim(memtab)[1]) {
+            rr <- rle(sort.int(memtab[i,-1], method = "quick"))
+            tot <- cnt-1
+            ps <- rr$lengths / cnt
+            TPR <- sum(ps * (rr$lengths - 1)) / tot
+            sizes <- siztab[i, names(rr$values)] - rr$lengths
+            FPR <- sum(ps * sizes) / pop[i]
+            res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
+          }
         }
+        
+        plotres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
+        
       }
       
-      plotres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
-      
     }
-    
   }
 }
 
