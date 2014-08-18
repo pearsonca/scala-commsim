@@ -17,7 +17,7 @@ for (p in 1:49) {
   pop[p] <- src.dt[(p-1)*shift < login & login <= ((p-1)*shift+end),length(unique(user.id))]
 }
 
-png("~/scala-commsim/results.png", width = 1500, height = 2500)
+#png("~/scala-commsim/results.png", width = 1500, height = 2500)
 
 nf <- layout(matrix(1:(length(memCounts)*length(locCounts)), ncol=length(locCounts)) )
 old.par <- par( bty = "n", mar=c(0,0,0,0), mgp = c(0.5, 0.5, 0), cex.axis=3 )
@@ -96,6 +96,8 @@ setborders <- function(pcount) {
   } else if (pcount == 18) {
     par(mar = axis.wid*c(2-.squeeze,0,0,2-.squeeze))
     ## bottom right
+  } else {
+    par()
   }
 }
 
@@ -127,6 +129,7 @@ setaxes <- function(pcount, loc, cnt) {
     day.axis(1, 1.5)
   }
 }
+
 plotter <- function() {
   for (loc in locCounts) {
     for (cnt in memCounts) {
@@ -172,8 +175,70 @@ plotter <- function() {
   }
 }
 
-dev.off()
+#plotter()
 
+#dev.off()
+
+#stop()
+
+histres <- function(res, red, blu) {
+  thing <- sort(apply(res[,,2], 1, function(x) which(x > 0.5, arr.ind = T)[1] ), na.last = T)
+  print(thing)
+  thing[is.na(thing)] <- 50
+  thingrle <- rle(thing)
+  print(thingrle)
+  lines((thingrle$values-1)*30+365, cumsum(thingrle$lengths), col=red, pch=6, lty="solid")
+}
+
+old.par <- par( bty = "n", mar=c(2,2,0,0), cex.axis=1 )
+
+arrivalsplot <- function() {
+  plot.count <- 1
+  for (loc in locCounts) {
+    for (cnt in memCounts) {
+      #setborders(plot.count)
+      
+      plot(NULL, NULL, ylim = c(0, 100), xlim = c(0, 49)*30+365, ylab="", xlab="")
+      
+      #setaxes(plot.count, loc, cnt)
+      
+      plot.count <- plot.count + 1
+      
+      for (interval in meetInterval) {
+        membershipSamples <- list.files(pattern = paste(cnt, interval, loc,".*-members.csv", sep="-"))
+        sizeSamples <- list.files(pattern = paste(cnt, interval, loc,".*-sizes.csv", sep="-"))
+        
+        res <- array(0,
+                     dim = c(length(membershipSamples), 49, 3),
+                     dimnames = list(
+                       sample=1:length(membershipSamples),
+                       obs=1:49,
+                       dat=c("day","TPR","FPR")
+                     )
+        )
+        for (j in 1:length(membershipSamples)) {
+          memtab <- as.matrix(read.table(membershipSamples[j], header = F))
+          siztab <- as.matrix(read.table(sizeSamples[j], header = F))
+          for (i in 1:dim(memtab)[1]) {
+            rr <- rle(sort.int(memtab[i,-1], method = "quick"))
+            tot <- cnt-1
+            ps <- rr$lengths / cnt
+            TPR <- sum(ps * (rr$lengths - 1)) / tot
+            sizes <- siztab[i, names(rr$values)] - rr$lengths
+            FPR <- sum(ps * sizes) / pop[i]
+            res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
+          }
+        }
+        
+        histres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
+        
+      }
+      
+    }
+  }
+}
+
+arrivalsplot()
 ## for parameter combination
 ##  for each sample
 ##    convert membership + size information into TPR / FRP
