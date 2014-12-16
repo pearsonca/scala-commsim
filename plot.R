@@ -17,7 +17,9 @@ for (p in 1:49) {
   pop[p] <- src.dt[(p-1)*shift < login & login <= ((p-1)*shift+end),length(unique(user.id))]
 }
 
-#png("~/scala-commsim/results.png", width = 1500, height = 2500)
+quartz("wtf", width = 5.5, height = 9, dpi = 300)
+
+#tiff("~/Desktop/results_hires.tiff", width = 5.5, height = 9, units = "in", res = 300)
 
 nf <- layout(matrix(1:(length(memCounts)*length(locCounts)), ncol=length(locCounts)) )
 old.par <- par( bty = "n", mar=c(0,0,0,0), mgp = c(0.5, 0.5, 0), cex.axis=3 )
@@ -130,6 +132,8 @@ setaxes <- function(pcount, loc, cnt) {
   }
 }
 
+res_array <- array(0, dim = c(length(locCounts), length(memCounts), length(meetInterval), 3))
+
 plotter <- function() {
   for (loc in locCounts) {
     for (cnt in memCounts) {
@@ -154,6 +158,7 @@ plotter <- function() {
             )
         )
         for (j in 1:length(membershipSamples)) {
+#           print(c(loc=loc, count=cnt, interval=interval, j=j))
           memtab <- as.matrix(read.table(membershipSamples[j], header = F))
           siztab <- as.matrix(read.table(sizeSamples[j], header = F))
           for (i in 1:dim(memtab)[1]) {
@@ -175,11 +180,11 @@ plotter <- function() {
   }
 }
 
-#plotter()
+plotter()
 
-#dev.off()
+dev.off()
 
-#stop()
+stop()
 
 histres <- function(res, red, blu) {
   thing <- sort(apply(res[,,2], 1, function(x) which(x > 0.5, arr.ind = T)[1] ), na.last = T)
