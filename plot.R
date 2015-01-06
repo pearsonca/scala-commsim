@@ -1,6 +1,8 @@
 ## plotting
 
 require(stats4)
+require(data.table)
+require(ggplot2)
 
 setwd("~/extract/")
 
@@ -17,9 +19,7 @@ for (p in 1:49) {
   pop[p] <- src.dt[(p-1)*shift < login & login <= ((p-1)*shift+end),length(unique(user.id))]
 }
 
-quartz("wtf", width = 5.5, height = 9, dpi = 300)
-
-#tiff("~/Desktop/results_hires.tiff", width = 5.5, height = 9, units = "in", res = 300)
+#quartz("wtf", width = 5.5, height = 9, dpi = 300)
 
 nf <- layout(matrix(1:(length(memCounts)*length(locCounts)), ncol=length(locCounts)) )
 old.par <- par( bty = "n", mar=c(0,0,0,0), mgp = c(0.5, 0.5, 0), cex.axis=3 )
@@ -132,7 +132,7 @@ setaxes <- function(pcount, loc, cnt) {
   }
 }
 
-res_array <- array(0, dim = c(length(locCounts), length(memCounts), length(meetInterval), 3))
+#res.dt <- data.table()
 
 plotter <- function() {
   for (loc in locCounts) {
@@ -180,35 +180,9 @@ plotter <- function() {
   }
 }
 
-plotter()
-
-dev.off()
-
-stop()
-
-histres <- function(res, red, blu) {
-  thing <- sort(apply(res[,,2], 1, function(x) which(x > 0.5, arr.ind = T)[1] ), na.last = T)
-  print(thing)
-  thing[is.na(thing)] <- 50
-  thingrle <- rle(thing)
-  print(thingrle)
-  lines((thingrle$values-1)*30+365, cumsum(thingrle$lengths), col=red, pch=6, lty="solid")
-}
-
-old.par <- par( bty = "n", mar=c(2,2,0,0), cex.axis=1 )
-
-arrivalsplot <- function() {
-  plot.count <- 1
+parser <- function(dt = data.table()) {
   for (loc in locCounts) {
     for (cnt in memCounts) {
-      #setborders(plot.count)
-      
-      plot(NULL, NULL, ylim = c(0, 100), xlim = c(0, 49)*30+365, ylab="", xlab="")
-      
-      #setaxes(plot.count, loc, cnt)
-      
-      plot.count <- plot.count + 1
-      
       for (interval in meetInterval) {
         membershipSamples <- list.files(pattern = paste(cnt, interval, loc,".*-members.csv", sep="-"))
         sizeSamples <- list.files(pattern = paste(cnt, interval, loc,".*-sizes.csv", sep="-"))
@@ -222,6 +196,7 @@ arrivalsplot <- function() {
                      )
         )
         for (j in 1:length(membershipSamples)) {
+                     print(c(loc=loc, count=cnt, interval=interval, j=j))
           memtab <- as.matrix(read.table(membershipSamples[j], header = F))
           siztab <- as.matrix(read.table(sizeSamples[j], header = F))
           for (i in 1:dim(memtab)[1]) {
@@ -231,21 +206,111 @@ arrivalsplot <- function() {
             TPR <- sum(ps * (rr$lengths - 1)) / tot
             sizes <- siztab[i, names(rr$values)] - rr$lengths
             FPR <- sum(ps * sizes) / pop[i]
-            res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
+            dt <- rbindlist(list(dt, list(meeting.locations = loc, group.size = cnt, meeting.interval = interval, run=j, day=memtab[i,1], TPR=ifelse(is.nan(TPR),0,TPR), FPR=FPR)))
+            #res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
           }
         }
         
-        histres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
+        #plotres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
         
       }
       
     }
   }
+  dt
 }
 
-arrivalsplot()
-## for parameter combination
-##  for each sample
-##    convert membership + size information into TPR / FRP
-##  consolidate samples into mean + uncertainty intervals
-## small multiples the group size and meeting period, plot lines for each location count
+res.dt <- parser()
+
+proc.dt <- res.dt[,list(FPR.med=median(FPR),
+                        TPR.med=median(TPR),
+                        TPR.high=quantile(TPR,probs=.75),
+                        TPR.low=quantile(TPR,probs=.25),
+                        FPR.high=quantile(FPR,probs=.75),
+                        FPR.low=quantile(FPR,probs=.25)
+                        ),by=list(meeting.locations, group.size, meeting.interval, day)]
+
+melt.dt <- melt(proc.dt,value.name = "value",id.vars = c("meeting.locations","group.size","meeting.interval","day"))
+melt.dt[,measure:=factor(sub('\\.\\w+','',as.character(variable)))]
+melt.dt[,quantile:=factor(sub('\\w+\\.','',as.character(variable)))]
+melt.dt$meeting.interval <- factor(melt.dt$meeting.interval)
+melt.dt$group.size <- factor(melt.dt$group.size)
+melt.dt$meeting.locations <- factor(melt.dt$meeting.locations)
+
+tiff("~/Desktop/results_hires_color.tiff", width = 6, height = 9, units = "in", res = 300)
+#p <- ggplot(melt.dt) + aes(x=day, y=value, linetype=meeting.interval, size=measure, alpha=quantile) + facet_grid(group.size ~ meeting.locations) + geom_line()
+p <- ggplot(melt.dt) + aes(x=day, y=value, linetype=meeting.interval, color=measure, alpha=quantile) + facet_grid(group.size ~ meeting.locations) + geom_line()
+p <- p + theme_bw() + theme(axis.text.y = element_text(angle = 90, hjust = 0.5))
+#p + scale_size_manual(values=c(0.5,1)) + scale_linetype(name="Meeting\nInterval") + scale_y_continuous(name="")
+p + scale_color_manual(values=c("blue","red")) + scale_linetype(name="Meeting\nInterval") + scale_y_continuous(name="")
+dev.off()
+
+#plotter()
+
+#dev.off()
+# 
+# stop()
+# 
+# histres <- function(res, red, blu) {
+#   thing <- sort(apply(res[,,2], 1, function(x) which(x > 0.5, arr.ind = T)[1] ), na.last = T)
+#   print(thing)
+#   thing[is.na(thing)] <- 50
+#   thingrle <- rle(thing)
+#   print(thingrle)
+#   lines((thingrle$values-1)*30+365, cumsum(thingrle$lengths), col=red, pch=6, lty="solid")
+# }
+# 
+# old.par <- par( bty = "n", mar=c(2,2,0,0), cex.axis=1 )
+# 
+# arrivalsplot <- function() {
+#   plot.count <- 1
+#   for (loc in locCounts) {
+#     for (cnt in memCounts) {
+#       #setborders(plot.count)
+#       
+#       plot(NULL, NULL, ylim = c(0, 100), xlim = c(0, 49)*30+365, ylab="", xlab="")
+#       
+#       #setaxes(plot.count, loc, cnt)
+#       
+#       plot.count <- plot.count + 1
+#       
+#       for (interval in meetInterval) {
+#         membershipSamples <- list.files(pattern = paste(cnt, interval, loc,".*-members.csv", sep="-"))
+#         sizeSamples <- list.files(pattern = paste(cnt, interval, loc,".*-sizes.csv", sep="-"))
+#         
+#         res <- array(0,
+#                      dim = c(length(membershipSamples), 49, 3),
+#                      dimnames = list(
+#                        sample=1:length(membershipSamples),
+#                        obs=1:49,
+#                        dat=c("day","TPR","FPR")
+#                      )
+#         )
+#         for (j in 1:length(membershipSamples)) {
+#           memtab <- as.matrix(read.table(membershipSamples[j], header = F))
+#           siztab <- as.matrix(read.table(sizeSamples[j], header = F))
+#           for (i in 1:dim(memtab)[1]) {
+#             rr <- rle(sort.int(memtab[i,-1], method = "quick"))
+#             tot <- cnt-1
+#             ps <- rr$lengths / cnt
+#             TPR <- sum(ps * (rr$lengths - 1)) / tot
+#             sizes <- siztab[i, names(rr$values)] - rr$lengths
+#             FPR <- sum(ps * sizes) / pop[i]
+#             res[j,i,1:3] <- c(memtab[i,1], ifelse(is.nan(TPR),0,TPR), FPR)
+#           }
+#         }
+#         
+#         histres(res, red = loc.colors.red[[interval]], blu = loc.colors.blu[[interval]])
+#         
+#       }
+#       
+#     }
+#   }
+# }
+# 
+# arrivalsplot()
+# ## for parameter combination
+# ##  for each sample
+# ##    convert membership + size information into TPR / FRP
+# ##  consolidate samples into mean + uncertainty intervals
+# ## small multiples the group size and meeting period, plot lines for each location count
