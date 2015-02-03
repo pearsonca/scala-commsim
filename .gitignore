@@ -36,3 +36,7 @@
 target/*
 
 project/target/*
+
+simdata/*
+
+_site/*
