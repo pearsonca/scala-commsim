@@ -16,25 +16,34 @@ import akka.actor.TypedActor
 import akka.actor.TypedActorFactory
 import akka.actor.TypedProps
 import scala.util.Random.{shuffle, nextInt}
+import scala.concurrent._
+import scala.concurrent.duration._
 
-import edu.cap10.cora.{TimeSensitive, PoissonDraws}
-import edu.cap10.util.Probability
+import edu.cap10.cora.{TimeEvents, PoissonDraws, Dispatchable}
+import edu.cap10.util.{Probability, TimeStamp}
+
+case class TravelEvent(agentId : Int, locId : Int, timeIn : Long, timeOut : Long)
+
+trait SimAgent extends TimeEvents[TravelEvent]
+
+class AgentImpl(id:Int, haunts:Seq[Int], p:Probability) extends SimAgent with Dispatchable
 
 object SimUniverse {
-  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Int)
-    = TypedProps(classOf[TimeSensitive], new SimUniverse(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs))
+  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Double)
+    = TypedProps(classOf[SimAgent], new SimUniverse(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs))
 
   def agent(id:Int, locs:Iterable[Int], p:Probability)(implicit sys : TypedActorFactory) 
-    = sys.typedActorOf(TypedProps(classOf[Agent], new AgentImpl(id, locs.toSeq, p)), "agent"+id)
+    = sys.typedActorOf(TypedProps(classOf[SimAgent], new AgentImpl(id, locs.toSeq, p)), "agent"+id)
 
-  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Int, visProb:Probability) : Seq[Agent] = {
+  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability) : Seq[SimAgent] = {
     implicit val sys = TypedActor.get(TypedActor.context)
     val meetingLocationCount = meetingLocations.size
     val srcLocs = (0 until locationCount) diff meetingLocations
-    (1 to agentCount) map { id:Int =>
-      val agentLocs = shuffle(srcLocs).take(avgLocs - meetingLocationCount)
+    (1 to agentCount) map { id:Int => {
+      val drawCount = 1 // TODO use avgLocs to draw a number of visited locations
+      val agentLocs = shuffle(srcLocs).take(drawCount)
       agent(id, agentLocs ++ meetingLocations, visProb)
-    }
+    }}
   }
 }
 
@@ -45,12 +54,12 @@ class SimUniverse(
     meetingLocationCount:Int,
     visProb:Probability,
     avgLocs:Double) 
-  extends TimeSensitive with PoissonDraws {
+  extends TimeEvents[TravelEvent] with PoissonDraws {
 
   val expectedK = expectedDaysBetweenMeets  // set the PoissonDraws parameter
   val meetingLocations = shuffle((0 to (locationCount-1))).take(meetingLocationCount)
   
-  val agents : Seq[Agent]
+  val agents : Seq[SimAgent]
     = SimUniverse.createAgents(groupSize, locationCount, meetingLocations, avgLocs, visProb)
   
   var timeToNextMeeting : Int = nextDraw  
