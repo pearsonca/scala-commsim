@@ -15,19 +15,12 @@ import edu.cap10.util.Probability._
 
 import scala.language.postfixOps
 
-object MontrealProperties {
-  val uniqueLocs = 345
-  val totalDays = 356*5
-  val dailyVisitProb : Probability = 0.5
-  val avgLocs = 4
-}
-
 object SimulationProperties {
   val startDay = 0
   val (minAgents, maxAgents) = (10, 20)
   val sampleSize = 100
   val (minPlotPeriod, maxPlotPeriod) = (10, 30)
-  val maxMeetLocations = MontrealProperties.avgLocs - 1
+  val maxMeetLocations = MontrealProps.avgLocs - 1
 }
 
 object Demo {
@@ -36,7 +29,7 @@ object Demo {
     val as = ActorSystem("Demo")
     val system = TypedActor(as)
     
-    import MontrealProperties._
+    import MontrealProps._
     import SimulationProperties._  
         
     for (
