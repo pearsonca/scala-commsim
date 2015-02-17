@@ -9,23 +9,19 @@ import edu.cap10.util.TimeStamp
 trait Dispatchable[EventType] extends TimeEvents[EventType] {
   
   private[this] val q : Queue[EventType] = Queue()
-  private[this] var traveled : Boolean = false
-  def _traveled = traveled
-  def _clearTravel = traveled = false
-  def travelResult(location:Int, ts:TimeStamp) : ResultType
-    
-  // ...
-  def travel(
-    location: Int,
-    ts: TimeStamp
-  ) = Future { _travel(location, ts)  }
-  
-  protected[this] def _travel(
-    location: Int,
-    ts: TimeStamp
-  ) : ResultType = {
-    traveled = true
-    travelResult(location, ts)
-  }
+  private[this] def dispatched : Boolean = !q.isEmpty
+  def _dispatched = dispatched
 
+  def _dispatch(e: EventType) = {
+   q += e
+   // TODO some return value indicating success
+  }
+  def dispatch(e:EventType) = Future { _dispatch(e) }
+  
+  def _tick(when:Int) : List[EventType] = {
+    val res = super._tick(when) ++ q
+    q.clear()
+    res
+  }
+  
 }

@@ -24,18 +24,16 @@ import edu.cap10.util.{Probability, TimeStamp}
 
 case class TravelEvent(agentId : Int, locId : Int, timeIn : Long, timeOut : Long)
 
-trait SimAgent extends TimeEvents[TravelEvent]
-
-class AgentImpl(id:Int, haunts:Seq[Int], p:Probability) extends SimAgent with Dispatchable
+class AgentImpl(id:Int, haunts:Seq[Int], p:Probability) extends Dispatchable[TravelEvent]
 
 object SimUniverse {
   def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Double)
-    = TypedProps(classOf[SimAgent], new SimUniverse(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs))
+    = TypedProps(classOf[TimeEvents[TravelEvent]], new SimUniverse(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs))
 
   def agent(id:Int, locs:Iterable[Int], p:Probability)(implicit sys : TypedActorFactory) 
-    = sys.typedActorOf(TypedProps(classOf[SimAgent], new AgentImpl(id, locs.toSeq, p)), "agent"+id)
+    = sys.typedActorOf(TypedProps(classOf[Dispatchable[TravelEvent]], new AgentImpl(id, locs.toSeq, p)), "agent"+id)
 
-  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability) : Seq[SimAgent] = {
+  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability) : Seq[Dispatchable[TravelEvent]] = {
     implicit val sys = TypedActor.get(TypedActor.context)
     val meetingLocationCount = meetingLocations.size
     val srcLocs = (0 until locationCount) diff meetingLocations
@@ -59,7 +57,7 @@ class SimUniverse(
   val expectedK = expectedDaysBetweenMeets  // set the PoissonDraws parameter
   val meetingLocations = shuffle((0 to (locationCount-1))).take(meetingLocationCount)
   
-  val agents : Seq[SimAgent]
+  val agents
     = SimUniverse.createAgents(groupSize, locationCount, meetingLocations, avgLocs, visProb)
   
   var timeToNextMeeting : Int = nextDraw  
@@ -72,7 +70,7 @@ class SimUniverse(
       val time = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )
       Await.result(
         Future.sequence(
-          shuffle(agents).take(2).map( agent => agent.travel(place, time) )
+          shuffle(agents).take(2).map( agent => agent.dispatch(place, time) )
         ),
         400 millis
       ) foreach {
