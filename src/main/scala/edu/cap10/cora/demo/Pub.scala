@@ -19,6 +19,7 @@ import scala.util.Random.{shuffle, nextInt}
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.language.implicitConversions
 
 import edu.cap10.cora.{TimeEvents, PoissonDraws, Dispatchable}
 import edu.cap10.util.{Probability, TimeStamp}
@@ -51,12 +52,6 @@ object SimUniverse {
 }
 
 class SimUniverse(
-//    expectedDaysBetweenMeets:Double,
-//    groupSize: Int,
-//    locationCount:Int,
-//    meetingLocationCount:Int,
-//    visProb:Probability,
-//    avgLocs:Double
     runConfig : SimConfig,
     globalConfig : ReferenceConfig
 ) 
@@ -88,16 +83,16 @@ class SimUniverse(
         Future.sequence(
           pairs.map( { case (agent, te) => agent.dispatch(te) })
         ),
-        400 millis
+        Duration(400, MILLISECONDS)
       )
       timeToNextMeeting = nextDraw
     } else {
       timeToNextMeeting -= 1
     }
-
-    agents foreach { a => a.tick(when) }
+    val src = Future.sequence(agents map {a => a.tick(when) })
+    val res = Await.result(src, Duration(1, SECONDS)).flatten
     day += 1
-    super._tick(when)
+    super._tick(when) ++ res
   }
   
 }
@@ -108,7 +103,7 @@ case class SimSystem(runConfig : SimConfig, globalConfig : ReferenceConfig) {
   val universe = system.typedActorOf(SimUniverse.props(runConfig, globalConfig))
   
   def run = {
-    val res = for (t <- 1 to globalConfig.totalDays) yield Await.result( universe.tick(t), 1 seconds)
+    val res = for (t <- 1 to globalConfig.totalDays) yield Await.result( universe.tick(t), Duration(1, SECONDS))
     res.flatten
   }
   
