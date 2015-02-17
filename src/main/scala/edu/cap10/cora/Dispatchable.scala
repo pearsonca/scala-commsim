@@ -12,13 +12,14 @@ trait Dispatchable[EventType] extends TimeEvents[EventType] {
   private[this] def dispatched : Boolean = !q.isEmpty
   def _dispatched = dispatched
 
-  def _dispatch(e: EventType) = {
+  def _dispatch(e: EventType) : Boolean = {
+   val ref = q.size 
    q += e
-   // TODO some return value indicating success
+   q.size + 1 == q.size
   }
   def dispatch(e:EventType) = Future { _dispatch(e) }
   
-  def _tick(when:Int) : List[EventType] = {
+  override def _tick(when:Int) : List[EventType] = {
     val res = super._tick(when) ++ q
     q.clear()
     res

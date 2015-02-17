@@ -7,5 +7,7 @@ case class TimeStamp(hour:Int, min:Int, sec:Int) {
   require(0 <= sec && sec < 60, f"hour $hour must be [0,60).")
   
   override val toString = f"$hour%02d:$min%02d:$sec%02d"
+ 
+  def +(day:Int) : Long = day*24*60*60 + hour*60*60 + min*60 + sec
   
 }
