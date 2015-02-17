@@ -6,7 +6,7 @@ object Probability {
   
   def apply(p:Double) = {
     if (0 <= p && p <= 1) new Probability(p)
-    throw new ArithmeticException(f"p = $p%f is not a valid probability.")
+    else throw new ArithmeticException(f"p = $p%f is not a valid probability.")
   }
   
   implicit def convertDtoP(p:Double) : Probability = this(p)

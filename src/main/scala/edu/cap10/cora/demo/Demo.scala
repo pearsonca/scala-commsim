@@ -20,7 +20,7 @@ object SimulationProperties {
   val (minAgents, maxAgents) = (10, 20)
   val sampleSize = 100
   val (minPlotPeriod, maxPlotPeriod) = (10, 30)
-  val maxMeetLocations = MontrealProps.avgLocs - 1
+  val maxMeetLocations = (MontrealProps.avgLocs - 1).toInt
 }
 
 object Demo {

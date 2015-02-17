@@ -18,6 +18,7 @@ import akka.actor.TypedProps
 import scala.util.Random.{shuffle, nextInt}
 import scala.concurrent._
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import edu.cap10.cora.{TimeEvents, PoissonDraws, Dispatchable}
 import edu.cap10.util.{Probability, TimeStamp}
@@ -102,9 +103,15 @@ class SimUniverse(
 }
 
 case class SimSystem(runConfig : SimConfig, globalConfig : ReferenceConfig) {
-  val as = ActorSystem("")
+  val as = ActorSystem("SimulationSystem")
   val system = TypedActor(as)
   val universe = system.typedActorOf(SimUniverse.props(runConfig, globalConfig))
+  
+  def run = {
+    val res = for (t <- 1 to globalConfig.totalDays) yield Await.result( universe.tick(t), 1 seconds)
+    res.flatten
+  }
+  
   def shutdown = {
     system.poisonPill(universe)
     as.shutdown()
@@ -122,7 +129,12 @@ Usage: pub [-n int] [-l int] [-t num] [-d num]
 """
 
   SimConfig().parse(args.toList) match {
-    case Some(config) => println(config)
+    case Some(config) => {
+      val sim = SimSystem(config, MontrealProps)
+      val results = sim.run
+      results map println
+      sim.shutdown
+    }
     case None => println(usage)
   }
 

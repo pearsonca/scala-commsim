@@ -15,18 +15,18 @@ import edu.cap10.util.Probability
 import edu.cap10.util.TimeStamp
 
 object Universe {
-  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Int, fh:BufferedWriter)
+  def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Double, fh:BufferedWriter)
   	= TypedProps(classOf[TimeSensitive], new Universe(poissonRate, groupSize, locationCount, meetingLocationCount, agentVisProb, avgLocs, fh))
 
   def agent(id:Int, locs:Iterable[Int], p:Probability, fh:BufferedWriter)(implicit sys : TypedActorFactory) 
     = sys.typedActorOf(TypedProps(classOf[Agent], new AgentImpl(id, locs.toSeq, p, fh)), "agent"+id)
 
-  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Int, visProb:Probability, fh:BufferedWriter) : Seq[Agent] = {
+  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability, fh:BufferedWriter) : Seq[Agent] = {
     implicit val sys = TypedActor.get(TypedActor.context)
     val meetingLocationCount = meetingLocations.size
     val srcLocs = (0 until locationCount) diff meetingLocations
     (1 to agentCount) map { id:Int =>
-      val agentLocs = shuffle(srcLocs).take(avgLocs - meetingLocationCount)
+      val agentLocs = shuffle(srcLocs).take((avgLocs - meetingLocationCount).toInt)
       agent(id, agentLocs ++ meetingLocations, visProb, fh)
     }
   }
@@ -42,7 +42,7 @@ class Universe(
     locationCount:Int,
     meetingLocationCount:Int,
     visProb:Probability,
-    avgLocs:Int,
+    avgLocs:Double,
     val fh:BufferedWriter) 
   extends TimeSensitive with PoissonDraws with CSVLogger[TravelData] {
   /* ... */
