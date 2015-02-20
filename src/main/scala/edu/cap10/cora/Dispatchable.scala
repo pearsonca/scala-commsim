@@ -9,10 +9,9 @@ import edu.cap10.util.TimeStamp
 trait Dispatchable[EventType] extends TimeEvents[EventType] {
   
   private[this] val q : Queue[EventType] = Queue()
-  private[this] def dispatched : Boolean = !q.isEmpty
-  def _dispatched = dispatched
+  protected def _dispatched = !q.isEmpty
 
-  def _dispatch(e: EventType) : Boolean = {
+  protected def _dispatch(e: EventType) : Boolean = {
    val ref = q.size 
    q += e
    q.size + 1 == q.size
