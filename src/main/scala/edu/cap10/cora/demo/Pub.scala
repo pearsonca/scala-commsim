@@ -24,9 +24,16 @@ import scala.language.implicitConversions
 import edu.cap10.cora.{TimeEvents, PoissonDraws, Dispatchable}
 import edu.cap10.util.{Probability, TimeStamp}
 
+object TravelEvent {
+  def random(agentId: Int, locations: Seq[Int], day:Int, durationSeconds:Int, minhour: Int = 8, maxhour:Int = 16) : TravelEvent = {
+    val start = TimeStamp(nextInt(maxhour-minhour+1)+minhour, nextInt(60), nextInt(60) )+day
+    TravelEvent(agentId, shuffle(locations).head, start, durationSeconds)
+  }
+}
+
 case class TravelEvent(agentId : Int, locId : Int, timeStart:Long, durationSeconds : Int)
 
-class AgentImpl(id:Int, haunts:Seq[Int], p:Probability) extends Dispatchable[TravelEvent] {
+class AgentImpl(id:Int, haunts:Seq[Int], p:Probability, meetDuration:Double) extends Dispatchable[TravelEvent] {
   override def _dispatch(te:TravelEvent) = {
     val extraSeconds = (nextDouble*5*2*60).toInt; // TODO distribute
     val myte = te.copy(agentId = id, durationSeconds = te.durationSeconds+extraSeconds)
@@ -36,6 +43,15 @@ class AgentImpl(id:Int, haunts:Seq[Int], p:Probability) extends Dispatchable[Tra
       myte
     })
   }
+  
+  override def _tick(when:Int) = {
+    if (_dispatched || (nextDouble > p)) { // if I already have directions or I'm not going out today
+      super._tick(when)
+    } else {
+      val durSecs = (nextDouble*meetDuration*2*60).toInt
+      super._tick(when) :+ TravelEvent.random(id, haunts, when, durSecs)
+    }
+  }
 }
 
 object SimUniverse {
@@ -44,17 +60,17 @@ object SimUniverse {
     globalConfig : ReferenceConfig
   ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimUniverse(runConfig, globalConfig))
 
-  def agent(id:Int, locs:Iterable[Int], p:Probability)(implicit sys : TypedActorFactory) 
-    = sys.typedActorOf(TypedProps(classOf[Dispatchable[TravelEvent]], new AgentImpl(id, locs.toSeq, p)), "agent"+id)
+  def agent(id:Int, locs:Iterable[Int], p:Probability, meetDuration:Double)(implicit sys : TypedActorFactory) 
+    = sys.typedActorOf(TypedProps(classOf[Dispatchable[TravelEvent]], new AgentImpl(id, locs.toSeq, p, meetDuration)), "agent"+id)
 
-  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability) : Seq[Dispatchable[TravelEvent]] = {
+  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability, avgMeetDuration:Double) : Seq[Dispatchable[TravelEvent]] = {
     implicit val sys = TypedActor.get(TypedActor.context)
     val meetingLocationCount = meetingLocations.size
     val srcLocs = (0 until locationCount) diff meetingLocations
     (1 to agentCount) map { id:Int => {
       val drawCount = 1 // TODO use avgLocs to draw a number of visited locations
       val agentLocs = shuffle(srcLocs).take(drawCount)
-      agent(id, agentLocs ++ meetingLocations, visProb)
+      agent(id, agentLocs ++ meetingLocations, visProb, avgMeetDuration)
     }}
   }
 }
@@ -73,7 +89,7 @@ class SimUniverse(
   val meetingLocations = shuffle((0 to (uniqueLocs-1))).take(meetLocations)
   
   val agents
-    = SimUniverse.createAgents(agentN, uniqueLocs, meetingLocations, avgLocs, dailyVisitProb)
+    = SimUniverse.createAgents(agentN, uniqueLocs, meetingLocations, avgLocs, dailyVisitProb, meetDuration)
   
   var timeToNextMeeting : Int = nextDraw
   var day : Int = 0
@@ -82,11 +98,9 @@ class SimUniverse(
   override def _tick(when:Int) = {
     
     if (timeToMeet) {
-      val place = shuffle(meetingLocations).head
-      val time = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )+day
       val numberMeeting = 2
-      val durSecs = (nextDouble*meetDuration*2*60).toInt
-      val refEvent = TravelEvent(-1, place, time, durSecs)
+      val durSecs = (nextDouble*meetDuration*2*60).toInt      
+      val refEvent = TravelEvent.random(-1, meetingLocations, day, durSecs)
       val tes = Seq.fill(numberMeeting)(refEvent)
       val pairs = shuffle(agents).take(numberMeeting).zip(tes)
       pairs foreach { case (agent, te) => agent.dispatch(te) }
