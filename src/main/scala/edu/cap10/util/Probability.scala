@@ -11,7 +11,8 @@ object Probability {
   
   implicit def convertDtoP(p:Double) : Probability = this(p)
   implicit def convertPtoD(p:Probability) : Double = p.underlying
-
+  implicit def ordering[P <: Probability] : Ordering[Probability] = Ordering[Probability].on(p => p.underlying)
+  
 }
 
 class Probability private (val underlying: Double) extends AnyVal {
