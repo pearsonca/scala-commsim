@@ -180,14 +180,14 @@ object SimUniverse {
   def agent(id:Int, locs:Iterable[Int], p:Probability, meetDuration:Double)(implicit sys : TypedActorFactory)
     = sys.typedActorOf(TypedProps(classOf[Dispatchable[TravelEvent]], new AgentImpl(id, locs.toSeq, p, meetDuration)), "agent"+id)
 
-  def createAgents(agentCount:Int, locationCount:Int, meetingLocations:Seq[Int], avgLocs:Double, visProb:Probability, avgMeetDuration:Double) : Seq[Dispatchable[TravelEvent]] = {
+  def createAgents(agentCount:Int, meetingLocations:Seq[Int], simConfig: SimConfig, globalConfig:ReferenceConfig) : Seq[Dispatchable[TravelEvent]] = {
     implicit val sys = TypedActor.get(TypedActor.context)
     val meetingLocationCount = meetingLocations.size
-    val srcLocs = (0 until locationCount) diff meetingLocations
+    val srcLocs = (0 until globalConfig.uniqueLocs) diff meetingLocations
     (1 to agentCount) map { id:Int => {
       val drawCount = 1 // TODO use avgLocs to draw a number of visited locations
       val agentLocs = shuffle(srcLocs).take(drawCount)
-      agent(id, agentLocs ++ meetingLocations, visProb, avgMeetDuration)
+      agent(id, agentLocs ++ meetingLocations, globalConfig.dailyVisitProb, simConfig.meanMeetingDuration)
     }}
   }
 }
@@ -225,7 +225,7 @@ class SimUniverse(
   val meetingLocations = shuffle((0 to (uniqueLocs-1))).take(meanLocationCount.toInt)
 
   val agents
-    = SimUniverse.createAgents(meanAgentCount.toInt, uniqueLocs, meetingLocations, avgLocs, dailyVisitProb, meanMeetingDuration)
+    = SimUniverse.createAgents(meanAgentCount.toInt, meetingLocations, runConfig, globalConfig)
 
   var timeToNextMeeting : Int = nextDraw
   var day : Int = 0
