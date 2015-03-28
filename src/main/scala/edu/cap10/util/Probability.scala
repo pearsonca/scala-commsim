@@ -15,6 +15,4 @@ object Probability {
   
 }
 
-class Probability private (val underlying: Double) extends AnyVal {
-  def -(p:Double) = Probability(underlying - p)
-}
+class Probability private (val underlying: Double) extends AnyVal

@@ -149,6 +149,7 @@ abstract class CovertAgent(id:Int, simConfig: SimConfig, globalConfig: Reference
 //  }
 //}
 
+type AgentID = Int
 
 class AgentImpl(id:Int, haunts:Seq[Int], p:Probability, meetDuration:Double) extends Dispatchable[TravelEvent] {
   override def _dispatch(te:TravelEvent) = {
