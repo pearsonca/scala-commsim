@@ -5,8 +5,8 @@ import ExecutionContext.Implicits.global
 
 trait TimeEvents[ResponseType] {
 
-  final def tick(when:Int) : Future[List[ResponseType]] = Future({ _tick(when) })
+  final def tick(when:Int) : Future[Seq[ResponseType]] = Future({ _tick(when) })
   
-  protected[this] def _tick(when:Int) : List[ResponseType] = List()
+  protected[this] def _tick(when:Int) : Seq[ResponseType] = Seq()
 
 }

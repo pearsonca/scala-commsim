@@ -23,35 +23,32 @@ class SimpleUniverse(
   import SimpleUniverse._
 
   val rng = new Random(seed)
-  val meetingLocations = rng.shuffle((0 to (uniqueLocations-1))).take(locationCount)
+  val gen = PoissonGenerator(rng, 1/meanMeetingFrequency)
+  import rng.{ shuffle, nextLong => newSeed }
+  import gen.{ next => nextMeeting }
+  
+  val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
   val agents
     = createAgents(
-     Seq.fill(agentCount)( rng.nextLong ),
+     replicate(agentCount)( newSeed ),
      runConfig, globalConfig
   )
   
-  val gen = PoissonGenerator(rng, 1/meanMeetingFrequency)
-  import gen.{ next => nextMeeting }
+
   
   var timeToNextMeeting : Int = nextMeeting
-  var day : Int = 0
   def timeToMeet = timeToNextMeeting == 0
 
   override def _tick(when:Int) = {
-
-    if (timeToMeet) {
+    timeToNextMeeting = if (timeToMeet) {
       replicate(2)( 
           TravelEvent.random(-1, meetingLocations, meanVisitDuration.toInt) 
-      ).zip(rng.shuffle(agents)) foreach {
+      ) zip(shuffle(agents)) foreach {
         case (event, agent) => agent.dispatch(event)
       }
-      timeToNextMeeting = nextMeeting
-    } else {
-      timeToNextMeeting -= 1
-    }
-    val res = Await.result(Future.sequence(agents map {a => a.tick(when) }), Duration(1, SECONDS)).flatten
-    day += 1
-    super._tick(when) ++ res
+      nextMeeting
+    } else timeToNextMeeting - 1
+    Await.result(Future.sequence(agents map {a => a.tick(when) }), Duration(1, SECONDS)).flatten ++ super._tick(when)
   }
 
 }
