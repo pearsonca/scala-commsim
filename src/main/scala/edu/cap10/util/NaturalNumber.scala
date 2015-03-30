@@ -15,4 +15,6 @@ object NaturalInt {
   
 }
 
-class NaturalInt private (val underlying: Int) extends AnyVal
+class NaturalInt private (val underlying: Int) extends AnyVal {
+  def +(n:NaturalInt) = new NaturalInt(underlying + n.underlying)
+}

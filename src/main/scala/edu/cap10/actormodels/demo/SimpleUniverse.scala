@@ -2,36 +2,50 @@ package edu.cap10.actormodels.demo
 
 import scala.concurrent._
 import ExecutionContext.Implicits.global
+import edu.cap10.util.NaturalInt
+import scala.util.Random
+import edu.cap10.util.PoissonGenerator
+import scala.language.implicitConversions
+import scala.collection.Seq.{fill => replicate}
+import scala.concurrent.duration._
+
+object SimpleUniverse {
+  def createAgents(seeds:Seq[Long], runConfig: SimpleParams, globalConfig : DataParams) : IndexedSeq[Dispatchable[TravelEvent]] = ???
+}
 
 class SimpleUniverse(
-    runConfig : SimConfig,
-    globalConfig : ReferenceConfig
+    runConfig : SimpleParams,
+    globalConfig : DataParams
 ) extends TimeEvents[TravelEvent] {
-
 
   import runConfig._
   import globalConfig._
+  import SimpleUniverse._
 
-  val expectedK = 1/meanMeetingFrequency  // set the PoissonDraws parameter
-  val meetingLocations = shuffle((0 to (uniqueLocs-1))).take(meanLocationCount.toInt)
-
+  val rng = new Random(seed)
+  val meetingLocations = rng.shuffle((0 to (uniqueLocations-1))).take(locationCount)
   val agents
-    = SimUniverse.createAgents(meanAgentCount.toInt, meetingLocations, runConfig, globalConfig)
-
-  var timeToNextMeeting : Int = nextDraw
+    = createAgents(
+     Seq.fill(agentCount)( rng.nextLong ),
+     runConfig, globalConfig
+  )
+  
+  val gen = PoissonGenerator(rng, 1/meanMeetingFrequency)
+  import gen.{ next => nextMeeting }
+  
+  var timeToNextMeeting : Int = nextMeeting
   var day : Int = 0
   def timeToMeet = timeToNextMeeting == 0
 
   override def _tick(when:Int) = {
 
     if (timeToMeet) {
-      val numberMeeting = 2
-      val durSecs = (nextDouble*meanMeetingDuration*2*60).toInt
-      val refEvent = TravelEvent.random(-1, meetingLocations, day, durSecs)
-      val tes = Seq.fill(numberMeeting)(refEvent)
-      val pairs = shuffle(agents).take(numberMeeting).zip(tes)
-      pairs foreach { case (agent, te) => agent.dispatch(te) }
-      timeToNextMeeting = nextDraw
+      replicate(2)( 
+          TravelEvent.random(-1, meetingLocations, meanVisitDuration.toInt) 
+      ).zip(rng.shuffle(agents)) foreach {
+        case (event, agent) => agent.dispatch(event)
+      }
+      timeToNextMeeting = nextMeeting
     } else {
       timeToNextMeeting -= 1
     }
