@@ -9,7 +9,7 @@ case class DataParams(
   totalDays:Int,
   dailyVisitProb : Probability,
   meanVisitDuration : Double, // seconds
-  avgLocs:Double
+  meanVisitedLocations : Double
 )
 
 object MontrealProps extends DataParams(345, 356*5, 0.5, 1, 4)

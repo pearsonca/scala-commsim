@@ -2,11 +2,21 @@ package edu.cap10.actormodels.demo
 
 import edu.cap10.util.NaturalInt
 
+object SimpleParams {
+    val usage = """
+Usage: pub [-n int] [-l int] [-t num] [-d num]
+   -n: the number of agents
+   -l: the number of covert meeting locations
+   -t: inter-plot meeting period (days)
+   -s: the random seed
+"""
+}
+
 case class SimpleParams (
-  agentCount : NaturalInt,
-  locationCount : NaturalInt,
-  meanMeetingFrequency : Double,
-  seed:Long
+  agentCount : NaturalInt = 1,
+  locationCount : NaturalInt = 1,
+  meanMeetingFrequency : Double = 1/10,
+  seed:Long = 0
 ) {
   def parse(args:List[String]) : Option[SimpleParams] = args match {
     case Nil => Some(this)

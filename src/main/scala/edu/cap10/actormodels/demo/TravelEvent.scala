@@ -1,7 +1,7 @@
 package edu.cap10.actormodels.demo
 
 import edu.cap10.util.TimeStamp
-import scala.util.Random._
+import scala.util.Random
 import edu.cap10.util.NaturalInt
 import scala.languageFeature.implicitConversions
 
@@ -22,16 +22,16 @@ object TravelEvent {
     durationSeconds : NaturalInt,
     minhour : NaturalInt = 6,
     maxhour : NaturalInt = 17
-  ) = {
+  )(implicit rng : Random) = {
     assert(!locations.isEmpty, "locations is empty")
     assert(maxhour <= 24, "max hour exceeds day length")
     assert(minhour <= maxhour, "max hour exceeds day length")
     
     TravelEvent(
-      agentID, shuffle(locations).head,
+      agentID, rng.shuffle(locations).head,
       TimeStamp(
-        nextInt(maxhour-minhour)+minhour,
-        nextInt(60), nextInt(60)
+        rng.nextInt(maxhour-minhour)+minhour,
+        rng.nextInt(60), rng.nextInt(60)
       ), durationSeconds
     )
   }

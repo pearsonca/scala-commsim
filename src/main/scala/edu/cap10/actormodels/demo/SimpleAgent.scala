@@ -1,7 +1,7 @@
 package edu.cap10.actormodels.demo
 
 import edu.cap10.util.Probability
-import scala.util.Random._
+import scala.util.Random
 
 /*An agent that
  * - can be dispatched, and does exactly as dispatched
@@ -9,19 +9,24 @@ import scala.util.Random._
  * */
 class SimpleAgent (
     id:AgentID,
-    haunts:List[LocationID],
+    haunts:Seq[LocationID],
     dailyVisitProbability:Probability,
-    aveVisitTime:Double
+    meanVisitDuration:Double, // seconds
+    seed:Long
 ) extends Dispatchable[TravelEvent] {
+  
+  private implicit val rng = new Random(seed) 
+  
+  private def makeVisit = rng.nextDouble < dailyVisitProbability
   
   override def _dispatch(te:TravelEvent) = 
     super._dispatch(te.copy(agentID = id))
 
   override def _tick(when:Int) =
-    if (_dispatched || (dailyVisitProbability < nextDouble))
+    if (_dispatched || !makeVisit)
       super._tick(when) 
     else 
       super._tick(when) :+
-        TravelEvent.random(id, haunts, aveVisitTime.toInt)
+        TravelEvent.random(id, haunts, meanVisitDuration.toInt)
 
 }

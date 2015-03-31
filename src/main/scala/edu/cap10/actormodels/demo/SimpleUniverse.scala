@@ -3,14 +3,47 @@ package edu.cap10.actormodels.demo
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import edu.cap10.util.NaturalInt
+import edu.cap10.util.Probability
+import edu.cap10.util.Probability._
 import scala.util.Random
 import edu.cap10.util.PoissonGenerator
 import scala.language.implicitConversions
 import scala.collection.Seq.{fill => replicate}
 import scala.concurrent.duration._
+import akka.actor.{ TypedActor, TypedActorFactory, TypedProps}
 
 object SimpleUniverse {
-  def createAgents(seeds:Seq[Long], runConfig: SimpleParams, globalConfig : DataParams) : IndexedSeq[Dispatchable[TravelEvent]] = ???
+  
+  def props(
+    runConfig : SimpleParams,
+    globalConfig : DataParams
+  ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimpleUniverse(runConfig, globalConfig))
+  
+  def createAgent(
+    id : AgentID,
+    haunts : Seq[LocationID],
+    dailyVisitProb: Probability,
+    meanVisitDuration: Double,
+    seed : Long
+  )(implicit sys : TypedActorFactory)
+    = sys.typedActorOf(
+      TypedProps(classOf[Dispatchable[TravelEvent]], 
+        new SimpleAgent(id, haunts, dailyVisitProb, 1, seed)), "agent"+id
+      )
+  
+  def createAgents(
+    seeds:Seq[Long],
+    runConfig: SimpleParams,
+    globalConfig : DataParams
+  )(implicit rng : Random) : Seq[Dispatchable[TravelEvent]] = {
+    implicit val sys = TypedActor.get(TypedActor.context)
+    import runConfig._
+    import globalConfig._
+    seeds.zipWithIndex map { case (agentSeed, id) => 
+      val haunts = rng.shuffle((0 to (uniqueLocations-1))).take(meanVisitedLocations.toInt)
+      createAgent(id, haunts, dailyVisitProb, meanVisitDuration, seed)
+    }
+  }
 }
 
 class SimpleUniverse(
@@ -22,8 +55,8 @@ class SimpleUniverse(
   import globalConfig._
   import SimpleUniverse._
 
-  val rng = new Random(seed)
-  val gen = PoissonGenerator(rng, 1/meanMeetingFrequency)
+  implicit val rng = new Random(seed)
+  val gen = PoissonGenerator(1/meanMeetingFrequency)
   import rng.{ shuffle, nextLong => newSeed }
   import gen.{ next => nextMeeting }
   
@@ -32,9 +65,7 @@ class SimpleUniverse(
     = createAgents(
      replicate(agentCount)( newSeed ),
      runConfig, globalConfig
-  )
-  
-
+    )
   
   var timeToNextMeeting : Int = nextMeeting
   def timeToMeet = timeToNextMeeting == 0

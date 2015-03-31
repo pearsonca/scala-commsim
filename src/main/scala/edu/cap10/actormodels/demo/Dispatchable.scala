@@ -6,7 +6,7 @@ import ExecutionContext.Implicits.global
 
 trait Dispatchable[EventType] extends TimeEvents[EventType] {
   
-  private[this] val q : Queue[EventType] = Queue()
+  private[this] val q = Queue[EventType]()
   protected[this] def _dispatched = !q.isEmpty
 
   protected[this] def _dispatch(e: EventType) : Boolean = {
