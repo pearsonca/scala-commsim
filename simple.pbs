@@ -4,7 +4,7 @@
 #PBS -o minnow.o
 #PBS -e minnow.err
 #PBS -m a
-#PBS -M cap10@ufl.edu
+#PBS -M blank101@gmail.com
 #PBS -l walltime=24:00:00
 #PBS -l nodes=1:ppn=8
 #PBS -l pmem=1G
