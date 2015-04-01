@@ -12,7 +12,7 @@ case class DataEvent private (uID: AgentID, locationID: LocationID, start:Long, 
 object DataEvent {
   def generatorDay(refTime:Long = 0) : Function2[Int,TravelEvent,DataEvent] = 
     (day:Int, te:TravelEvent) => 
-      DataEvent(te.agentID, te.locationId, te.timeStart+day + refTime, te.timeStart+day+te.durationSeconds + refTime)
+      DataEvent(te.agentID, te.locationID, te.timeStart+day + refTime, te.timeStart+day+te.durationSeconds + refTime)
 }
 
 object TravelEvent {
@@ -39,7 +39,7 @@ object TravelEvent {
 
 case class TravelEvent (
     agentID : AgentID,
-    locationId : LocationID,
+    locationID : LocationID,
     timeStart: TimeStamp,
     durationSeconds : Int
 )

@@ -1,7 +1,7 @@
 package edu.cap10.actormodels.demo
 
 import edu.cap10.util.Probability
-import scala.util.Random
+import edu.cap10.util.LocalRNG
 
 /*An agent that
  * - can be dispatched, and does exactly as dispatched
@@ -13,9 +13,7 @@ class SimpleAgent (
     dailyVisitProbability:Probability,
     meanVisitDuration:Double, // seconds
     seed:Long
-) extends Dispatchable[TravelEvent] {
-  
-  private implicit val rng = new Random(seed) 
+) extends Dispatchable[TravelEvent] with LocalRNG { 
   
   private def makeVisit = rng.nextDouble < dailyVisitProbability
   

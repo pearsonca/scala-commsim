@@ -5,6 +5,7 @@ import ExecutionContext.Implicits.global
 import edu.cap10.util.NaturalInt
 import edu.cap10.util.Probability
 import edu.cap10.util.Probability._
+import edu.cap10.util.LocalRNG
 import scala.util.Random
 import edu.cap10.util.PoissonGenerator
 import scala.language.implicitConversions
@@ -49,26 +50,22 @@ object SimpleUniverse {
 class SimpleUniverse(
     runConfig : SimpleParams,
     globalConfig : DataParams
-) extends TimeEvents[TravelEvent] {
+) extends TimeEvents[TravelEvent] with LocalRNG {
 
-  import runConfig._
-  import globalConfig._
-  import SimpleUniverse._
+  import runConfig._, globalConfig._, SimpleUniverse._
 
-  implicit val rng = new Random(seed)
-  val gen = PoissonGenerator(meanMeetingPeriod)
+  val meetingGenerator = PoissonGenerator(meanMeetingPeriod)
   import rng.{ shuffle, nextLong => newSeed }
-  import gen.{ next => nextMeeting }
+  import meetingGenerator.{ next => daysToNextMeeting }
   
   val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
-  val agents
-    = createAgents(
-     replicate(agentCount)( newSeed ),
-     runConfig, globalConfig
-    )
+  val agents = createAgents(
+    replicate(agentCount)( newSeed ),
+    runConfig, globalConfig
+  )
   
-  var timeToNextMeeting : Int = nextMeeting
-  def timeToMeet = timeToNextMeeting == 0
+  var timeToNextMeeting : Int = daysToNextMeeting
+  def timeToMeet : Boolean = timeToNextMeeting == 0
 
   override def tick(when:Int) = {
     var dispatch : Future[Seq[Unit]] = Future.successful(Seq())
@@ -80,12 +77,12 @@ class SimpleUniverse(
           agent.dispatch(event)
         }
       })
-      nextMeeting
+      daysToNextMeeting
     } else timeToNextMeeting - 1
     for (
-      _ <- dispatch;
-      res <- Future.sequence(agents map { a => a.tick(when) })
-    ) yield res.flatten
+      _ <- dispatch; // await dispatch
+      agentActivity <- Future.sequence(agents map { a => a.tick(when) })
+    ) yield agentActivity.flatten
   }
 
 }
