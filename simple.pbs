@@ -8,13 +8,13 @@
 #PBS -l walltime=24:00:00
 #PBS -l nodes=1:ppn=8
 #PBS -l pmem=1G
-#PBS -t 1-1080
+#PBS -t 1-54
 
-#cd /scratch/lfs/cap10
+cd /scratch/lfs/cap10/scala-commsim
 parameters=`cat parameters.csv | tail -n +$PBS_ARRAYID | head -1`
-for ((i=0;i<1;i++))
+for ((i=0;i<100;i++))
 do
-  scala -cp ./target/scala-2.11/classes edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > run-$PBS_ARRAYID-$i.csv
-  awk '{ print "$PBS_ARRAYID, $i, " $0 }' run-$PBS_ARRAYID-$i.csv >> runs.csv
+  target/start edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > run-$PBS_ARRAYID-$i.csv
+  awk '{ print "'$PBS_ARRAYID' '$i' " $0 }' run-$PBS_ARRAYID-$i.csv >> runs.csv
   rm run-$PBS_ARRAYID-$i.csv
 done

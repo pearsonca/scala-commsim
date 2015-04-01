@@ -10,7 +10,7 @@
 #PBS -l pmem=1G
 #PBS -t 1-1080
 
-cd /scratch/lfs/cap10
+cd /scratch/lfs/cap10/scala-commsim
 parameters=`cat parameters.txt | tail -n +$PBS_ARRAYID | head -1`
 for ((i=0;i<1000;i++))
 do
