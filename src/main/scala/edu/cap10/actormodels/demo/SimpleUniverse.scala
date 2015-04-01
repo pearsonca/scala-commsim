@@ -79,7 +79,7 @@ class SimpleUniverse(
       }
       nextMeeting
     } else timeToNextMeeting - 1
-    Await.result(Future.sequence(agents map {a => a.tick(when) }), Duration(1, SECONDS)).flatten ++ super._tick(when)
+    Await.result(Future.sequence(agents map { a => a.tick(when) }), Duration(3, SECONDS)).flatten ++ super._tick(when)
   }
 
 }

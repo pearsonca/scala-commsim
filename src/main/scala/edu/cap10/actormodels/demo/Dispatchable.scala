@@ -16,9 +16,11 @@ trait Dispatchable[EventType] extends TimeEvents[EventType] {
   }
   def dispatch(e:EventType) = Future { _dispatch(e) }
   
-  override def _tick(when:Int) = {
-    val res = super._tick(when) ++ q
-    q.clear()
-    res
+  override def _tick(when:Int) = q ++ super._tick(when)
+  
+  override def tick(when:Int) = super.tick(when) andThen { 
+    case res =>
+      q.clear()
+      res
   }
 } 

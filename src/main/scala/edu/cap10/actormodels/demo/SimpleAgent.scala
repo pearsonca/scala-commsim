@@ -24,9 +24,8 @@ class SimpleAgent (
 
   override def _tick(when:Int) =
     if (_dispatched || !makeVisit)
-      super._tick(when) 
+      super._tick(when)
     else 
-      super._tick(when) :+
-        TravelEvent.random(id, haunts, meanVisitDuration.toInt)
+      TravelEvent.random(id, haunts, meanVisitDuration.toInt) +: super._tick(when)
 
 }

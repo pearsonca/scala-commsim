@@ -26,7 +26,6 @@ object TravelEvent {
     assert(!locations.isEmpty, "locations is empty")
     assert(maxhour <= 24, "max hour exceeds day length")
     assert(minhour <= maxhour, "max hour exceeds day length")
-    
     TravelEvent(
       agentID, rng.shuffle(locations).head,
       TimeStamp(

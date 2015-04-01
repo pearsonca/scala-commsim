@@ -13,9 +13,9 @@ Usage: pub [-n int] [-l int] [-t num] [-d num]
 }
 
 case class SimpleParams (
-  agentCount : NaturalInt = 1,
+  agentCount : NaturalInt = 2,
   locationCount : NaturalInt = 1,
-  meanMeetingFrequency : Double = 1/10,
+  meanMeetingFrequency : Double = 1d/10d,
   seed:Long = 0
 ) {
   def parse(args:List[String]) : Option[SimpleParams] = args match {

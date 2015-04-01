@@ -12,4 +12,4 @@ case class DataParams(
   meanVisitedLocations : Double
 )
 
-object MontrealProps extends DataParams(345, 356*5, 0.5, 1, 4)
+object MontrealProps extends DataParams(345, 356*5, 0.5, 5*60, 4)

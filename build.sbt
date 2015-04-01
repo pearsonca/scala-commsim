@@ -2,7 +2,7 @@ scalaVersion := "2.11.5"
 
 sbtVersion := "0.13.7"
 
-scalacOptions ++= Seq("-feature","-deprecation","-target:jvm-1.8")
+scalacOptions ++= Seq("-feature","-deprecation","-target:jvm-1.7")
 
 name := "scala-commsim"
 

@@ -11,8 +11,8 @@
 #PBS -t 1-1080
 
 #cd /scratch/lfs/cap10
-parameters=`cat parameters.txt | tail -n +$PBS_ARRAYID | head -1`
-for ((i=0;i<10;i++))
+parameters=`cat parameters.csv | tail -n +$PBS_ARRAYID | head -1`
+for ((i=0;i<1;i++))
 do
   scala -cp ./target/scala-2.11/classes edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > run-$PBS_ARRAYID-$i.csv
   awk '{ print "$PBS_ARRAYID, $i, " $0 }' run-$PBS_ARRAYID-$i.csv >> runs.csv
