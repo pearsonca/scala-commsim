@@ -18,7 +18,7 @@ object SimpleUniverse {
   def props(
     runConfig : SimpleParams,
     globalConfig : DataParams
-  ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimpleUniverse(runConfig, globalConfig))
+  ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimpleUniverse(runConfig.seed, runConfig, globalConfig))
   
   def createAgent(
     id : AgentID,
@@ -48,11 +48,12 @@ object SimpleUniverse {
 }
 
 class SimpleUniverse(
+    override val seed : Long,
     runConfig : SimpleParams,
     globalConfig : DataParams
 ) extends TimeEvents[TravelEvent] with LocalRNG {
 
-  import runConfig._, globalConfig._, SimpleUniverse._
+  import runConfig.{seed => _, _}, globalConfig._, SimpleUniverse._
 
   val meetingGenerator = PoissonGenerator(meanMeetingPeriod)
   import rng.{ shuffle, nextLong => newSeed }

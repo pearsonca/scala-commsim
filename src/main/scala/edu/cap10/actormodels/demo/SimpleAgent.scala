@@ -12,7 +12,7 @@ class SimpleAgent (
     haunts:Seq[LocationID],
     dailyVisitProbability:Probability,
     meanVisitDuration:Double, // seconds
-    seed:Long
+    override val seed:Long
 ) extends Dispatchable[TravelEvent] with LocalRNG { 
   
   private def makeVisit = rng.nextDouble < dailyVisitProbability
