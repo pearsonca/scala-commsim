@@ -70,7 +70,7 @@ class SimpleUniverse(
   var timeToNextMeeting : Int = nextMeeting
   def timeToMeet = timeToNextMeeting == 0
 
-  override def _tick(when:Int) = {
+  override def tick(when:Int) = {
     timeToNextMeeting = if (timeToMeet) {
       replicate(2)( 
           TravelEvent.random(-1, meetingLocations, meanVisitDuration.toInt) 
@@ -79,7 +79,8 @@ class SimpleUniverse(
       }
       nextMeeting
     } else timeToNextMeeting - 1
-    Await.result(Future.sequence(agents map { a => a.tick(when) }), Duration(3, SECONDS)).flatten ++ super._tick(when)
+    
+    for (res <- Future.sequence(agents map { a => a.tick(when) })) yield res.flatten
   }
 
 }
