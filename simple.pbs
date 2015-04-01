@@ -10,6 +10,8 @@
 #PBS -l pmem=1G
 #PBS -t 1-54
 
+module load java/1.8.0_31
+module load scala
 cd /scratch/lfs/cap10/scala-commsim
 parameters=`cat parameters.csv | tail -n +$PBS_ARRAYID | head -1`
 for ((i=0;i<100;i++))
