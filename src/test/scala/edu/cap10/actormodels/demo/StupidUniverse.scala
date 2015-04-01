@@ -12,12 +12,12 @@ import scala.collection.Seq.{fill => replicate}
 import scala.concurrent.duration._
 import akka.actor.{ TypedActor, TypedActorFactory, TypedProps}
 
-object SimpleUniverse {
+object StupidUniverse {
   
   def props(
     runConfig : SimpleParams,
     globalConfig : DataParams
-  ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimpleUniverse(runConfig, globalConfig))
+  ) = TypedProps(classOf[TimeEvents[TravelEvent]], new StupidUniverse(runConfig, globalConfig))
   
   def createAgent(
     id : AgentID,
@@ -28,7 +28,7 @@ object SimpleUniverse {
   )(implicit sys : TypedActorFactory)
     = sys.typedActorOf(
       TypedProps(classOf[Dispatchable[TravelEvent]], 
-        new SimpleAgent(id, haunts, dailyVisitProb, 1, seed)), "agent"+id
+        new StupidAgent(id, haunts, dailyVisitProb, 1, seed)), "agent"+id
       )
   
   def createAgents(
@@ -40,27 +40,27 @@ object SimpleUniverse {
     import runConfig._
     import globalConfig._
     seeds.zipWithIndex map { case (agentSeed, id) => 
-      val haunts = rng.shuffle((0 to (uniqueLocations-1))).take(meanVisitedLocations.toInt)
+      val haunts = (0 to (uniqueLocations-1)).take(meanVisitedLocations.toInt)
       createAgent(id, haunts, dailyVisitProb, meanVisitDuration, seed)
     }
   }
 }
 
-class SimpleUniverse(
+class StupidUniverse(
     runConfig : SimpleParams,
     globalConfig : DataParams
 ) extends TimeEvents[TravelEvent] {
 
   import runConfig._
   import globalConfig._
-  import SimpleUniverse._
+  import StupidUniverse._
 
   implicit val rng = new Random(seed)
   val gen = PoissonGenerator(meanMeetingPeriod)
   import rng.{ shuffle, nextLong => newSeed }
   import gen.{ next => nextMeeting }
   
-  val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
+  val meetingLocations = (0 to (uniqueLocations-1)).drop(meanVisitedLocations.toInt).take(locationCount)
   val agents
     = createAgents(
      replicate(agentCount)( newSeed ),

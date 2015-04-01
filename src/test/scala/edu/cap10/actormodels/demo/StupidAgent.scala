@@ -19,8 +19,8 @@ class StupidAgent (
   
   private def makeVisit = rng.nextDouble < dailyVisitProbability
   
-  override def _dispatch(te:TravelEvent) = true
+  override def _dispatch(te:TravelEvent) = super._dispatch(te.copy(agentID = id))
 
-  override def _tick(when:Int) = Seq(TravelEvent.random(id, haunts, meanVisitDuration.toInt))
+  //override def _tick(when:Int) = Seq(TravelEvent.random(id, haunts, meanVisitDuration.toInt))
 
 }

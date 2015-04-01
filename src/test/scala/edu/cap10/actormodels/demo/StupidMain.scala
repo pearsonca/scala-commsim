@@ -7,10 +7,10 @@ import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
 
-case class SimpleSystem(runConfig : SimpleParams, globalConfig : DataParams) {
+case class StupidSystem(runConfig : SimpleParams, globalConfig : DataParams) {
   val as = ActorSystem("SimulationSystem")
   val system = TypedActor(as)
-  val universe = system.typedActorOf(SimpleUniverse.props(runConfig, globalConfig))
+  val universe = system.typedActorOf(StupidUniverse.props(runConfig, globalConfig))
   
   val mapper = DataEvent.generatorDay()
   
@@ -21,10 +21,10 @@ case class SimpleSystem(runConfig : SimpleParams, globalConfig : DataParams) {
   def shutdown = as.shutdown
 }
 
-object SimpleMain extends App {
+object StupidMain extends App {
   SimpleParams().parse(args.toList) match {
     case Some(config) => {
-      val sim = SimpleSystem(config, MontrealProps)
+      val sim = StupidSystem(config, MontrealProps)
       val results = for (res <- sim.run) yield { res map { _.toString } }
       results.onComplete { _ match {
         case Success(output) => System.out.println(output mkString System.lineSeparator)
