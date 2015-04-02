@@ -14,7 +14,7 @@ module load java/1.8.0_31
 module load scala
 cd /scratch/lfs/cap10/scala-commsim
 parameters=`cat parameters.csv | tail -n +$PBS_ARRAYID | head -1`
-for ((i=0;i<1000;i++))
+for ((i=0;i<SAMPLE_SIZE;i++))
 do
   target/start edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > run-$PBS_ARRAYID-$i.csv
   awk '{ print "'$PBS_ARRAYID' '$i' " $0 }' run-$PBS_ARRAYID-$i.csv >> runs-$PBS_ARRAYID.csv
