@@ -2,8 +2,9 @@
 
 require(data.table); require(ggplot2); require(grid); require(reshape2)
 
-src.dt <- data.table(read.csv("~/Dropbox/montreal/merged.o", header = F, sep=" "))
+src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ")
 setnames(src.dt, c("user_id","location_id","login","logout"))
+setkey(src.dt, login, logout, user_id, location_id)
 
 max_real_duration <- 60*60*24 # at most, continuous login of a day
 
@@ -29,6 +30,12 @@ min_total_login <- 60*60 # 1 hour
 invalid.locs <- locs.dt[(unique_users == 1) | (total_login_time < min_total_login), location_id] # locations with only one user, or total log in time < 1 hour
 
 loc_user_duration.censored.dt <- user_and_duration.censored.dt[!(location_id %in% invalid.locs),]
+loc_user_duration.censored.dt[,user_id := .GRP, by=user_id]
+loc_user_duration.censored.dt[,location_id := .GRP, by=location_id]
+
+
+ggplot(loc_user_duration.censored.dt[,list(first=min(login), last=max(logout)),by=user_id]) + theme_bw() +
+  aes(ymin=user_id+1-0.5, ymax=user_id+1+0.5, xmin = first, xmax=last) + geom_rect()
 
 loc_view.dt <- loc_user_duration.censored.dt[,
   list(
