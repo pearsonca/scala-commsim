@@ -17,8 +17,6 @@ parameters=`cat parameters.csv | tail -n +$PBS_ARRAYID | head -1`
 for ((i=0;i<1000;i++))
 do
   target/start edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > run-$PBS_ARRAYID-$i.csv
-  awk '{ print "'$i' " $0 }' run-$PBS_ARRAYID-$i.csv >> runs-$PBS_ARRAYID.csv
+  awk '{ print "'$PBS_ARRAYID' '$i' " $0 }' run-$PBS_ARRAYID-$i.csv >> runs-$PBS_ARRAYID.csv
   rm run-$PBS_ARRAYID-$i.csv
 done
-awk '{ print "'$PBS_ARRAYID' " $0 }' runs-$PBS_ARRAYID.csv >> runs.csv
-rm runs-$PBS_ARRAYID.csv

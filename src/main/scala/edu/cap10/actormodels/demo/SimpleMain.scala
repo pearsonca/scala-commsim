@@ -22,18 +22,24 @@ case class SimpleSystem(runConfig : SimpleParams, globalConfig : DataParams) {
 }
 
 object SimpleMain extends App {
+  
+  val (stdout, stderr) = (System.out, System.err)
+  
   SimpleParams().parse(args.toList) match {
     case Some(config) => {
       val sim = SimpleSystem(config, MontrealProps)
       val results = for (res <- sim.run) yield { res map { _.toString } }
       results.onComplete { _ match {
-        case Success(output) => System.out.println(output mkString System.lineSeparator)
-        case Failure(e) => System.err.println(e)
+        case Success(output) => {
+          stdout.println(output mkString System.lineSeparator)
+          stdout.flush()
+        }
+        case Failure(e) => stderr.println(e)
       } }
       results.andThen { case _ => sim.shutdown }
       Await.result(results, Duration(30, SECONDS))
     }
-    case None => println(SimpleParams.usage)
+    case None => stderr.println(SimpleParams.usage)
   }
 
 }
