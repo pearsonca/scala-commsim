@@ -3,12 +3,20 @@
 require(data.table); require(ggplot2); require(grid); require(reshape2)
 
 src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ")
-setnames(src.dt, c("user_id","location_id","login","logout"))
+setnames(src.dt, c("user_id", "location_id", "login", "logout"))
 setkey(src.dt, login, logout, user_id, location_id)
 
 max_real_duration <- 60*60*24 # at most, continuous login of a day
 
+bad.list <- with(src.dt[(logout - login) > max_real_duration,],
+  list(bad_users = unique(user_id), bad_locs = unique(location_id), bad_entries = length(user_id) )
+)
+
 duration.censored.dt <- src.dt[(logout - login) <= max_real_duration,]
+
+eliminated.users <- setdiff(bad.list$bad_users, unique(duration.censored.dt$user_id))
+eliminated.locs <- setdiff(bad.list$bad_locs, unique(duration.censored.dt$location_id))
+warning("eliminated ", length(eliminated.users)," users with only >24 hour sessions: ", paste(eliminated.users, collapse=" "))
 
 user.location.count.dt <- duration.censored.dt[,
 	list(location_count = length(unique(location_id))),
@@ -33,10 +41,6 @@ loc_user_duration.censored.dt <- user_and_duration.censored.dt[!(location_id %in
 loc_user_duration.censored.dt[,user_id := .GRP, by=user_id]
 loc_user_duration.censored.dt[,location_id := .GRP, by=location_id]
 
-
-ggplot(loc_user_duration.censored.dt[,list(first=min(login), last=max(logout)),by=user_id]) + theme_bw() +
-  aes(ymin=user_id+1-0.5, ymax=user_id+1+0.5, xmin = first, xmax=last) + geom_rect()
-
 loc_view.dt <- loc_user_duration.censored.dt[,
   list(
     unique_users = length(unique(user_id)),
@@ -51,10 +55,18 @@ user_view.dt <- loc_user_duration.censored.dt[,
 		unique_locs = length(unique(location_id)),
 		total_login_time = sum(logout - login),
 		mean_login = mean(logout - login),
-		sd_login = sd(logout - login)
+		sd_login = sd(logout - login),
+    first = min(login),
+    last = max(logout)
 	),
 	by="user_id"
 ]
+
+user_view.dt[, login_proportion := total_login_time / (last-first) ]
+
+ggplot(user_view.dt) + theme_bw() +
+  aes(x=user_id, ymin=first, ymax=last, alpha=login_proportion) + geom_linerange() + coord_flip()
+
 
 break_categorization <- function(dt, target, output) {
 	bks <- hist(dt[[target]], plot = F)$breaks
