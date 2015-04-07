@@ -13,7 +13,7 @@ sapply(req.packages, require, character.only = T)
 Source data:
 
 ```{r, echo=FALSE}
-src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ")
+src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ", colClasses = c("integer","integer","integer","integer"))
 setnames(src.dt, c("user_id", "location_id", "login", "logout"))
 setkey(src.dt, login, logout, user_id, location_id)
 src.dt
@@ -40,15 +40,42 @@ while(length(invalid.users) > 0) {
   censor.dt <- censor.dt[!location_id %in% invalid.locs]
   invalid.users <- censor.dt[,.N, by=user_id ][N < min_logins, user_id]
 }
+censor.dt
 ```
 
+Relabel source data:
+
+1. re-assign user ids from 1, ordered by first appearance
+2. re-assign location ids from 1, ordered by first appearance
+3. TODO split entries that cross days (~ 3% of data; of crossing entries, most look like late PM->early AM sessions, aka bar / club visits)
+4. convert login / logout times to `log(in|out)_day` and `log(in|out)_time`
+
 ```{r, echo=FALSE}
-# src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ")
-# setnames(src.dt, c("user_id", "location_id", "login", "logout"))
-# setkey(src.dt, login, logout, user_id, location_id)
-# 
-# max_real_duration <- 60*60*24 # at most, continuous login of a day
-# 
+censor.dt[,
+  user_id := .GRP, by=user_id
+][,
+  location_id := .GRP, by=location_id
+][,
+  login_day := login %/% (24*60*60)
+][,
+  logout_day := logout %/% (24*60*60)
+][,
+  login_time := login - login_day*24*60*60
+][,
+  logout_time := logout - logout_day*24*60*60
+]
+setkey(censor.dt, login, logout, user_id, location_id)
+save(censor.dt, file = "~/Dropbox/montreal/censored.Rdata")
+# censor.dt[,list(
+#   login_day = login %/% (24*60*60),
+#   logout_day = logout %/% (24*60*60),
+#   login_time = login %% (24*60*60)/(60*60),
+#   logout_time = logout %% (24*60*60)/(60*60)
+# ) ]
+```
+
+
+```{r, echo=FALSE}
 # bad.list <- with(src.dt[(logout - login) > max_real_duration,],
 #   list(bad_users = unique(user_id), bad_locs = unique(location_id), bad_entries = length(user_id) )
 # )

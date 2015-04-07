@@ -13,3 +13,7 @@ case class DataParams(
 )
 
 object MontrealProps extends DataParams(345, 356*5, 0.5, 5*60, 4)
+
+class LocationParams
+
+class AdvancedDataParams
