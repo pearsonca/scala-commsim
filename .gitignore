@@ -42,7 +42,7 @@ token.txt
 /simdata/*
 *.cpp
 
-test.csv
+test*.csv
 
 thing.csv
 
