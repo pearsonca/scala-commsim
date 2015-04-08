@@ -62,14 +62,24 @@ method_1_target <- function(slice.dt)
     user_id
   ]
 
-method_1 <- function(dt, width, start = min(dt$login_day)+365, max_increments = 6, target_pop = 50) {
+method_1 <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
   i <- 0
   target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
   while((i < max_increments) & (length(target_users) > target_pop)) {
     i <- i+1
     target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
   }
-  target_users
+  list(targets=target_users, inc=i)
+}
+
+method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
+  i <- 0
+  target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
+  while((i < max_increments) & (length(target_users) > target_pop)) {
+    i <- i+1
+    target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
+  }
+  list(targets=target_users, inc=i)
 }
 
 for (rid in meld.dt[run_id != 0, unique(run_id)]) for (sid in meld.dt[run_id == rid, unique(sample_id)]) {
@@ -77,14 +87,16 @@ for (rid in meld.dt[run_id != 0, unique(run_id)]) for (sid in meld.dt[run_id == 
   targets <- synth.dt[target == T,]
   view.dt <- view(synth.dt)
   target_14 <- method_1(view.dt, 14)
-  target_21 <- method_1(view.dt, 21)
-  target_28 <- method_1(view.dt, 28)
+  covert_targets <- target_14$targets
+#  target_21 <- method_1(view.dt, 21)
+#  target_28 <- method_1(view.dt, 28)
   misses_ref <- targets[,length(unique(user_id))]
-  hits <- targets[user_id %in% target_14, length(unique(user_id))]
+  hits <- targets[user_id %in% covert_targets, length(unique(user_id))]
   misses <- misses_ref - hits
-  collateral <- length(target_14)-hits
+  collateral <- length(covert_targets)-hits
   print("14:")
   print(c(
+    steps = target_14$inc,
     run_id = rid,
     sample_id = sid,
     hits=hits,
