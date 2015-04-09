@@ -54,27 +54,34 @@ Relabel source data:
 5. mark data as the empirical source: set `run_id = 0`, `sample_id = 0`, `target = FALSE`.
 
 ```{r, echo=FALSE}
-censor.dt[,
+breakoutDays <- function(dt) {
+  dt[,
+    user_id := .GRP, by=user_id
+  ][,
+    location_id := .GRP, by=location_id
+  ][,
+    login_day := login %/% (24*60*60)
+  ][,
+    logout_day := logout %/% (24*60*60)
+  ][,
+    login_time := login - login_day*24*60*60
+  ][,
+    logout_time := logout - logout_day*24*60*60
+  ]
+}
+breakoutDays(censor.dt[,
   user_id := .GRP, by=user_id
 ][,
   location_id := .GRP, by=location_id
-][,
-  login_day := login %/% (24*60*60)
-][,
-  logout_day := logout %/% (24*60*60)
-][,
-  login_time := login - login_day*24*60*60
-][,
-  logout_time := logout - logout_day*24*60*60
 ][,
   run_id := 0
 ][,
   sample_id := 0
 ][,
   target := FALSE
-]
+])
 setkey(censor.dt, run_id, sample_id, login_day, login_time, logout_day, logout_time, user_id, location_id)
-save(censor.dt, file = "../input/censored.Rdata")
+save(censor.dt, breakoutDays, file = "../input/censored.Rdata")
 ```
 
 

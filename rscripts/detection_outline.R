@@ -1,28 +1,20 @@
 ## detection schemes
 require(argparser)
+a.parser <- arg.parser("Run Detection approaches against synthetic data", "detector")
+a.parser <- add.argument(a.parser, "--src", "source data", default = "../input/censored.Rdata")
+a.parser <- add.argument(a.parser, "target", "target synthetic data", type="character")
+a.parser <- add.argument(a.parser, "--out", "the output file; will default to out-$tar", type="character")
+argv <- parse.args(a.parser, c("../output/test-1.csv"))
 
-
-load("../input/censored.Rdata")
-samples.dt <- fread("../test-1.csv", colClasses = "integer")
+load(argv$src)
+samples.dt <- fread(argv$target, colClasses = "integer")
 setnames(samples.dt, c("run_id", "sample_id", "user_id", "location_id", "login", "logout"))
-setkeyv(samples.dt, key(censor.dt))
-samples.dt[,
+breakoutDays(samples.dt[,
   user_id := user_id + max(censor.dt$user_id)+1L
 ][,
-  login_day := login %/% (24*60*60)
-][,
-  logout_day := logout %/% (24*60*60)
-][,
-  login_time := login - login_day*24*60*60
-][,
-  logout_time := logout - logout_day*24*60*60
-][,
-  login_day := login_day + min(censor.dt$login_day)
-][,
-  logout_day := logout_day + min(censor.dt$login_day)
-][,
   target := TRUE
-]
+])
+setkeyv(samples.dt, key(censor.dt))
 
 meld.dt <- rbind(censor.dt, samples.dt, use.names = TRUE)
 
