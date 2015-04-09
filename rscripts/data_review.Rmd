@@ -13,7 +13,7 @@ sapply(req.packages, require, character.only = T)
 Source data:
 
 ```{r, echo=FALSE}
-src.dt <- fread("~/Dropbox/montreal/merged.o", header = F, sep=" ", colClasses = c("integer","integer","integer","integer"))
+src.dt <- fread("../input/merged.o", header = F, sep=" ", colClasses = c("integer","integer","integer","integer"))
 setnames(src.dt, c("user_id", "location_id", "login", "logout"))
 setkey(src.dt, login, logout, user_id, location_id)
 src.dt
@@ -24,9 +24,9 @@ max_hours <- 24
 min_logins <- 2
 ```
 
-Trim data by:
+Trim data:
 
-1. sessions exceeding `r max_hours` hours
+1. remove sessions exceeding `r max_hours` hours
 2. eliminate users that have fewer than `r min_logins` logins
 3. eliminate locations that have fewer than `r min_logins` logins
 4. recursively apply steps 2-3 until no users / locations eliminated
@@ -43,12 +43,15 @@ while(length(invalid.users) > 0) {
 censor.dt
 ```
 
+Removed `r dim(src.dt)[1] - dim(censor.dt)[1]` rows, or `r (dim(src.dt)[1] - dim(censor.dt)[1])/dim(src.dt)[1]` reduction.
+
 Relabel source data:
 
 1. re-assign user ids from 1, ordered by first appearance
 2. re-assign location ids from 1, ordered by first appearance
 3. TODO split entries that cross days (~ 3% of data; of crossing entries, most look like late PM->early AM sessions, aka bar / club visits)
 4. convert login / logout times to `log(in|out)_day` and `log(in|out)_time`
+5. mark data as the empirical source: set `run_id = 0`, `sample_id = 0`, `target = FALSE`.
 
 ```{r, echo=FALSE}
 censor.dt[,
@@ -63,15 +66,15 @@ censor.dt[,
   login_time := login - login_day*24*60*60
 ][,
   logout_time := logout - logout_day*24*60*60
+][,
+  run_id := 0
+][,
+  sample_id := 0
+][,
+  target := FALSE
 ]
-setkey(censor.dt, login, logout, user_id, location_id)
-save(censor.dt, file = "~/Dropbox/montreal/censored.Rdata")
-# censor.dt[,list(
-#   login_day = login %/% (24*60*60),
-#   logout_day = logout %/% (24*60*60),
-#   login_time = login %% (24*60*60)/(60*60),
-#   logout_time = logout %% (24*60*60)/(60*60)
-# ) ]
+setkey(censor.dt, run_id, sample_id, login_day, login_time, logout_day, logout_time, user_id, location_id)
+save(censor.dt, file = "../input/censored.Rdata")
 ```
 
 

@@ -1,8 +1,8 @@
 ## detection schemes
+require(argparser)
 
-load("~/Dropbox/montreal/censored.Rdata")
-censor.dt[, run_id := 0][,sample_id := 0][, target := FALSE]
-setkeyv(censor.dt, c("run_id","sample_id", key(censor.dt)))
+
+load("../input/censored.Rdata")
 samples.dt <- fread("../test-1.csv", colClasses = "integer")
 setnames(samples.dt, c("run_id", "sample_id", "user_id", "location_id", "login", "logout"))
 setkeyv(samples.dt, key(censor.dt))
