@@ -19,6 +19,6 @@ rm output/runs-$PBS_ARRAYID.csv
 for ((i=1;i<=SAMPLE_SIZE;i++))
 do
   target/start edu.cap10.actormodels.demo.SimpleMain $parameters -s $i > output/run-$PBS_ARRAYID-$i.csv
-  awk '{ print "'$PBS_ARRAYID' '$i' " $0 }' run-$PBS_ARRAYID-$i.csv >> output/runs-$PBS_ARRAYID.csv
+  awk '{ print "'$PBS_ARRAYID' '$i' " $0 }' output/run-$PBS_ARRAYID-$i.csv >> output/runs-$PBS_ARRAYID.csv
   rm output/run-$PBS_ARRAYID-$i.csv
 done
