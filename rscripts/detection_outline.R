@@ -1,5 +1,7 @@
 ## detection schemes
-require(argparser)
+req.packages <- c("data.table", "argparser")
+sapply(req.packages, require, character.only = T)
+
 a.parser <- arg.parser("Run Detection approaches against synthetic data", "detector")
 a.parser <- add.argument(a.parser, "--src", "source data", default = "../input/censored.Rdata")
 a.parser <- add.argument(a.parser, "target", "target synthetic data", type="character")
@@ -16,7 +18,15 @@ breakoutDays(samples.dt[,
 ])
 setkeyv(samples.dt, key(censor.dt))
 
-meld.dt <- rbind(censor.dt, samples.dt, use.names = TRUE)
+meld <- function(src.dt, samp.dt) {
+  limits <- src.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
+  samp.dt <- merge(samp.dt, limits, by = "location_id")
+  samp.dt <- samp.dt[(login >= first) & (logout <= last),]
+  samp.dt$first <- samp.dt$last <- NULL
+  rbind(src.dt, samp.dt, use.names = TRUE)
+}
+
+meld.dt <- meld(censor.dt, samples.dt)
 
 synthesize <- function(rid, sid, combo.dt = meld.dt) {
   res.dt <- combo.dt[
@@ -35,9 +45,6 @@ synthesize <- function(rid, sid, combo.dt = meld.dt) {
 view <- function(synthesized.dt) {
   synthesized.dt[,list(user_id, location_id, login_day, login_time, logout_day, logout_time)]
 }
-
-asynth.dt <- synthesize(1, 1)
-aview.dt <- view(asynth.dt)
 
 method_1_slice <- function(dt, start, width) {
   dt[(start <= login_day) & (login_day < start + width)]
@@ -73,6 +80,8 @@ method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments
   }
   list(targets=target_users, inc=i)
 }
+
+## detection should not be applied to multiple run configurations at once, only multiple samples
 
 for (rid in meld.dt[run_id != 0, unique(run_id)]) for (sid in meld.dt[run_id == rid, unique(sample_id)]) {
   synth.dt <- synthesize(rid, sid, meld.dt)
