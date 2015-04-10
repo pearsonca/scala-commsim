@@ -13,11 +13,16 @@ case class SimpleSystem(runConfig : SimpleParams, globalConfig : DataParams) {
   val universe = system.typedActorOf(SimpleUniverse.props(runConfig, globalConfig))
   
   val mapper = DataEvent.generatorDay()
+  val noActivity = Future.successful(Seq[DataEvent]())
   
-  def run : Future[Seq[DataEvent]] = for (res <- Future.sequence(for (t <- 0 until globalConfig.totalDays) yield {
-      for (tick <- universe.tick(t)) yield { tick map { mapper(t,_) } }
-  })) yield res.flatten
-
+  def run : Future[Seq[DataEvent]] = {
+    (0 until globalConfig.totalDays).foldLeft(noActivity)( (f, t) => f flatMap {
+      seq => { 
+        universe.tick(t).map(next => seq ++ (next map { mapper(t,_) }))
+      }
+    } )
+  }
+  
   def shutdown = as.shutdown
 }
 
