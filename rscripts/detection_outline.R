@@ -6,7 +6,7 @@ a.parser <- arg.parser("Run Detection approaches against synthetic data", "detec
 a.parser <- add.argument(a.parser, "--src", "source data", default = "../input/censored.Rdata")
 a.parser <- add.argument(a.parser, "target", "target synthetic data", type="character")
 a.parser <- add.argument(a.parser, "--out", "the output file; will default to out-$tar", type="character")
-argv <- parse.args(a.parser, c("../output/test-1.csv"))
+argv <- parse.args(a.parser, c("../output/test-0.csv"))
 
 load(argv$src)
 samples.dt <- fread(argv$target, colClasses = "integer")
@@ -23,52 +23,50 @@ meld <- function(src.dt, samp.dt) {
   samp.dt <- merge(samp.dt, limits, by = "location_id")
   samp.dt <- samp.dt[(login >= first) & (logout <= last),]
   samp.dt$first <- samp.dt$last <- NULL
+  samp.dt[, user_id := user_id + max(src.dt$user_id)]
   rbind(src.dt, samp.dt, use.names = TRUE)
 }
 
 meld.dt <- meld(censor.dt, samples.dt)
 
-synthesize <- function(rid, sid, combo.dt = meld.dt) {
-  res.dt <- combo.dt[
-    ((run_id == 0) & (sample_id == 0)) | ((run_id == rid) & (sample_id == sid)),
-    list(user_id, location_id, login_day, login_time, logout_day, logout_time, target)
-  ]
-  setkey(res.dt, login_day, login_time, logout_day, logout_time, user_id, location_id)
-  
-  res.dt[,
-    user_id := .GRP, by=user_id
-  ][,
-    location_id := .GRP, by=location_id
-  ]
-}
+# synthesize <- function(rid, sid, combo.dt = meld.dt) {
+#   res.dt <- combo.dt[
+#     ((run_id == 0) & (sample_id == 0)) | ((run_id == rid) & (sample_id == sid)),
+#     list(user_id, location_id, login_day, login_time, logout_day, logout_time, target)
+#   ]
+#   setkey(res.dt, login_day, login_time, logout_day, logout_time, user_id, location_id)
+#   
+#   res.dt[,
+#     user_id := .GRP, by=user_id
+#   ][,
+#     location_id := .GRP, by=location_id
+#   ]
+# }
+# 
+# view <- function(synthesized.dt) {
+#   synthesized.dt[,list(user_id, location_id, login_day, login_time, logout_day, logout_time)]
+# }
 
-view <- function(synthesized.dt) {
-  synthesized.dt[,list(user_id, location_id, login_day, login_time, logout_day, logout_time)]
-}
+method_1_eval <- function(dt, start, width)
+  dt[(start <= login_day) & (login_day < start + width),
+    list(login_count = .N),
+    by=list(user_id, login_day)
+  ][,
+    list(atmost_one = all(login_count <= 1), seen = any(login_count > 0)),
+    by=user_id
+  ]
 
 method_1_slice <- function(dt, start, width) {
   dt[(start <= login_day) & (login_day < start + width)]
 }
 
-method_1_target <- function(slice.dt)
-  slice.dt[,
-    list(login_count = .N),
-    by=list(user_id, login_day)
-  ][,
-    list(only_one = all(login_count == 1)),
-    by=user_id
-  ][only_one == T,
-    user_id
-  ]
-
-method_1 <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
-  i <- 0
-  target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
-  while((i < max_increments) & (length(target_users) > target_pop)) {
-    i <- i+1
-    target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
-  }
-  list(targets=target_users, inc=i)
+method_1 <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6) {
+  res.dt <- data.table(hits = sapply(Reduce(function(l.dt, r.dt) {
+      merge(l.dt, r.dt, by="user_id")[, list(atmost_one = atmost_one.x & atmost_one.y, seen = seen.x | seen.y), by=user_id]
+    },
+    Map(function(i) method_1_eval(dt, start+i*width, width), 0:max_increments), accumulate = T
+  ), function(dt) dt[,sum(atmost_one & seen)]))
+  res.dt[, inc := .I]
 }
 
 method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
