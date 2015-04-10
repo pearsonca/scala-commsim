@@ -41,7 +41,7 @@ object SimpleUniverse {
     import runConfig._
     import globalConfig._
     seeds.zipWithIndex map { case (agentSeed, id) => 
-      val haunts = rng.shuffle((0 to (uniqueLocations-1))).take(meanVisitedLocations.toInt)
+      val haunts = rng.shuffle(1 to uniqueLocations).take(meanVisitedLocations.toInt)
       createAgent(id, haunts, dailyVisitProb, meanVisitDuration, seed)
     }
   }
@@ -73,16 +73,14 @@ class SimpleUniverse(
     
     timeToNextMeeting = if (timeToMeet) {
       val te = TravelEvent.random(-1, meetingLocations, meanVisitDuration.toInt)
-      dispatch = Future.sequence(replicate(2)(te) zip(agents) map {
-        case (event, agent) => {
-          agent.dispatch(event)
-        }
+      dispatch = Future.sequence(replicate(2)(te) zip(shuffle(agents)) map {
+        case (event, agent) => agent.dispatch(event)
       })
       daysToNextMeeting
     } else timeToNextMeeting - 1
     for (
-      _ <- dispatch; // await dispatch
-      agentActivity <- Future.sequence(agents map { a => a.tick(when) })
+      _ <- dispatch; // await dispatch success
+      agentActivity <- Future.sequence(agents map { _.tick(when) })
     ) yield agentActivity.flatten
   }
 
