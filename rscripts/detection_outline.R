@@ -1,12 +1,12 @@
 ## detection schemes
-req.packages <- c("data.table", "argparser")
+req.packages <- c("data.table", "argparser", "ggplot2")
 sapply(req.packages, require, character.only = T)
 
 a.parser <- arg.parser("Run Detection approaches against synthetic data", "detector")
 a.parser <- add.argument(a.parser, "--src", "source data", default = "../input/censored.Rdata")
 a.parser <- add.argument(a.parser, "target", "target synthetic data", type="character")
 a.parser <- add.argument(a.parser, "--out", "the output file; will default to out-$tar", type="character")
-argv <- parse.args(a.parser, c("../output/test-0.csv"))
+argv <- parse.args(a.parser, c("../output/runs-1.csv"))
 
 load(argv$src)
 samples.dt <- fread(argv$target, colClasses = "integer")
@@ -15,37 +15,25 @@ breakoutDays(samples.dt[,
   user_id := user_id + max(censor.dt$user_id)+1L
 ][,
   target := TRUE
-])
+])[, login_day := login_day + min(censor.dt$login_day)
+  ][,
+     logout_day := logout_day + min(censor.dt$login_day)
+]
 setkeyv(samples.dt, key(censor.dt))
 
-meld <- function(src.dt, samp.dt) {
-  limits <- src.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
-  samp.dt <- merge(samp.dt, limits, by = "location_id")
-  samp.dt <- samp.dt[(login >= first) & (logout <= last),]
-  samp.dt$first <- samp.dt$last <- NULL
-  samp.dt[, user_id := user_id + max(src.dt$user_id)]
-  rbind(src.dt, samp.dt, use.names = TRUE)
-}
+limits <- censor.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
+samp.dt <- merge(samples.dt, limits, by = "location_id")
+samp.dt <- samp.dt[(login >= first) & (logout <= last),]
+samp.dt$first <- samp.dt$last <- NULL
+samp.dt[, user_id := user_id + max(censor.dt$user_id)]
+setkeyv(samp.dt, key(samples.dt))
 
-meld.dt <- meld(censor.dt, samples.dt)
-
-# synthesize <- function(rid, sid, combo.dt = meld.dt) {
-#   res.dt <- combo.dt[
-#     ((run_id == 0) & (sample_id == 0)) | ((run_id == rid) & (sample_id == sid)),
-#     list(user_id, location_id, login_day, login_time, logout_day, logout_time, target)
-#   ]
-#   setkey(res.dt, login_day, login_time, logout_day, logout_time, user_id, location_id)
-#   
-#   res.dt[,
-#     user_id := .GRP, by=user_id
-#   ][,
-#     location_id := .GRP, by=location_id
-#   ]
-# }
-# 
-# view <- function(synthesized.dt) {
-#   synthesized.dt[,list(user_id, location_id, login_day, login_time, logout_day, logout_time)]
-# }
+stopifnot(
+  samples.dt[,
+    list(login_count = .N),
+    by=list(sample_id, user_id, login_day)
+  ][, max(login_count) ] == 1
+) ## assert that the simple outputs have at most one login per day
 
 method_1_eval <- function(dt, start, width)
   dt[(start <= login_day) & (login_day < start + width),
@@ -56,50 +44,42 @@ method_1_eval <- function(dt, start, width)
     by=user_id
   ]
 
-method_1_slice <- function(dt, start, width) {
-  dt[(start <= login_day) & (login_day < start + width)]
-}
-
-method_1 <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6) {
-  res.dt <- data.table(hits = sapply(Reduce(function(l.dt, r.dt) {
-      merge(l.dt, r.dt, by="user_id")[, list(atmost_one = atmost_one.x & atmost_one.y, seen = seen.x | seen.y), by=user_id]
+method_1 <- function(dt, width = 14, start = 4*365, max_increments = 6) {
+  init.dt <- dt[,list(atmost_one = T, seen = F), by=user_id]
+  slices <- Map(function(i) method_1_eval(dt, start+i*width, width), 0:max_increments)
+  reduction <- Reduce(
+    function(l.dt, r.dt) {
+      m <- merge(l.dt, r.dt, by="user_id", all.x = T)
+      m[is.na(atmost_one.y), atmost_one.y := TRUE][is.na(seen.y), seen.y := FALSE]
+      m[, list(atmost_one = atmost_one.x & atmost_one.y, seen = seen.x | seen.y), by=user_id]
     },
-    Map(function(i) method_1_eval(dt, start+i*width, width), 0:max_increments), accumulate = T
-  ), function(dt) dt[,sum(atmost_one & seen)]))
-  res.dt[, inc := .I]
+    x = slices,
+    init = init.dt, 
+    accumulate = T
+  )
+  reduction[[1]] <- NULL
+  res.dt <- data.table(hits = sapply(reduction, function(dt) dt[,sum(atmost_one & seen)]))
+  res.dt[, inc := .I-1]
 }
 
-method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
-  i <- 0
-  target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
-  while((i < max_increments) & (length(target_users) > target_pop)) {
-    i <- i+1
-    target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
-  }
-  list(targets=target_users, inc=i)
-}
+# method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
+#   i <- 0
+#   target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
+#   while((i < max_increments) & (length(target_users) > target_pop)) {
+#     i <- i+1
+#     target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
+#   }
+#   list(targets=target_users, inc=i)
+# }
 
 ## detection should not be applied to multiple run configurations at once, only multiple samples
 
-for (rid in meld.dt[run_id != 0, unique(run_id)]) for (sid in meld.dt[run_id == rid, unique(sample_id)]) {
-  synth.dt <- synthesize(rid, sid, meld.dt)
-  targets <- synth.dt[target == T,]
-  view.dt <- view(synth.dt)
-  target_14 <- method_1(view.dt, 14)
-  covert_targets <- target_14$targets
-#  target_21 <- method_1(view.dt, 21)
-#  target_28 <- method_1(view.dt, 28)
-  misses_ref <- targets[,length(unique(user_id))]
-  hits <- targets[user_id %in% covert_targets, length(unique(user_id))]
-  misses <- misses_ref - hits
-  collateral <- length(covert_targets)-hits
-  print("14:")
-  print(c(
-    steps = target_14$inc,
-    run_id = rid,
-    sample_id = sid,
-    hits=hits,
-    collateral=collateral,
-    misses = misses
-  ))
-}
+analyzer <- function(period) Reduce(rbind, lapply(samp.dt[,unique(sample_id)], function(sid) {
+  res <- method_1(samp.dt[sample_id == sid], period)
+  res[, sample_id := sid ][, period := period ]
+}))
+
+analyzed <- Reduce(rbind, Map(analyzer, seq(from=7,to=28,by=7)))
+
+p <- ggplot(analyzed) + aes(x = inc*period, y = hits, group=sample_id) + facet_grid(. ~ period, scales = "free_x", space = "free_x") + geom_line(alpha=0.5)
+p + labs(x="day from start") + theme_bw()
