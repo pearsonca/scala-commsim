@@ -1,6 +1,7 @@
 ## detection schemes
 req.packages <- c("data.table", "argparser", "ggplot2")
 sapply(req.packages, require, character.only = T)
+source("munging.R")
 
 a.parser <- arg.parser("Run Detection approaches against synthetic data", "detector")
 a.parser <- add.argument(a.parser, "--src", "source data", default = "../input/censored.Rdata")
@@ -15,18 +16,14 @@ breakoutDays(samples.dt[,
   user_id := user_id + max(censor.dt$user_id)+1L
 ][,
   target := TRUE
-])[, login_day := login_day + min(censor.dt$login_day)
-  ][,
+])[, login_day  := login_day  + min(censor.dt$login_day)
+][,
      logout_day := logout_day + min(censor.dt$login_day)
 ]
 setkeyv(samples.dt, key(censor.dt))
 
-limits <- censor.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
-samp.dt <- merge(samples.dt, limits, by = "location_id")
-samp.dt <- samp.dt[(login >= first) & (logout <= last),]
-samp.dt$first <- samp.dt$last <- NULL
+samp.dt <- trimLimits(samples.dt, limits.dt)
 samp.dt[, user_id := user_id + max(censor.dt$user_id)]
-setkeyv(samp.dt, key(samples.dt))
 
 stopifnot(
   samples.dt[,
@@ -43,6 +40,16 @@ method_1_eval <- function(dt, start, width)
     list(atmost_one = all(login_count <= 1), seen = any(login_count > 0)),
     by=user_id
   ]
+
+method_1a_eval <- function(dt, start, width)
+  dt[(start <= login_day) & (login_day < start + width),
+     list(login_count = .N),
+     by=list(user_id)
+  ][,
+    list(exactly_one = (login_count == width)),
+    by=user_id
+  ]
+
 
 method_1 <- function(dt, width = 14, start = 4*365, max_increments = 6) {
   init.dt <- dt[,list(atmost_one = T, seen = F), by=user_id]
@@ -62,24 +69,56 @@ method_1 <- function(dt, width = 14, start = 4*365, max_increments = 6) {
   res.dt[, inc := .I-1]
 }
 
-# method_1a <- function(dt, width, start = min(dt$login_day)+4*365, max_increments = 6, target_pop = 25) {
-#   i <- 0
-#   target_users <- method_1_target(method_1_slice(dt, start+i*width, width))
-#   while((i < max_increments) & (length(target_users) > target_pop)) {
-#     i <- i+1
-#     target_users <- intersect(target_users, method_1_target(method_1_slice(dt, start+i*width, width)))
-#   }
-#   list(targets=target_users, inc=i)
-# }
+method_1a <- function(dt, width = 14, start = 4*365, max_increments = 6) {
+  init.dt <- dt[,list(exactly_one = T, seen = F), by=user_id]
+  slices <- Map(function(i) method_1a_eval(dt, start+i*width, width), 0:max_increments)
+  reduction <- Reduce(
+    function(l.dt, r.dt) {
+      m <- merge(l.dt, r.dt, by="user_id", all.x = T)
+      m[is.na(exactly_one.y), exactly_one.y := FALSE]
+      m[, list(exactly_one = exactly_one.x & exactly_one.y), by=user_id]
+    },
+    x = slices,
+    init = init.dt, 
+    accumulate = T
+  )
+  reduction[[1]] <- NULL
+  res.dt <- data.table(hits = sapply(reduction, function(dt) dt[,sum(exactly_one)]))
+  res.dt[, inc := .I-1]
+}
 
 ## detection should not be applied to multiple run configurations at once, only multiple samples
 
-analyzer <- function(period) Reduce(rbind, lapply(samp.dt[,unique(sample_id)], function(sid) {
-  res <- method_1(samp.dt[sample_id == sid], period)
+analyzer <- function(period, dt) Reduce(rbind, lapply(dt[,unique(sample_id)], function(sid) {
+  res <- method_1(dt[sample_id == sid], period)
   res[, sample_id := sid ][, period := period ]
 }))
 
-analyzed <- Reduce(rbind, Map(analyzer, seq(from=7,to=28,by=7)))
+analyzer_a <- function(period, dt) Reduce(rbind, lapply(dt[,unique(sample_id)], function(sid) {
+  res <- method_1a(dt[sample_id == sid], period)
+  res[, sample_id := sid ][, period := period ]
+}))
 
-p <- ggplot(analyzed) + aes(x = inc*period, y = hits, group=sample_id) + facet_grid(. ~ period, scales = "free_x", space = "free_x") + geom_line(alpha=0.5)
+analyzed_a <- Reduce(rbind, lapply(seq(from=7,to=28,by=7), analyzer_a, dt=samp.dt))
+
+analyzed <- Reduce(rbind, lapply(seq(from=7,to=28,by=7), analyzer, dt=samp.dt))
+
+ref <- Reduce(rbind, lapply(seq(from=7,to=28,by=7), analyzer, dt=censor.dt))
+
+p <- ggplot(analyzed_a) + 
+  aes(x = inc*period, y = hits, group=sample_id) +
+  facet_grid(. ~ period, scales = "free_x", space = "free_x") +
+  geom_rect(aes(xmin=period*(1+seq(from=0, by=2, length.out=max(inc)%/%2)),
+                xmax=period*(1+seq(from=1, by=2, length.out=max(inc)%/%2)),
+                ymin=0, ymax=max(hits)), fill="lightblue", alpha=0.2) +
+  geom_line(alpha=0.5)
+p + labs(x="day from start") + theme_bw()
+
+p <- ggplot(ref) + 
+  aes(x = inc*period, y = hits, group=sample_id) +
+  facet_grid(. ~ period, scales = "free_x", space = "free_x") +
+  geom_rect(aes(xmin=period*(1+seq(from=0, by=2, length.out=max(inc)%/%2)),
+                xmax=period*(1+seq(from=1, by=2, length.out=max(inc)%/%2)),
+                ymin=0, ymax=max(hits)), fill="lightblue", alpha=0.2) +
+  geom_line()
 p + labs(x="day from start") + theme_bw()

@@ -54,21 +54,7 @@ Relabel source data:
 5. mark data as the empirical source: set `run_id = 0`, `sample_id = 0`, `target = FALSE`.
 
 ```{r, echo=FALSE}
-breakoutDays <- function(dt) {
-  dt[,
-    user_id := .GRP, by=user_id
-  ][,
-    location_id := .GRP, by=location_id
-  ][,
-    login_day := login %/% (24*60*60)
-  ][,
-    logout_day := logout %/% (24*60*60)
-  ][,
-    login_time := login - login_day*24*60*60
-  ][,
-    logout_time := logout - logout_day*24*60*60
-  ]
-}
+source("munging.R")
 breakoutDays(censor.dt[,
   user_id := .GRP, by=user_id
 ][,
@@ -81,9 +67,16 @@ breakoutDays(censor.dt[,
   target := FALSE
 ])
 setkey(censor.dt, run_id, sample_id, login_day, login_time, logout_day, logout_time, user_id, location_id)
-save(censor.dt, breakoutDays, file = "../input/censored.Rdata")
+
 ```
 
+When generating our synthetic data, we assume locations exist before and after they join the service.  So the synthetic population may make visits to these locations outside of time when the service is operating.  We trim that activity from the synthetic data according the time that locations are active in the observed data.
+
+```{r, echo=FALSE}
+limits.dt <- censor.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
+limits.dt
+save(censor.dt, limits.dt, file = "../input/censored.Rdata")
+```
 
 ```{r, echo=FALSE}
 # bad.list <- with(src.dt[(logout - login) > max_real_duration,],
