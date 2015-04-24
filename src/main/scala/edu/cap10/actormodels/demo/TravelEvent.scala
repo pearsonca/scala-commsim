@@ -5,7 +5,7 @@ import scala.util.Random
 import edu.cap10.util.NaturalInt
 import scala.languageFeature.implicitConversions
 
-case class DataEvent private (uID: AgentID, locationID: LocationID, start:Long, end:Long) {
+case class DataEvent (uID: AgentID, locationID: LocationID, start:Long, end:Long) {
   override def toString = f"$uID $locationID $start $end"
 }
 
@@ -42,4 +42,6 @@ case class TravelEvent (
     locationID : LocationID,
     timeStart: TimeStamp,
     durationSeconds : Int
-)
+) {
+  def +(day:Int) = DataEvent(agentID, locationID, timeStart+day, timeStart+day+durationSeconds)
+}
