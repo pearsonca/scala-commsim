@@ -60,10 +60,11 @@ class SubgroupingUniverse(
   import meetingGenerator.{ next => daysToNextMeeting }
   
   val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
-  val agents = createAgents(
-    replicate(agentCount)( newSeed ),
-    runConfig, globalConfig
-  )
+  val agents : Seq[Dispatchable[TravelEvent]] = ???
+//  createAgents(
+//    replicate(agentCount)( newSeed ),
+//    runConfig, globalConfig
+//  )
   
   var timeToNextMeeting : Int = daysToNextMeeting
   def timeToMeet : Boolean = timeToNextMeeting == 0
