@@ -51,3 +51,5 @@ run*.csv
 input
 
 project/project/target/config-classes/$a6bdf1ccfb0236f873b2.cache
+
+*.cache
