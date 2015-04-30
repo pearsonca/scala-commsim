@@ -59,26 +59,37 @@ breakoutDays(censor.dt[,
   user_id := .GRP, by=user_id
 ][,
   location_id := .GRP, by=location_id
-][,
-  run_id := 0
-][,
-  sample_id := 0
-][,
-  target := FALSE
 ])
-setkey(censor.dt, run_id, sample_id, login_day, login_time, logout_day, logout_time, user_id, location_id)
-
+setkey(censor.dt, login_day, login_time, logout_day, logout_time, user_id, location_id)
+censor.dt
 ```
 
 When generating our synthetic data, we assume locations exist before and after they join the service.  So the synthetic population may make visits to these locations outside of time when the service is operating.  We trim that activity from the synthetic data according the time that locations are active in the observed data.
 
 ```{r, echo=FALSE}
+## TODO switch to log(in|out) day
 limits.dt <- censor.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
 limits.dt
 save(censor.dt, limits.dt, file = "../input/censored.Rdata")
 ```
 
+The locations have different patterns of activity, reflecting their different hours of operation.
+
 ```{r, echo=FALSE}
+hours.dt <- censor.dt[,
+  list(login_day, login_time, logout_day, logout_time, logout_time_adj=0),
+  keyby=list(location_id, user_id)
+]
+hours.dt[ login_day != logout_day,
+   logout_time_adj := logout_time + 24*60*60
+]
+hours.dt <- hours.dt[,
+  list(open=min(login_time), close=max(logout_time, logout_time_adj)),
+  by=list(login_day, location_id)
+]
+p <- ggplot(hours.dt[,
+  list(med_open = median(open), med_close=median(close)), by=location_id
+][, open_id:=.GRP, by=list(med_open, location_id)])+aes(x=open_id, y=med_open/3600) + geom_point() + geom_hline(yintercept=1:23, color="red") + theme_bw()
 # bad.list <- with(src.dt[(logout - login) > max_real_duration,],
 #   list(bad_users = unique(user_id), bad_locs = unique(location_id), bad_entries = length(user_id) )
 # )

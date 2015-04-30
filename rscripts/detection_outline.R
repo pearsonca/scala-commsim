@@ -10,6 +10,9 @@ a.parser <- add.argument(a.parser, "--out", "the output file; will default to ou
 argv <- parse.args(a.parser, c("../output/runs-1.csv"))
 
 load(argv$src)
+
+censor.dt[, run_id := 0 ][, sample_id := 0 ][, target := FALSE ]
+
 samples.dt <- fread(argv$target, colClasses = "integer")
 setnames(samples.dt, c("run_id", "sample_id", "user_id", "location_id", "login", "logout"))
 breakoutDays(samples.dt[,
