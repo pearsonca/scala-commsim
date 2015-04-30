@@ -2,6 +2,22 @@ package edu.cap10.actormodels.demo
 
 import edu.cap10.util.Probability
 import edu.cap10.util.LocalRNG
+import akka.actor.{ TypedActor, TypedActorFactory, TypedProps}
+
+object SimpleAgent {
+  
+  def props(
+    id : AgentID,
+    haunts : Seq[LocationID],
+    runConfig : SimpleParams,
+    globalConfig : DataParams,
+    seed : Long
+  ) = TypedProps(
+    classOf[Dispatchable[TravelEvent]],
+    new SimpleAgent(id, haunts, globalConfig.dailyVisitProb, 60*60, seed)
+  )
+  
+}
 
 /*An agent that
  * - can be dispatched, and does exactly as dispatched
@@ -23,7 +39,8 @@ class SimpleAgent (
   override def _tick(when:Int) =
     if (_dispatched || !makeVisit)
       super._tick(when)
-    else 
+    else {
       TravelEvent.random(id, haunts, meanVisitDuration.toInt) +: super._tick(when)
+    }
 
 }

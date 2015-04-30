@@ -23,12 +23,13 @@ object SimpleMain extends App {
     case Some(config) => {    
       val results = for (res <- SimpleSystem(config, MontrealProps).run()) yield { 
         res map { case (day, events) => events map { _ + day } }
+      } map { 
+        dailyEvents =>
+          stdout.println(dailyEvents mkString System.lineSeparator)
+          stdout.flush
       }
       results.onComplete { _ match {
-        case Success(output) => {
-          stdout.println((output.flatten) mkString System.lineSeparator)
-          stdout.flush()
-        }
+        case Success(output) => stdout.flush
         case Failure(e) => stderr.println(e)
       } }
       Await.result(results, Duration(30, SECONDS))

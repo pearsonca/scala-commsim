@@ -33,16 +33,24 @@ object SimpleUniverse {
       )
   
   def createAgents(
-    seeds:Seq[Long],
+    count:NaturalInt,
     runConfig: SimpleParams,
     globalConfig : DataParams
-  )(implicit rng : Random) : Seq[Dispatchable[TravelEvent]] = {
-    implicit val sys = TypedActor.get(TypedActor.context)
-    import runConfig._
-    import globalConfig._
-    seeds.zipWithIndex map { case (agentSeed, id) => 
-      val haunts = rng.shuffle(1 to uniqueLocations).take(meanVisitedLocations.toInt)
-      createAgent(id, haunts, dailyVisitProb, meanVisitDuration, seed)
+  )(
+    implicit rng : Random,
+    sys : TypedActorFactory = TypedActor.get(TypedActor.context)
+  ) : Seq[Dispatchable[TravelEvent]] = {
+    import runConfig._, globalConfig._
+    val hauntGen = HauntGenerator(rng).uniform(1 to uniqueLocations)
+    (0 until count) map { id =>
+      val haunts = hauntGen(meanVisitedLocations.toInt)
+      val agentSeed = rng.nextLong
+      sys.typedActorOf(
+        SimpleAgent.props(
+            id, haunts, runConfig, globalConfig, agentSeed 
+        ),
+        "agent"+id
+      )
     }
   }
 }
@@ -56,18 +64,14 @@ class SimpleUniverse(
   import runConfig.{seed => _, _}, globalConfig._, SimpleUniverse._
 
   val meetingGenerator = PoissonGenerator(meanMeetingPeriod)
-  import rng.{ shuffle, nextLong => newSeed }
-  import meetingGenerator.{ next => daysToNextMeeting }
+  import rng.shuffle, meetingGenerator.{ next => daysToNextMeeting }
   
-  val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
-  val agents = createAgents(
-    replicate(agentCount)( newSeed ),
-    runConfig, globalConfig
-  )
+  val meetingLocations = HauntGenerator(rng).uniform(1 to uniqueLocations)(locationCount)
+  val agents = createAgents(agentCount, runConfig, globalConfig)
   
   var timeToNextMeeting : Int = daysToNextMeeting
   def timeToMeet : Boolean = timeToNextMeeting == 0
-
+  
   override def tick(when:Int) = {
     var dispatch : Future[Seq[Unit]] = Future.successful(Seq())
     
