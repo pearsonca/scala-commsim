@@ -11,7 +11,7 @@ object NaturalInt {
   
   implicit def convertItoN(i:Int) = this(i)
   implicit def convertNtoI(n:NaturalInt) = n.underlying
-  implicit def ordering : Ordering[NaturalInt] = Ordering[Int].on(n => n.underlying)
+  implicit def ordering[NI <: NaturalInt] : Ordering[NI] = Ordering[Int].on(n => n.underlying)
   
 }
 
