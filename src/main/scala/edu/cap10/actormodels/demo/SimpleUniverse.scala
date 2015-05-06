@@ -19,19 +19,7 @@ object SimpleUniverse {
     runConfig : SimpleParams,
     globalConfig : DataParams
   ) = TypedProps(classOf[TimeEvents[TravelEvent]], new SimpleUniverse(runConfig.seed, runConfig, globalConfig))
-  
-  def createAgent(
-    id : AgentID,
-    haunts : Seq[LocationID],
-    dailyVisitProb: Probability,
-    meanVisitDuration: Double,
-    seed : Long
-  )(implicit sys : TypedActorFactory)
-    = sys.typedActorOf(
-      TypedProps(classOf[Dispatchable[TravelEvent]], 
-        new SimpleAgent(id, haunts, dailyVisitProb, 1, seed)), "agent"+id
-      )
-  
+    
   def createAgents(
     count:NaturalInt,
     runConfig: SimpleParams,
@@ -42,12 +30,10 @@ object SimpleUniverse {
   ) : Seq[Dispatchable[TravelEvent]] = {
     import runConfig._, globalConfig._
     val hauntGen = HauntGenerator(rng).uniform(1 to uniqueLocations)
-    (0 until count) map { id =>
-      val haunts = hauntGen(meanVisitedLocations.toInt)
-      val agentSeed = rng.nextLong
+    (1 to count) map { id => 
       sys.typedActorOf(
         SimpleAgent.props(
-            id, haunts, runConfig, globalConfig, agentSeed 
+            id, hauntGen(meanVisitedLocations.toInt), runConfig, globalConfig, rng.nextLong
         ),
         "agent"+id
       )

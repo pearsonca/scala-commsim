@@ -59,7 +59,7 @@ class SubgroupingUniverse(
   import rng.{ shuffle, nextLong => newSeed }
   import meetingGenerator.{ next => daysToNextMeeting }
   
-  val meetingLocations = shuffle((0 to (uniqueLocations-1))).take(locationCount)
+  val meetingLocations = HauntGenerator(rng).uniform(1 to uniqueLocations)(locationCount)
   val agents : Seq[Dispatchable[TravelEvent]] = ???
 //  createAgents(
 //    replicate(agentCount)( newSeed ),

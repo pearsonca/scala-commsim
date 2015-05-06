@@ -19,9 +19,9 @@ class HauntGeneratorsTests extends FunSuite with BeforeAndAfter {
   }
   
   test("properly set up random number generators") {
-    assert(rng(0) !== rng(1))
-    assert(rng(0) !== rng(2))
-    assert(rng(1) !== rng(2))
+    assert(rng(0) !== rng(1), "rng(0) vs rng(1) refs are incorrectly equal.")
+    assert(rng(0) !== rng(2), "rng(0) vs rng(2) refs are incorrectly equal.")
+    assert(rng(1) !== rng(2), "rng(1) vs rng(2) refs are incorrectly equal.")
     val results = rng map { _.nextDouble }
     assert(results(0) === results(1))
     assert(results(0) !== results(2))
