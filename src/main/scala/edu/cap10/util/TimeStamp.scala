@@ -12,3 +12,6 @@ case class TimeStamp(hour:Int, min:Int, sec:Int) {
   def toSec : Long = hour*60*60 + min*60 + sec
   
 }
+
+// TODO value to re-writing as
+//  TimeStamp(hh:Hour, mm:Minute, ss:Second) and defining those classes
