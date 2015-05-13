@@ -44,3 +44,14 @@ class SimpleAgent (
     }
 
 }
+
+class SimpleAgentII (
+  override val id:AgentID,
+  override val haunts:Seq[LocationID],
+  override val dailyVisitP:Probability,
+  override val meanVisitDuration:Double, // seconds
+  override val seed:Long
+) extends CovertAgent 
+  with SimpleLocations
+  with FiveToNine
+  with Obedient
