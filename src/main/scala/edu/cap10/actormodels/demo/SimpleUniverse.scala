@@ -29,7 +29,7 @@ object SimpleUniverse {
     sys : TypedActorFactory = TypedActor.get(TypedActor.context)
   ) : Seq[Dispatchable[TravelEvent]] = {
     import runConfig._, globalConfig._
-    val hauntGen = HauntGenerator(rng).uniform(1 to uniqueLocations)
+    val hauntGen = HauntGenerator(rng, 1 to uniqueLocations).uniform
     (1 to count) map { id => 
       sys.typedActorOf(
         SimpleAgent.props(
@@ -52,7 +52,7 @@ class SimpleUniverse(
   val meetingGenerator = PoissonGenerator(meanMeetingPeriod)
   import rng.shuffle, meetingGenerator.{ next => daysToNextMeeting }
   
-  val meetingLocations = HauntGenerator(rng).uniform(1 to uniqueLocations)(locationCount)
+  val meetingLocations = HauntGenerator(rng, 1 to uniqueLocations).uniform(locationCount)
   val agents = createAgents(agentCount, runConfig, globalConfig)
   
   var timeToNextMeeting : Int = daysToNextMeeting

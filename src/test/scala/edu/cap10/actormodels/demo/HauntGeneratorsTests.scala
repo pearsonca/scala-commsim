@@ -8,6 +8,11 @@ import scala.languageFeature.implicitConversions
 
 class HauntGeneratorsTests extends FunSuite with BeforeAndAfter {
 
+  // TODO these tests mostly assume that certain outcomes are impossible,
+  //  when in fact, they are only improbable -- e.g., drawing the same series
+  //  from different PRNGs.  Tests should be rewritten to deal w/ this
+  //  stochasticity, though this is low priority
+  
   val seed : Long = 10
   var rng : Seq[Random] = _
   val locations : IndexedSeq[Int] = 0 until 100
@@ -15,7 +20,7 @@ class HauntGeneratorsTests extends FunSuite with BeforeAndAfter {
   
   before {
     rng = List(seed, seed, seed*2) map { new Random(_) }
-    HG = rng map { HauntGenerator(_) }
+    HG = rng map { HauntGenerator(_, locations) }
   }
   
   test("properly set up random number generators") {
@@ -28,38 +33,38 @@ class HauntGeneratorsTests extends FunSuite with BeforeAndAfter {
   }
   
   test("uniform generators return the requested number of locations") {
-    val gen = HG(0).uniform(locations)
+    val gen = HG(0).uniform
     (1 to 10) map { i => assert(gen(i).size === i) }
   }
   
   test("uniform generators return different series on subsequent draws") {
-    val gen = HG(0).uniform(locations)
+    val gen = HG(0).uniform
     assert(gen(5) !== gen(5))
   }
   
   test("uniform generators with same rng series return same location sets") {
-    val gen1 = HG(0).uniform(locations)
-    val gen2 = HG(1).uniform(locations)
+    val gen1 = HG(0).uniform
+    val gen2 = HG(1).uniform
     assert(gen1(5) === gen2(5))
     assert(gen1(5) === gen2(5))
   }
   
   test("uniform generators with different rng series return different location sets") {
-    val gen1 = HG(0).uniform(locations)
-    val gen2 = HG(2).uniform(locations)
+    val gen1 = HG(0).uniform
+    val gen2 = HG(2).uniform
     assert(gen1(5) !== gen2(5))
     assert(gen1(5) !== gen2(5))
   }
   
   test("uniform generators complain when initialized with empty location lists") {
     intercept[IllegalArgumentException] {
-      HG(0).uniform(Seq.empty)
+      HauntGenerator(new Random, Seq.empty)
     }
   }
   
   test("uniform generators complain when asked for too many elements") {
     intercept[IllegalArgumentException] {
-      HG(0).uniform(Seq(1))(2)
+      HG(0).uniform(locations.size+1)
     }
   }
   
