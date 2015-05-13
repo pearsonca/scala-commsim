@@ -13,8 +13,8 @@ object Probability {
   implicit def convertPtoD(p:Probability) : Double = p.underlying
   implicit def ordering[P <: Probability] : Ordering[Probability] = Ordering[Double].on(p => p.underlying)
   
-  implicit class PRNG(rng : scala.util.Random) {
-    def next : Probability = rng.nextDouble()
+  implicit class ProbRNG(rng : scala.util.Random) {
+    def nextProbability : Probability = rng.nextDouble()
   }
 
   val TRUE = this(1)
@@ -25,5 +25,9 @@ object Probability {
 
 
 class Probability private (val underlying: Double) extends AnyVal {
-  def +(p:Probability) = Probability(underlying + p.underlying)
+  def |(p:Probability) = {
+    require(underlying + p.underlying <= 1, "this and p must be exclusive events.")
+    Probability(underlying + p.underlying)
+  }
+  def &(p:Probability) = Probability(underlying * p.underlying)
 }
