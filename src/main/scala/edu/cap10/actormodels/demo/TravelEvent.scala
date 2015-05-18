@@ -1,6 +1,9 @@
 package edu.cap10.actormodels.demo
 
-import edu.cap10.util.TimeStamp
+import edu.cap10.util.{
+  TimeStamp,
+  Hour, Minute, Second
+}
 import scala.util.Random
 import edu.cap10.util.NaturalInt
 import scala.languageFeature.implicitConversions
@@ -29,8 +32,8 @@ object TravelEvent {
     TravelEvent(
       agentID, rng.shuffle(locations).head,
       TimeStamp(
-        rng.nextInt(maxhour-minhour)+minhour,
-        rng.nextInt(60), rng.nextInt(60)
+        Hour(rng.nextInt(maxhour-minhour)+minhour),
+        Minute.random, Second.random
       ), durationSeconds
     )
   }

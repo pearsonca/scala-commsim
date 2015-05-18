@@ -29,7 +29,7 @@ class AgentImpl(
    
   override def _tick(when:Int) = {
     if (!_traveled && (Math.random < visProbPerTick)) {
-      log( _travel( location = randomLocation, ts = randomHour ).copy( when = when ) )
+      // log( _travel( location = randomLocation, ts = randomHour ).copy( when = when ) )
     } else {
       _clearTravel
     }

@@ -11,8 +11,10 @@ import java.io.BufferedWriter
 import scala.util.Random.{shuffle, nextInt}
 import scala.language.postfixOps
 
-import edu.cap10.util.Probability
-import edu.cap10.util.TimeStamp
+import edu.cap10.util.{
+  Probability,
+  TimeStamp, Hour, Minute, Second
+}
 
 object Universe {
   def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Double, fh:BufferedWriter)
@@ -60,7 +62,7 @@ class Universe(
     
     if (timeToMeet) {
       val place = shuffle(meetingLocations).apply(0)
-      val time = TimeStamp(nextInt(9)+8, nextInt(60), nextInt(60) )
+      val time = TimeStamp(Hour(nextInt(9)+8), Minute(nextInt(60)), Second(nextInt(60)) )
       Await.result(
         Future.sequence(
           shuffle(agents).take(2).map( agent => agent.travel(place, time) )

@@ -12,15 +12,16 @@ trait CovertAgent extends Dispatchable[TravelEvent] with LocalRNG {
   
   final override def _dispatch(te:TravelEvent) = 
     super._dispatch( dispatchModifier(te).copy(agentID = id) )
-  
+
+  final override def _tick(when:Int) =
+    timesGenerator(locationSelector) ++: super._tick(when)
+    
   protected def timesGenerator(locations: Seq[LocationID]) : Seq[TravelEvent]
   
   protected def dispatchModifier(te:TravelEvent) : TravelEvent
   
   protected def locationSelector : Seq[LocationID]
   
-  override def _tick(when:Int) =
-    timesGenerator(locationSelector) ++: super._tick(when)
   
 }
 
@@ -52,5 +53,13 @@ trait FiveToNine extends CovertAgent {
 }
 
 trait Obedient extends CovertAgent {
+  override def dispatchModifier(te:TravelEvent) : TravelEvent = te
+}
+
+trait EarlyBird extends CovertAgent {
+  override def dispatchModifier(te:TravelEvent) : TravelEvent = te
+}
+
+trait Lingerer extends CovertAgent {
   override def dispatchModifier(te:TravelEvent) : TravelEvent = te
 }
