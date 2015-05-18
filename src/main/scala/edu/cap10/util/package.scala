@@ -5,6 +5,6 @@ import scala.language.implicitConversions
 
 package object util {
 
-  implicit def hour2RandomTimeStamp(hour:Int) = TimeStamp(hour, nextInt(60), nextInt(60))
+ // implicit def hour2RandomTimeStamp(hour:Int) = TimeStamp(Hour(hour), Minute(nextInt(60)), Second(nextInt(60)))
   
 }
