@@ -4,6 +4,7 @@ import edu.cap10.util.LocalRNG
 import edu.cap10.util.Probability
 import edu.cap10.util.Probability._
 import edu.cap10.util.TimeStamp
+import edu.cap10.util.TimeStamp._
 import scala.languageFeature.implicitConversions
 
 trait CovertAgent extends Dispatchable[TravelEvent] with LocalRNG {
@@ -46,7 +47,7 @@ trait FiveToNine extends CovertAgent {
     locations map { (locID:LocationID) =>
       TravelEvent(
         id, locID,
-        TimeStamp(5+rng.nextInt(21-5+1), rng.nextInt(60), rng.nextInt(60)),
+        TimeStamp(Hour(5+rng.nextInt(21-5+1)), Minute.random, Second.random),
         meanVisitDuration.toInt
       )
     }    

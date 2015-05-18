@@ -11,10 +11,8 @@ import java.io.BufferedWriter
 import scala.util.Random.{shuffle, nextInt}
 import scala.language.postfixOps
 
-import edu.cap10.util.{
-  Probability,
-  TimeStamp, Hour, Minute, Second
-}
+import edu.cap10.util.{ Probability, TimeStamp }
+import edu.cap10.util.TimeStamp._
 
 object Universe {
   def props(poissonRate: Double, groupSize: Int, locationCount:Int, meetingLocationCount:Int, agentVisProb:Probability, avgLocs:Double, fh:BufferedWriter)
@@ -58,11 +56,13 @@ class Universe(
   var timeToNextMeeting : Int = nextDraw  
   def timeToMeet = timeToNextMeeting == 0
   
+  implicit val rng = new Random
+  
   override def _tick(when:Int) = {
     
     if (timeToMeet) {
       val place = shuffle(meetingLocations).apply(0)
-      val time = TimeStamp(Hour(nextInt(9)+8), Minute(nextInt(60)), Second(nextInt(60)) )
+      val time = TimeStamp(Hour(nextInt(9)+8), Minute.random, Second.random )
       Await.result(
         Future.sequence(
           shuffle(agents).take(2).map( agent => agent.travel(place, time) )

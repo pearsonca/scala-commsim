@@ -2,7 +2,7 @@ import com.typesafe.sbt.SbtStartScript
 
 seq(SbtStartScript.startScriptForClassesSettings: _*)
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 sbtVersion := "0.13.7"
 
@@ -20,7 +20,7 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.4",
   "com.typesafe.akka" %% "akka-testkit" % "2.3.4",
-  "org.scalatest" %% "scalatest" % "2.2.4",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3"
 )
 

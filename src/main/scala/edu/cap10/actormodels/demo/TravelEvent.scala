@@ -1,9 +1,7 @@
 package edu.cap10.actormodels.demo
 
-import edu.cap10.util.{
-  TimeStamp,
-  Hour, Minute, Second
-}
+import edu.cap10.util.TimeStamp
+import edu.cap10.util.TimeStamp._
 import scala.util.Random
 import edu.cap10.util.NaturalInt
 import scala.languageFeature.implicitConversions

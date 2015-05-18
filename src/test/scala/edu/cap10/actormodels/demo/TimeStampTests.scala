@@ -9,17 +9,15 @@ import org.scalatest.prop.PropertyChecks
 import scala.util.Random
 import scala.language.implicitConversions
 
-import edu.cap10.util.{
-  TimeStamp,
-  Hour, Minute, Second
-}
+import edu.cap10.util.TimeStamp
+import edu.cap10.util.TimeStamp._
 
 class TimeStampTests extends FunSuite with BeforeAndAfter with PropertyChecks {
  
   val seed : Long = 10
   var rng : Seq[Random] = _
   
-  test("Hours should be between 0 and 23") { 
+  test("TimeStamp Hour should be between 0 and 23") { 
     forAll { (n:Int) => 
       whenever(n < 0 || n > 23) {
         intercept[IllegalArgumentException] { Hour(n) }
@@ -27,6 +25,21 @@ class TimeStampTests extends FunSuite with BeforeAndAfter with PropertyChecks {
     }
   }
   
+  test("TimeStamp Minute should be between 0 and 59") { 
+    forAll { (n:Int) => 
+      whenever(n < 0 || n > 59) {
+        intercept[IllegalArgumentException] { Minute(n) }
+      }
+    }
+  }
+  
+  test("TimeStamp Second should be between 0 and 59") { 
+    forAll { (n:Int) => 
+      whenever(n < 0 || n > 59) {
+        intercept[IllegalArgumentException] { Second(n) }
+      }
+    }
+  }
 //  val locations : IndexedSeq[Int] = 0 until 100
 //  var HG : Seq[HauntGenerator] = _
 //  
