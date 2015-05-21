@@ -5,7 +5,7 @@ import edu.cap10.util.Probability
 import edu.cap10.util.Probability._
 import edu.cap10.util.TimeStamp
 import edu.cap10.util.TimeStamp._
-import scala.languageFeature.implicitConversions
+import scala.language.implicitConversions
 
 trait CovertAgent extends Dispatchable[TravelEvent] with LocalRNG {
 
