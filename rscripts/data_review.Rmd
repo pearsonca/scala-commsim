@@ -13,9 +13,14 @@ sapply(req.packages, require, character.only = T)
 Source data:
 
 ```{r, echo=FALSE}
-src.dt <- fread("../input/merged.o", header = F, sep=" ", colClasses = c("integer","integer","integer","integer"))
-setnames(src.dt, c("user_id", "location_id", "login", "logout"))
-setkey(src.dt, login, logout, user_id, location_id)
+src.dt <- 
+  setkey(
+    setnames(
+      fread("../input/merged.o", header = F, sep=" ", colClasses = list(integer=1.4)),
+      c("user_id", "location_id", "login", "logout")
+    ),
+    login, logout, user_id, location_id
+  )
 src.dt
 ```
 
@@ -27,12 +32,13 @@ min_logins <- 2
 Trim data:
 
 1. remove sessions exceeding `r max_hours` hours
-2. eliminate users that have fewer than `r min_logins` logins
-3. eliminate locations that have fewer than `r min_logins` logins
-4. recursively apply steps 2-3 until no users / locations eliminated
+2. remove sessions with no time (these correspond to rows in the source data with no logout time)
+3. eliminate users that have fewer than `r min_logins` logins
+4. eliminate locations that have fewer than `r min_logins` logins
+5. recursively apply steps 2-3 until no users / locations eliminated
 
 ```{r, echo=FALSE}
-censor.dt <- src.dt[(logout - login) <= max_hours*60*60, ]
+censor.dt <- src.dt[(logout != login) & ((logout - login) <= max_hours*60*60), ]
 invalid.users <- censor.dt[,.N, by=user_id ][N < min_logins, user_id]
 while(length(invalid.users) > 0) {
   censor.dt <- censor.dt[!user_id %in% invalid.users]
@@ -55,12 +61,11 @@ Relabel source data:
 
 ```{r, echo=FALSE}
 source("munging.R")
-breakoutDays(censor.dt[,
+setkey(breakoutDays(censor.dt[,
   user_id := .GRP, by=user_id
 ][,
   location_id := .GRP, by=location_id
-])
-setkey(censor.dt, login_day, login_time, logout_day, logout_time, user_id, location_id)
+]), login_day, login_time, logout_day, logout_time, user_id, location_id)
 censor.dt
 ```
 
@@ -71,6 +76,34 @@ When generating our synthetic data, we assume locations exist before and after t
 limits.dt <- censor.dt[,list(first=min(login), last=max(logout)), keyby=location_id]
 limits.dt
 save(censor.dt, limits.dt, file = "../input/censored.Rdata")
+```
+
+Our synthetic population comprises long term users of the system.  When synthezing their behavior, we should be thinking relative to other long term users of the system.
+
+```{r, echo=FALSE}
+reference.dt <- merge(censor.dt, censor.dt[,list(tot = (max(logout) - min(login))/(365*24*60*60)), by=user_id][tot > 1, list(user_id = user_id)], by="user_id")
+setkeyv(reference.dt, key(censor.dt))
+ref.dt <- reference.dt[,
+  list(
+    overnight_logins = sum(login_day != logout_day),
+    non_overnight_logins = sum(login_day == logout_day),
+    mean_session_min = mean(logout-login)/60,
+    total_session_min = sum(logout-login)/60,
+    user_lifetime_days = max(logout_day) - min(login_day)
+), by=user_id][,total_logins := overnight_logins + non_overnight_logins]
+hist(ref.dt$overnight_logins/c(ref.dt$overnight_logins + ref.dt$non_overnight_logins))
+hist(ref.dt$mean_session_min)
+fitting <- function(runs, p_continue) sum(rnbinom(n=runs, size=1, prob=1-p_continue))/runs
+with(ref.dt, {
+  plot(total_logins, mean_session_min)
+  points(total_logins, sapply(total_logins, fitting, p_continue = 0.99), pch=".", col = "red")
+})
+
+```
+
+```{r, echo=FALSE}
+
+plot()
 ```
 
 The locations have different patterns of activity, reflecting their different hours of operation.
