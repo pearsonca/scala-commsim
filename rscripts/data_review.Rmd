@@ -91,19 +91,35 @@ ref.dt <- reference.dt[,
     total_session_min = sum(logout-login)/60,
     user_lifetime_days = max(logout_day) - min(login_day)
 ), by=user_id][,total_logins := overnight_logins + non_overnight_logins]
-hist(ref.dt$overnight_logins/c(ref.dt$overnight_logins + ref.dt$non_overnight_logins))
-hist(ref.dt$mean_session_min)
-fitting <- function(runs, p_continue) sum(rnbinom(n=runs, size=1, prob=1-p_continue))/runs
-with(ref.dt, {
-  plot(total_logins, mean_session_min)
-  points(total_logins, sapply(total_logins, fitting, p_continue = 0.99), pch=".", col = "red")
-})
+setkey(ref.dt, total_logins)
+```
 
+```{r,echo=FALSE}
+sess_scale_min <- log10(c(10, 60, 2*60, 24*60, 7*24*60, 30*24*60, 6*30*24*60, 365*24*60))
+sess_labels <- c("10 min", "1 hr", "2 hr", "1 day", "1 week", "1 month", "6 months", "1 year")
+
+use_period_scale_day <- log10((1:5)*365)
+use_period_labels <- c(1,2,3,4,5)
+
+ggplot(ref.dt) + theme_bw() + 
+  aes(x=log10(user_lifetime_days), y=log10(total_session_min), color=log10(total_logins)) + 
+  geom_point() +
+  scale_y_continuous("Total Session Time", breaks=sess_scale_min, labels=sess_labels) +
+  scale_x_continuous("Usage Period (Years)", breaks=use_period_scale_day, labels=use_period_labels) +
+  scale_color_continuous("Unique Logins", breaks=log10(c(10,100,1000)), labels=c(10,100,1000))
 ```
 
 ```{r, echo=FALSE}
+#with(ref.dt, {
 
-plot()
+#  hist(ref.dt$overnight_logins/c(ref.dt$overnight_logins + ref.dt$non_overnight_logins))
+#hist(ref.dt$mean_session_min)
+#fitting <- function(runs, p_continue) sum(rnbinom(n=runs, size=1, prob=1-p_continue))/runs
+  
+#  plot(user_lifetime_days, total_logins, pch=".", alpha=0.5)
+#  plot(total_logins, mean_session_min)
+#  points(total_logins, sapply(total_logins, fitting, p_continue = 0.99), pch=".", col = "red")
+#})
 ```
 
 The locations have different patterns of activity, reflecting their different hours of operation.
