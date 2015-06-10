@@ -27,7 +27,8 @@ object Probability {
 class Probability private (val underlying: Double) extends AnyVal {
   def |(p:Probability) = {
     require(underlying + p.underlying <= 1, "this and p must be exclusive events.")
-    Probability(underlying + p.underlying)
+    new Probability(underlying + p.underlying)
   }
-  def &(p:Probability) = Probability(underlying * p.underlying)
+  def &(p:Probability) = new Probability(underlying * p.underlying)
+  def complement = new Probability(1-underlying)
 }
