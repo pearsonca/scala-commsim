@@ -1,16 +1,15 @@
 package edu.cap10.actormodels.tb
 
-import TBStrain._
+import TBStrain.Value
 import edu.cap10.util.LocalRNG
 
-
 case class InfectionModel(infectionProb:Double, val seed:Long)
-  extends Function2[HostTBState, Seq[TBStrain], Option[HostTBState]]
+  extends Function2[HostTBState, Seq[TBStrain.Value], Option[HostTBState]]
   with LocalRNG
 {
   def apply(
     hostTBstate : HostTBState,
-    infectiousContacts:Seq[TBStrain]
+    infectiousContacts:Seq[TBStrain.Value]
   ) : Option[HostTBState] = infectiousContacts match {
     case Seq() => None
     case _ => hostTBstate match {
