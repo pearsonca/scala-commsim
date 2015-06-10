@@ -78,49 +78,169 @@ limits.dt
 save(censor.dt, limits.dt, file = "../input/censored.Rdata")
 ```
 
-Our synthetic population comprises long term users of the system.  When synthezing their behavior, we should be thinking relative to other long term users of the system.
+Our synthetic population comprises long term users of the system.  When synthezing their behavior, we should be thinking relative to other long term users of the system.  We define *long term* as having greater than six months between first and last observed use of the system by a particular user id.
 
-```{r, echo=FALSE}
-reference.dt <- merge(censor.dt, censor.dt[,list(tot = (max(logout) - min(login))/(365*24*60*60)), by=user_id][tot > 1, list(user_id = user_id)], by="user_id")
-setkeyv(reference.dt, key(censor.dt))
-ref.dt <- reference.dt[,
-  list(
-    overnight_logins = sum(login_day != logout_day),
-    non_overnight_logins = sum(login_day == logout_day),
-    mean_session_min = mean(logout-login)/60,
-    total_session_min = sum(logout-login)/60,
-    user_lifetime_days = max(logout_day) - min(login_day)
-), by=user_id][,total_logins := overnight_logins + non_overnight_logins]
-setkey(ref.dt, total_logins)
+For long term users, we are interested in a few first-order behaviors: how much of their time are they using the system, and how is the time spent using the system broken up into sessions?
+
+```{r}
+reference.dt <-
+  setkey(censor.dt[,
+    list(
+      overnight_logins = sum(login_day != logout_day),
+      non_overnight_logins = sum(login_day == logout_day),
+      total_session_min = sum(logout-login)/60,
+      user_lifetime_days = max(logout_day) - min(login_day)
+    ), by=user_id
+  ][
+    user_lifetime_days > 365/2
+  ][,
+    total_logins := overnight_logins + non_overnight_logins
+  ], total_logins)
 ```
+
+First, we survey the relationship between total time spent on the system, period of use, and total unique logins:
 
 ```{r,echo=FALSE}
 sess_scale_min <- log10(c(10, 60, 2*60, 24*60, 7*24*60, 30*24*60, 6*30*24*60, 365*24*60))
 sess_labels <- c("10 min", "1 hr", "2 hr", "1 day", "1 week", "1 month", "6 months", "1 year")
 
-use_period_scale_day <- log10((1:5)*365)
-use_period_labels <- c(1,2,3,4,5)
+use_period_scale_day <- log10(c(0.5,1:5)*365)
+use_period_labels <- c(0.5,1:5)
 
-ggplot(ref.dt) + theme_bw() + 
-  aes(x=log10(user_lifetime_days), y=log10(total_session_min), color=log10(total_logins)) + 
+base.plot <- ggplot(reference.dt) + theme_bw() + 
+  aes(
+    color=log10(user_lifetime_days),
+    y=log10(total_session_min),
+    x=log10(total_logins)
+  ) + 
+  scale_y_continuous(
+    "Cumulative Usage",
+    breaks=sess_scale_min,
+    labels=sess_labels
+  ) +
+  scale_color_continuous(
+    "Usage Period (Years)",
+    breaks=use_period_scale_day,
+    labels=use_period_labels
+  ) +
+  scale_x_continuous(
+    "Unique Logins",
+    breaks=log10(c(10,100,1000)),
+    labels=c(10,100,1000)
+  ) +
   geom_point() +
-  scale_y_continuous("Total Session Time", breaks=sess_scale_min, labels=sess_labels) +
-  scale_x_continuous("Usage Period (Years)", breaks=use_period_scale_day, labels=use_period_labels) +
-  scale_color_continuous("Unique Logins", breaks=log10(c(10,100,1000)), labels=c(10,100,1000))
+  stat_smooth(method=lm, color="red")
+base.plot
 ```
+
+Visual inspection indicates that there is a log-linear dependency of total session time, $\sum{t_i}$, on login counts, $n_l$, and the period of activity seems to explain little.  We can check this with a linear regression:
 
 ```{r, echo=FALSE}
-#with(ref.dt, {
-
-#  hist(ref.dt$overnight_logins/c(ref.dt$overnight_logins + ref.dt$non_overnight_logins))
-#hist(ref.dt$mean_session_min)
-#fitting <- function(runs, p_continue) sum(rnbinom(n=runs, size=1, prob=1-p_continue))/runs
-  
-#  plot(user_lifetime_days, total_logins, pch=".", alpha=0.5)
-#  plot(total_logins, mean_session_min)
-#  points(total_logins, sapply(total_logins, fitting, p_continue = 0.99), pch=".", col = "red")
-#})
+user.model <- lm(
+  log10(total_session_min) ~ log10(user_lifetime_days) + log10(total_logins),
+  reference.dt
+)
+summary(user.model)
 ```
+
+This confirms that usage period is not substantively driving total session time - unique logins are.  However, is usage period driving the total lifetime logins?  Certainly that would seem reasonable - the longer someone uses the system, the more login opportunities they have.
+
+```{r, echo=FALSE}
+logins.plot <- ggplot(reference.dt) + theme_bw() + 
+  aes(
+    x=log10(user_lifetime_days),
+    y=log10(total_logins)
+  ) + 
+  scale_x_continuous(
+    "Usage Period (Years)",
+    breaks=use_period_scale_day,
+    labels=use_period_labels
+  ) +
+  scale_y_continuous(
+    "Unique Logins",
+    breaks=log10(c(10,100,1000)),
+    labels=c(10,100,1000)
+  ) +
+  geom_point(alpha=0.3, size=3) +
+  stat_smooth(method=lm, color="red")
+logins.plot
+```
+
+There seems to be a steady trend:
+
+```{r, echo=FALSE}
+logins.model <- lm(
+  log10(total_logins) ~ log10(user_lifetime_days),
+  reference.dt
+)
+summary(logins.model)
+```
+
+However, little of the variation is explained.  By visual inspection, the variation seems to remain roughly constant with the increasing trend.  Failing to have predictive terms for that variance is not a problem, as long as we are able to replicate that amount of variation in our synthetic population.
+
+Before we try some models to reproduce that, let's consider our user behavior a bit more closely, since the system itself is growing as time proceeds.  Particularly, we want to consider whether the growth in number of available login sites influences the number of unique logins.
+
+Consider the number of available sites:
+
+```{r,echo=FALSE}
+site.dt <- setkey(melt(
+    censor.dt[,list(end=max(logout), start=min(login)), by=location_id],
+    id.var="location_id",
+    value.name="time",
+    variable.name = "event"),
+  "time")
+site.dt[,increment := ifelse(event=="end",-1,1)]
+site.dt[,count := cumsum(increment)]
+mintime <- site.dt$time[1]
+site.dt[, time := time - mintime]
+locations.plot <- ggplot(site.dt) + theme_bw() + aes(x=time/(365*24*60*60), y=count) +
+  geom_step() +
+  scale_x_continuous("year", limits=c(0,NA))
+locations.plot
+```
+
+From this view, we see a division of eras: a period of steady growth, a period of stable turnover, then another growth period terminating in the end of the data set (where locations that likely continue to exist are censored by the end of the data set).  While we could do a more rigorous interpretation, this is a practical approximation, and we can use straightforward linear regression to fit three trend lines, assuming that the middle line should have zero slope.  To curtail the terminal region in the data, we will simply identify where the trend is monotonically declining.
+
+```{r, echo=FALSE}
+grow1 <- function(break1, dt) sum(lm(count ~ time, dt[time < break1])$residuals^2)
+stable <- function(break1, break2, dt) sum(dt[(break1 <= time) & (time < break2), count - mean(count)]^2)
+grow2 <- function(break2, break3, dt) sum(lm(count ~ time, dt[(break2 <= time) & (time < break3)])$residuals^2)
+decline <- function(break3, dt) sum(lm(count ~ time, dt[break3 <= time])$residuals^2)
+partition <- function(x, maxt) {
+  ## x is logit of proportions remaining in the series
+  es <- exp(x)
+  bs <- es/(1+es)
+  break1 <- bs[1]*maxt
+  break2 <- (maxt-break1)*bs[2] + break1
+  break3 <- (maxt-break2)*bs[3] + break2
+  grow1(break1) + stable(break1, break2) + grow2(break2, break3) + decline(break3)
+}
+guessp <- c(0.5, 0.5, 0.9)
+res <- with(optim(log(guessp/(1-guessp)), partition, maxt=max(site.dt$time), dt=site.dt), {
+  es <- exp(par)
+  ps <- es/(1+es)
+  maxt <- max(site.dt$time)
+  break1 <- ps[1]*maxt
+  break2 <- (maxt-break1)*ps[2] + break1
+  break3 <- (maxt-break2)*ps[3] + break2
+  c(b1=break1, b2=break2, b3=break3)  
+})
+locations.plot + geom_vline(x=res/(365*24*60*60), color="red")
+```
+
+This means fitting three values: the slope in the growth region, the transition point, and the end point for stable region.
+
+
+
+If we propose some distributions of unique logins around an increasing mean number of logins, then we can determine via maximum likelihood tests (1) what shape parameters best capture the data, and (2) which distribution models the data best.  There are a few features of the distribution to capture:
+
+ - it should be left censored.  The outcomes are bound by $\log_{10}(2)=`r log10(2)`$ as the minimum number of logins (required to appear at least long enough to measure a lifetime in the dataset greater than a 6 month duration).
+
+First, let's consider the Poisson distribution, with the shape parameter $\lambda$ as the rate of new sessions per available location.  That is, users of the system have an activity rate per location, so more locations.
+
+This implies that we may be able to create synthetic activity informed by the whole dataset, independently of how long a period (within the bounds of the actual empirical data) we are simulating.
+
+TODO: some simulation approaches, show those simulated people on that plot.
 
 The locations have different patterns of activity, reflecting their different hours of operation.
 
