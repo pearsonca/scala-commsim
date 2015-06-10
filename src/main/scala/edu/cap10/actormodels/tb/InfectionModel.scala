@@ -10,6 +10,9 @@ case class InfectionModel(some:Double)
     infectiousContacts:Seq[TBStrain]
   ) : Option[HostTBState] = infectiousContacts match {
     case Seq() => None
-    case _ => None
+    case _ => hostTBstate match {
+      case Susceptible => Some(Exposed(infectiousContacts.head))
+      case _ => None
+    }
   }
 }

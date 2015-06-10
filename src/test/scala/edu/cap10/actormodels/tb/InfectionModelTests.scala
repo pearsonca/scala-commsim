@@ -32,5 +32,12 @@ class InfectionModelTests extends FunSuite {
     val res = nonSusceptibleHosts map { hs => infModel(hs, strains.toSeq) }
     assert(res.forall { _.isEmpty } === true)
   }
+  
+  test("exposing Susceptible hosts to one infectious contact of a particular strain, returns an Exposed of the appropriate type, when the infection probability is 1.0") {
+    val infModel = InfectionModel(1.0)
+    strains.foreach { strain =>
+      assert(infModel(Susceptible, Seq(strain)) === Option(Exposed(strain))) 
+    }
+  }
 
 }
