@@ -59,4 +59,15 @@ class InfectionModelTests extends FunSuite with BeforeAndAfter {
     } 
   }
   
+  test("exposing Chronic (of either type) hosts to one infectious contact of a particular strain, returns an Infected of the appropriate type, at the appropriate rate, when the infection probability is not 1.0") {
+    val infProb = 0.3
+    val chronicEnhance = 2
+    val infModel = InfectionModel(infProb, seed) 
+    strains foreach { strain =>
+      val draws : Seq[Option[HostTBState]] = Seq.fill(10)( rng.nextDouble() < infProb*chronicEnhance ) map { if(_) Some(Infectious(strain)) else None }
+      val res = Seq.fill(10)( infModel(Chronic(TBStrain.Resistant), Seq(strain)) )
+      assert(res === draws)
+    } 
+  }
+  
 }
