@@ -1,6 +1,11 @@
-sealed class TBStrain
-case object Resistant extends TBStrain
-case object Sensitive extends TBStrain
+package edu.cap10.actormodels.tb
+
+object TBStrain extends Enumeration {
+  type TBStrain = Value
+  val Resistant, Sensitive = Value
+}
+
+import TBStrain._
 
 sealed class HostTBState
 case object Susceptible extends HostTBState
