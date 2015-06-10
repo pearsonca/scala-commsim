@@ -8,5 +8,8 @@ case class InfectionModel(some:Double)
   def apply(
     hostTBstate : HostTBState,
     infectiousContacts:Seq[TBStrain]
-  ) : Option[HostTBState] = ???
+  ) : Option[HostTBState] = infectiousContacts match {
+    case Seq() => None
+    case _ => None
+  }
 }
