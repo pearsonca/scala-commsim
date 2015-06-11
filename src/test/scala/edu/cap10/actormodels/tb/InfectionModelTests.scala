@@ -29,6 +29,7 @@ class InfectionModelTests extends FunSuite with BeforeAndAfter {
   
   val nullModel = ModelParams(1.0, 1)
   val refModel = ModelParams(0.3, 2)
+  val lowModel = ModelParams(0.1, 1)
   
   var rng : Random = _
   
@@ -72,6 +73,19 @@ class InfectionModelTests extends FunSuite with BeforeAndAfter {
       val res = Seq.fill(10)( infModel(Chronic(TBStrain.Resistant), Seq(strain)) )
       assert(res === draws)
     } 
+  }
+  
+  test("exposure to multiple infectious contacts makes for higher prob of infection") {
+    val infModel = InfectionModel(lowModel, seed)
+    import lowModel._
+    strains foreach { strain =>
+      (1 to 100).foreach { _ =>
+        val notinfect = Stream.fill(5)(
+            rng.nextDouble() < (1-Math.pow(infection.complement, chronicEnhancement))
+        ).forall( b => !b )
+        assert(infModel(Susceptible, Seq.fill(5)(strain)) === (if (notinfect) None else Some(Exposed(strain))))
+      }
+    }
   }
   
 }

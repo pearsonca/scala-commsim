@@ -7,7 +7,7 @@ object TBStrain extends Enumeration {
 
 import TBStrain._
 
-sealed class HostTBState
+sealed trait HostTBState
 case object Susceptible extends HostTBState
 case class Resistant(strain:TBStrain) extends HostTBState
 case class Exposed(strain:TBStrain) extends HostTBState
