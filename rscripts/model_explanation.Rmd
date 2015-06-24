@@ -1,0 +1,7 @@
+---
+output: pdf_document
+---
+
+The WiFi data consists of two entities, _Hotspots_ and _Users_, and their interactions: _Users_ _login_ and _logout_ of _Hotspots_.
+
+To simulate a covert group acting in a way that appears in this data, we must have that simulation create that kind of data.
