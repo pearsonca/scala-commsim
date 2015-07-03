@@ -7,13 +7,17 @@ case object NoLongerActive extends HotSpotState
 
 case class HotSpot(id:Long, logName:String, activationDate:Long, shutdownDate:Long) {
   
-  private var _clock = 0
+  private var _clock : Long = 0
   private var _state = if (activationDate == 0) Active else NotYetActive
   
   def clock : Long = _clock
   
   def tick(time:Long) : HotSpotState = {
     _clock += 1
+    if (_clock == activationDate)
+      _state = Active
+    else if (_clock == shutdownDate)
+      _state = NoLongerActive
     _state 
   }
   // receive ticks
