@@ -1,6 +1,9 @@
 package edu.cap10.actormodels.covert
 
-import scala.collection.mutable.{Map => MMap, MutableList => MList}
+import scala.collection.mutable.{
+  Map => MMap,
+  MutableList => MList
+}
 
 sealed trait HotSpotState
 case object NotYetActive extends HotSpotState
@@ -8,9 +11,7 @@ case object Active extends HotSpotState
 case object NoLongerActive extends HotSpotState
 
 case class HotSpot(
-  id:HotSpotID,
-  logName:String,
-  activation:Day, shutdown:Day
+  id:HotSpotID, activation:Day, shutdown:Day
 ) {
   
   private var _clock : Day = 0
@@ -56,14 +57,6 @@ case class HotSpot(
   
   def record(query:AccessRecord) = _record.contains(query)
   
-  // receive logins, logouts
-    // reject if not active
-    // if active, queue
-    // once login matched with logout, record
+  def replay = _record.toList
   
-  // activate
-    // open log file
-  
-  // deactivate
-    // flush+close log file
 }
