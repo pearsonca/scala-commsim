@@ -69,6 +69,114 @@ setkey(breakoutDays(censor.dt[,
 censor.dt
 ```
 
+Now we must try to understand the remaining data.
+
+First, what happens with our hotspot locations?  We need to understand how people appear connected to them, in order to properly model how our covert agents might use them.  To do that, we need to speculate about how these hotspots are behaving, *e.g.* are they new wifi access locations? are they substituting for existing services?
+
+We can start by looking at all of locations, and their first and last access times.
+
+```{r, echo=FALSE}
+ggplot(censor.dt[,list(t_min=min(login),t_max=max(logout)), by=location_id]) +
+  theme_bw() +
+  aes(x=location_id, ymin=t_min, ymax=t_max) +
+  geom_linerange() +
+  coord_flip() + labs(y="seconds since start", x="hotspot ordered by start time")
+```
+
+The fairly consistent slope of site start times indicates a reliable creation rate.  We can investigate this further by considering the average creation rate for the whole time period, and the rolling average.
+
+We can determine the overall average creation rate straightforwardly, by taking the number of hotspots created over the whole duration of the data set.  We should also compare that average to an aggregation (*e.g.*, the number created in each week) to get a feel for how creation varies around that.
+
+```{r, echo=FALSE}
+weekly_ave <- censor.dt[,(length(unique(location_id))-2)/(max(login) - min(login))*60*60*24*7]
+weekly_count <- censor.dt[,list(creation_week=(min(login_day) %/% 7)), by=location_id][,list(count=.N),by=creation_week]
+ggplot(weekly_count) + theme_bw() + aes(x=creation_week, y=count) +
+  geom_bar(stat="identity", width=1) +
+  geom_hline(y = weekly_ave, color="red")
+```
+
+We can also be a bit more statistical, fitting a least squares regression model (here, creations by day instead of by week):
+
+```{r, echo=FALSE}
+creations <- setkey(censor.dt[,list(creation_day=min(login_day)), by=location_id][,list(count=.N), by=creation_day][,list(creation_day = creation_day - min(creation_day), count)], "creation_day")
+zeros <- data.table(creation_day = 0:max(creations$creation_day), count=0, key = "creation_day")
+creations <- merge(creations, zeros, all=TRUE)[,list(count=max(count.x, count.y, na.rm=T)),keyby=creation_day]
+ggplot(creations) + theme_bw() + aes(x=creation_day, y=count) +
+  stat_smooth(method="lm") + geom_point()
+```
+
+This leaves a bit to be desired - clearly, there is a mostly constant level with possibly a very small trend, but least squares is not the best fitting approach since the underlying data is restricted to be positive.  We can use maximum likelihood to better describe the number of new hotspots created per day.  We can posit some processes, like creation of new businesses, tendency to accummulate requests and complete them all on one day, *etc.* to inspire our distribution.
+
+TODO: zero-inflated poisson?  zero-inflated negative binomial?
+
+Unlike creation, elimination of hotspot IDs seems to be much more variable.  So they are steadily created, but the lifetime after creation is variable.
+
+```{r,echo=FALSE}
+# dt <- censor.dt[,list(duration=(max(logout) - min(login))/60/60/24/7), by=location_id]
+# h <- hist(dt$duration, 0:ceiling(max(dt$duration)), plot=F)
+# ggplot() +
+#   theme_bw() +
+#   aes(x=duration/60/60/24/7) +
+#   geom_bar(binwidth=1) + labs(x="weeks of hotspot life", y="hotspots with that duration")
+```
+
+The usage profile of hostspots also varies.  We can use this to categorize "types" of locations using a *k-means* approach.  First let's look at grouping by typical *login* times:
+
+```{r, echo=FALSE}
+shft <- 4
+orig <- 0:23
+hr_shf <- (orig - shft) %% 24
+hr_lab <- (orig + shft) %% 24
+base <- censor.dt[,list(login_hour=floor(login_time/60/60)), by=location_id][,list(count=.N),keyby=list(location_id, login_hour)][,list(login_hour=hr_shf[login_hour+1],count=count/max(count)),keyby=location_id]
+# by max vs by sum
+byid <- acast(base, location_id ~ login_hour, value.var = "count", fill = 0)
+kmplotter <- function(n) {
+  km <- kmeans(byid, n, nstart = 5)
+  ggplot(base[,list(location_id,login_hour,count,cluster=factor(km$cluster[location_id]))]) + theme_bw() +
+    aes(x = factor(location_id), y = login_hour, fill = count) +
+    facet_grid(. ~ cluster, scales = "free") + scale_x_discrete("location", labels="") +
+    geom_raster() + scale_y_discrete(name="login hour", labels=hr_lab, breaks=0:23) +
+    labs(fill="proportion max")
+}
+print(kmplotter(4))
+print(kmplotter(5))
+print(kmplotter(6))
+print(kmplotter(7))
+print(kmplotter(8))
+print(kmplotter(9))
+print(kmplotter(10))
+```
+
+We can also look at logout times:
+
+```{r, echo=FALSE}
+shft <- 4
+orig <- 0:23
+hr_shf <- (orig - shft) %% 24
+hr_lab <- (orig + shft) %% 24
+base <- censor.dt[,list(logout_hour=floor(logout_time/60/60)), by=location_id][,list(count=.N),keyby=list(location_id, logout_hour)][,list(logout_hour=hr_shf[logout_hour+1],count=count/max(count)),keyby=location_id]
+# by max vs by sum
+byid <- acast(base, location_id ~ logout_hour, value.var = "count", fill = 0)
+kmplotter <- function(n) {
+  km <- kmeans(byid, n, nstart = 5)
+  ggplot(base[,list(location_id,logout_hour,count,cluster=factor(km$cluster[location_id]))]) + theme_bw() +
+    aes(x = factor(location_id), y = logout_hour, fill = count) +
+    facet_grid(. ~ cluster, scales = "free") + scale_x_discrete("location", labels="") +
+    geom_raster() + scale_y_discrete(name="logout hour", labels=hr_lab, breaks=0:23) +
+    labs(fill="proportion max")
+}
+print(kmplotter(4))
+print(kmplotter(5))
+print(kmplotter(6))
+print(kmplotter(7))
+print(kmplotter(8))
+print(kmplotter(9))
+print(kmplotter(10))
+```
+
+* * *
+
+
 When generating our synthetic data, we assume locations exist before and after they join the service.  So the synthetic population may make visits to these locations outside of time when the service is operating.  We trim that activity from the synthetic data according the time that locations are active in the observed data.
 
 ```{r, echo=FALSE}
@@ -201,7 +309,7 @@ locations.plot
 
 From this view, we see a division of eras: a period of steady growth, a period of stable turnover, then another growth period terminating in the end of the data set (where locations that likely continue to exist are censored by the end of the data set).  While we could do a more rigorous interpretation, this is a practical approximation, and we can use straightforward linear regression to fit three trend lines, assuming that the middle line should have zero slope.  To curtail the terminal region in the data, we will simply identify where the trend is monotonically declining.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval=FALSE}
 grow1 <- function(break1, dt) sum(lm(count ~ time, dt[time < break1])$residuals^2)
 stable <- function(break1, break2, dt) sum(dt[(break1 <= time) & (time < break2), count - mean(count)]^2)
 grow2 <- function(break2, break3, dt) sum(lm(count ~ time, dt[(break2 <= time) & (time < break3)])$residuals^2)
