@@ -8,5 +8,8 @@ package object covert {
   type Time = Long
   
   type AccessRecord = (Day, UserID, Time, Time)
+  type AccessPlan = (HotSpot, Time, Time)
+  
+  type CDF = Array[Double]
   
 }

@@ -1,6 +1,9 @@
 package edu.cap10.actormodels.covert
 
-case class Provocateur(id:UserID) {
+import scala.util.Random.nextDouble
+import scala.collection.mutable.{Set => MSet}
+
+case class Provocateur(id:UserID, acceptNewHotSpot:Double) {
 
   private var _clock : Day = 0
   
@@ -10,5 +13,15 @@ case class Provocateur(id:UserID) {
     _clock += 1
     true
   }
+  
+  private val _hotspots = MSet[HotSpot]()
+  
+  def aware(hotspot:HotSpot) =
+    if (nextDouble() < acceptNewHotSpot)
+      _hotspots add hotspot
+    else
+      false
+  
+  def hotspots : Set[HotSpot] = _hotspots.toSet
   
 }
