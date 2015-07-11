@@ -24,7 +24,7 @@ src.dt <-
 src.dt
 ```
 
-```{r}
+```{r, echo=FALSE}
 max_hours <- 24
 min_logins <- 2
 ```
@@ -41,9 +41,9 @@ Trim data:
 censor.dt <- src.dt[(logout != login) & ((logout - login) <= max_hours*60*60), ]
 invalid.users <- censor.dt[,.N, by=user_id ][N < min_logins, user_id]
 while(length(invalid.users) > 0) {
-  censor.dt <- censor.dt[!user_id %in% invalid.users]
-  invalid.locs <- censor.dt[,.N, by=location_id ][N < min_logins, location_id]
-  censor.dt <- censor.dt[!location_id %in% invalid.locs]
+  censor.dt     <- censor.dt[!user_id %in% invalid.users]
+  invalid.locs  <- censor.dt[,.N, by=location_id ][N < min_logins, location_id]
+  censor.dt     <- censor.dt[!location_id %in% invalid.locs]
   invalid.users <- censor.dt[,.N, by=user_id ][N < min_logins, user_id]
 }
 censor.dt
@@ -76,11 +76,12 @@ First, what happens with our hotspot locations?  We need to understand how peopl
 We can start by looking at all of locations, and their first and last access times.
 
 ```{r, echo=FALSE}
-ggplot(censor.dt[,list(t_min=min(login),t_max=max(logout)), by=location_id]) +
+minmax.dt <- censor.dt[,list(t_min=min(login),t_max=max(logout)), keyby=location_id]
+ggplot(minmax.dt) +
   theme_bw() +
-  aes(x=location_id, ymin=t_min, ymax=t_max) +
+  aes(x=location_id, ymin=t_min/60/60/24/7, ymax=t_max/60/60/24/7) +
   geom_linerange() +
-  coord_flip() + labs(y="seconds since start", x="hotspot ordered by start time")
+  coord_flip() + labs(y="weeks since start", x="hotspot")
 ```
 
 The fairly consistent slope of site start times indicates a reliable creation rate.  We can investigate this further by considering the average creation rate for the whole time period, and the rolling average.
@@ -88,9 +89,22 @@ The fairly consistent slope of site start times indicates a reliable creation ra
 We can determine the overall average creation rate straightforwardly, by taking the number of hotspots created over the whole duration of the data set.  We should also compare that average to an aggregation (*e.g.*, the number created in each week) to get a feel for how creation varies around that.
 
 ```{r, echo=FALSE}
-weekly_ave <- censor.dt[,(length(unique(location_id))-2)/(max(login) - min(login))*60*60*24*7]
-weekly_count <- censor.dt[,list(creation_week=(min(login_day) %/% 7)), by=location_id][,list(count=.N),by=creation_week]
-ggplot(weekly_count) + theme_bw() + aes(x=creation_week, y=count) +
+weekly_ave <- minmax.dt[,
+  (length(unique(location_id))-2)/(max(t_max) - min(t_min))*60*60*24*7
+]
+weekly.dt <- minmax.dt[,
+  list(
+    creation = (t_min/60/60/24)%/%7,
+    shutdown = (t_max/60/60/24)%/%7
+  ),
+  by = location_id
+]
+count.dt <- weekly.dt[,
+  .N, by = creation
+]
+ggplot(count.dt) + theme_bw() + 
+  aes(x=creation, y=N) +
+  labs(x="week", y="hotspots created", color="ave") +
   geom_bar(stat="identity", width=1) +
   geom_hline(y = weekly_ave, color="red")
 ```
@@ -98,81 +112,250 @@ ggplot(weekly_count) + theme_bw() + aes(x=creation_week, y=count) +
 We can also be a bit more statistical, fitting a least squares regression model (here, creations by day instead of by week):
 
 ```{r, echo=FALSE}
-creations <- setkey(censor.dt[,list(creation_day=min(login_day)), by=location_id][,list(count=.N), by=creation_day][,list(creation_day = creation_day - min(creation_day), count)], "creation_day")
-zeros <- data.table(creation_day = 0:max(creations$creation_day), count=0, key = "creation_day")
-creations <- merge(creations, zeros, all=TRUE)[,list(count=max(count.x, count.y, na.rm=T)),keyby=creation_day]
-ggplot(creations) + theme_bw() + aes(x=creation_day, y=count) +
-  stat_smooth(method="lm") + geom_point()
+creations <- setkey(censor.dt[,
+  list(creation_day=min(login_day)),
+  by=location_id
+][,
+  .N,
+  by=creation_day
+][,
+  list(creation_day = creation_day - min(creation_day), N)
+], creation_day)
+zeros <- data.table(
+  creation_day = 0:max(creations$creation_day),
+  N = 0,
+  key = "creation_day"
+)
+creations <- merge(creations, zeros, all=TRUE)[,
+  list(N = max(N.x, N.y, na.rm=T)),
+  keyby = creation_day
+]
+ggplot(creations) + theme_bw() +
+  aes(x=creation_day, y=N) +
+  stat_smooth(method="lm") + geom_point() +
+  labs(x="creation day", y="hotspots created")
 ```
 
 This leaves a bit to be desired - clearly, there is a mostly constant level with possibly a very small trend, but least squares is not the best fitting approach since the underlying data is restricted to be positive.  We can use maximum likelihood to better describe the number of new hotspots created per day.  We can posit some processes, like creation of new businesses, tendency to accummulate requests and complete them all on one day, *etc.* to inspire our distribution.
 
 TODO: zero-inflated poisson?  zero-inflated negative binomial?
 
-Unlike creation, elimination of hotspot IDs seems to be much more variable.  So they are steadily created, but the lifetime after creation is variable.
+Unlike creation, elimination of hotspot IDs seems to be much more variable.  While they are steadily created, their lifetime after creation has a long tailed distribution.  This is further complicated by the termination of the data, left censoring many entries.
+
+TODO: break out entries that start near the end of the dataset and highlight their contribution to the spike in low weeks.
 
 ```{r,echo=FALSE}
-# dt <- censor.dt[,list(duration=(max(logout) - min(login))/60/60/24/7), by=location_id]
+dt <- minmax.dt[,
+  list(duration = (t_max-t_min)/60/60/24/7),
+  by=location_id
+]
 # h <- hist(dt$duration, 0:ceiling(max(dt$duration)), plot=F)
-# ggplot() +
-#   theme_bw() +
-#   aes(x=duration/60/60/24/7) +
-#   geom_bar(binwidth=1) + labs(x="weeks of hotspot life", y="hotspots with that duration")
+ggplot(dt) +
+  theme_bw() +
+  aes(x=duration) +
+  geom_bar(binwidth=1) + labs(x="weeks of hotspot life", y="hotspots with that duration")
 ```
 
-The usage profile of hostspots also varies.  We can use this to categorize "types" of locations using a *k-means* approach.  First let's look at grouping by typical *login* times:
+The usage profile of hostspots also varies.  We can use this to categorize "types" of locations using a *k-means* approach.  First, let's look at grouping by typical *login* and *logout* times:
 
 ```{r, echo=FALSE}
 shft <- 4
 orig <- 0:23
 hr_shf <- (orig - shft) %% 24
 hr_lab <- (orig + shft) %% 24
-base <- censor.dt[,list(login_hour=floor(login_time/60/60)), by=location_id][,list(count=.N),keyby=list(location_id, login_hour)][,list(login_hour=hr_shf[login_hour+1],count=count/max(count)),keyby=location_id]
-# by max vs by sum
-byid <- acast(base, location_id ~ login_hour, value.var = "count", fill = 0)
-kmplotter <- function(n) {
-  km <- kmeans(byid, n, nstart = 5)
-  ggplot(base[,list(location_id,login_hour,count,cluster=factor(km$cluster[location_id]))]) + theme_bw() +
-    aes(x = factor(location_id), y = login_hour, fill = count) +
-    facet_grid(. ~ cluster, scales = "free") + scale_x_discrete("location", labels="") +
-    geom_raster() + scale_y_discrete(name="login hour", labels=hr_lab, breaks=0:23) +
-    labs(fill="proportion max")
+base <- censor.dt[,
+  list(
+    login_hour  = floor(login_time/60/60),
+    logout_hour = floor(logout_time/60/60)
+  ),
+  by = location_id
+]
+both <- rbind(base[,
+  list(login_count=.N),
+  keyby=list(location_id, login_hour)
+][,
+  list(
+    hour=hr_shf[login_hour+1],
+    count=login_count/max(login_count),
+    event=factor("login", levels=c("logout","login"))
+  ),
+  keyby=location_id
+],
+base[,
+  list(logout_count=.N),
+  keyby=list(location_id, logout_hour)
+][,
+  list(
+    hour=hr_shf[logout_hour+1],
+    count=logout_count/max(logout_count),
+    event=factor("logout", levels=c("logout","login"))
+  ),
+  keyby=location_id
+])
+setkey(both, location_id, event, hour)
+# by max vs by sum?
+byid <- acast(both, location_id ~ hour + event, value.var = "count", fill = 0)
+
+kmplotter <- function(n, castdata, src,
+  facet = facet_grid(event ~ cluster, scales = "free"),
+  refevent = "login"
+) {
+    km <- kmeans(castdata, n, nstart = 5)
+    cluster.dt <- data.table(
+      location_id = 1:src[,max(location_id)],
+      cluster = km$cluster, 
+      key="location_id"
+    )
+    peakhours <- src[cluster.dt][,
+      list(peak=sum(hour*count)/sum(count)),
+      by=list(event, cluster)
+    ]
+    setkey(peakhours, event, peak)
+    ## get the order from login
+    ## relabel
+    reorder <- peakhours[event == refevent, order(cluster)]
+    peakhours[, cluster := reorder[cluster]]
+    cluster.dt[,cluster := reorder[cluster]]
+  # reorder cluster ids
+    ggplot(src[cluster.dt]) +
+      theme_bw() +
+      aes(x = factor(location_id), y = hour, fill = count) + facet +
+      geom_raster() + geom_hline(data=peakhours, mapping=aes(yintercept = peak), color="red") +
+      scale_x_discrete("location",  labels="") +
+      scale_y_discrete(name="hour", labels=hr_lab, limits=0:23, expand = c(0,0)) +
+      labs(fill="prop. max count")
 }
-print(kmplotter(4))
-print(kmplotter(5))
-print(kmplotter(6))
-print(kmplotter(7))
-print(kmplotter(8))
-print(kmplotter(9))
-print(kmplotter(10))
+# print(kmplotter(3))
+# print(kmplotter(4))
+print(kmplotter(5, byid, both)) 
+# print(kmplotter(6))
+# print(kmplotter(7))
+# print(kmplotter(8))
+# print(kmplotter(9))
+# print(kmplotter(10))
+# TODO: sort out clustering - either different clustering algorithm, or principled selection of k?
 ```
 
-We can also look at logout times:
+An alternative view would be to consider something like total users present in each hour.
+
+TODO: could weight a user contribution to an hour by how much time they are present during it, but seems reasonable to just do counts at the moment.
 
 ```{r, echo=FALSE}
-shft <- 4
-orig <- 0:23
-hr_shf <- (orig - shft) %% 24
-hr_lab <- (orig + shft) %% 24
-base <- censor.dt[,list(logout_hour=floor(logout_time/60/60)), by=location_id][,list(count=.N),keyby=list(location_id, logout_hour)][,list(logout_hour=hr_shf[logout_hour+1],count=count/max(count)),keyby=location_id]
-# by max vs by sum
-byid <- acast(base, location_id ~ logout_hour, value.var = "count", fill = 0)
-kmplotter <- function(n) {
-  km <- kmeans(byid, n, nstart = 5)
-  ggplot(base[,list(location_id,logout_hour,count,cluster=factor(km$cluster[location_id]))]) + theme_bw() +
-    aes(x = factor(location_id), y = logout_hour, fill = count) +
-    facet_grid(. ~ cluster, scales = "free") + scale_x_discrete("location", labels="") +
-    geom_raster() + scale_y_discrete(name="logout hour", labels=hr_lab, breaks=0:23) +
-    labs(fill="proportion max")
+if (file.access("extend.RData") != 0) {
+  proto <- array(0L, dim = c(1,24), dimnames = list(drop=c(),hours=0:23))
+  extend <- cbind(censor.dt, proto)
+  extend[, login_hour := floor(login_time/60/60) ][, logout_hour:=floor(logout_time/60/60)]
+  extend[, "0"  := ifelse((0  <= logout_hour) & (login_hour <= 0),  1L, 0L)]
+  extend[, "1"  := ifelse((1  <= logout_hour) & (login_hour <= 1),  1L, 0L)]
+  extend[, "2"  := ifelse((2  <= logout_hour) & (login_hour <= 2),  1L, 0L)]
+  extend[, "3"  := ifelse((3  <= logout_hour) & (login_hour <= 3),  1L, 0L)]
+  extend[, "4"  := ifelse((4  <= logout_hour) & (login_hour <= 4),  1L, 0L)]
+  extend[, "5"  := ifelse((5  <= logout_hour) & (login_hour <= 5),  1L, 0L)]
+  extend[, "6"  := ifelse((6  <= logout_hour) & (login_hour <= 6),  1L, 0L)]
+  extend[, "7"  := ifelse((7  <= logout_hour) & (login_hour <= 7),  1L, 0L)]
+  extend[, "8"  := ifelse((8  <= logout_hour) & (login_hour <= 8),  1L, 0L)]
+  extend[, "9"  := ifelse((9  <= logout_hour) & (login_hour <= 9),  1L, 0L)]
+  extend[, "10" := ifelse((10 <= logout_hour) & (login_hour <= 10), 1L, 0L)]
+  extend[, "11" := ifelse((11 <= logout_hour) & (login_hour <= 11), 1L, 0L)]
+  extend[, "12" := ifelse((12 <= logout_hour) & (login_hour <= 12), 1L, 0L)]
+  extend[, "13" := ifelse((13 <= logout_hour) & (login_hour <= 13), 1L, 0L)]
+  extend[, "14" := ifelse((14 <= logout_hour) & (login_hour <= 14), 1L, 0L)]
+  extend[, "15" := ifelse((15 <= logout_hour) & (login_hour <= 15), 1L, 0L)]
+  extend[, "16" := ifelse((16 <= logout_hour) & (login_hour <= 16), 1L, 0L)]
+  extend[, "17" := ifelse((17 <= logout_hour) & (login_hour <= 17), 1L, 0L)]
+  extend[, "18" := ifelse((18 <= logout_hour) & (login_hour <= 18), 1L, 0L)]
+  extend[, "19" := ifelse((19 <= logout_hour) & (login_hour <= 19), 1L, 0L)]
+  extend[, "20" := ifelse((20 <= logout_hour) & (login_hour <= 20), 1L, 0L)]
+  extend[, "21" := ifelse((21 <= logout_hour) & (login_hour <= 21), 1L, 0L)]
+  extend[, "22" := ifelse((22 <= logout_hour) & (login_hour <= 22), 1L, 0L)]
+  extend[, "23" := ifelse((23 <= logout_hour) & (login_hour <= 23), 1L, 0L)]
+} else {
+  load("extend.RData")
 }
-print(kmplotter(4))
-print(kmplotter(5))
-print(kmplotter(6))
-print(kmplotter(7))
-print(kmplotter(8))
-print(kmplotter(9))
-print(kmplotter(10))
+if (file.access("comp.RData") != 0) {
+  comp <- extend[,list(
+    `0` =sum(`0`),
+    `1` =sum(`1`),
+    `2` =sum(`2`),
+    `3` =sum(`3`),
+    `4` =sum(`4`),
+    `5` =sum(`5`),
+    `6` =sum(`6`),
+    `7` =sum(`7`),
+    `8` =sum(`8`),
+    `9` =sum(`9`),
+    `10`=sum(`10`),
+    `11`=sum(`11`),
+    `12`=sum(`12`),
+    `13`=sum(`13`),
+    `14`=sum(`14`),
+    `15`=sum(`15`),
+    `16`=sum(`16`),
+    `17`=sum(`17`),
+    `18`=sum(`18`),
+    `19`=sum(`19`),
+    `20`=sum(`20`),
+    `21`=sum(`21`),
+    `22`=sum(`22`),
+    `23`=sum(`23`)
+  ),by=location_id]
+  save(comp, file="comp.RData")
+} else {
+  load("comp.RData")
+}
+
+comp.short <- melt(comp, id.var="location_id", variable.name = "hour", value.name="count")[count != 0]
+comp.short$count <- as.double(comp.short$count)
+comp.short$hour <- as.integer(comp.short$hour)
+setkey(comp.short, location_id, hour)
+comp.short[, count := count/max(count), by=location_id][,event := "usage" ]
+compbyID <- acast(comp.short, location_id ~ hour, value.var = "count", fill = 0)
+
+kmplotter(5, compbyID, comp.short, facet = facet_grid(. ~ cluster, scale="free"), refevent="usage")
 ```
+
+These analyses identify similar kinds of locations based on their aggegrated usage profile.  There is not an obviously preferable approach to the signature we used for clustering -- *i.e.*, login and logout densities *vs.* concurrent usage density -- so we choose the usage-based clusters.
+
+TODO: there probably could be, if we did some statistics to determine best *k*, and then did some information criterion between the two models?  Additionally, compare overlap in clusters?
+
+If we revisit our view of the presence of locations over time in the dataset, what do we see?
+
+```{r,echo=FALSE}
+usagekm <- kmeans(compbyID, 8, nstart = 5)$cluster
+km.dt <- data.table(location_id=1:length(usagekm), cluster=factor(usagekm), key=c("location_id"))
+ggplot(minmax.dt[km.dt]) +
+  theme_bw() +
+  aes(x=location_id, ymin=t_min, ymax=t_max, color=cluster) +
+  geom_linerange() +
+  coord_flip() + labs(y="seconds since start", x="hotspot ordered by start time") +
+  scale_color_discrete()
+```
+
+There are perhaps some trends like-location creation, indicated by the solid color bands.  However, this does not clarify what sort of locations are available throughout the whole duration of the data set.  What if we look at the availability of a type cluster at anytime?
+
+```{r, echo=FALSE}
+week.melt <- setkey(melt(weekly.dt, id.var = "location_id", variable.name = "event", value.name = "week"), location_id)[km.dt]
+week.melt[, inc := ifelse(event == "creation", 1, -1)]
+week.melt <- week.melt[,list(inc = sum(inc)), keyby=list(cluster, week) ]
+# ggplot(week.totals[cluster==1]) + aes(x = week, y = agg, fill=factor(cluster), group=cluster) + geom_area(stat="hline")
+week.melt.fill <- setkey(Reduce(function(left, right) {
+  ul <- left[!(week %in% right[,unique(week)]), unique(week)]
+  ur <- right[!(week %in% left[,unique(week)]), unique(week)]
+  ulc <- left[,unique(cluster)]
+  rbind(left, right, 
+    data.table(week=ul, inc=0, cluster=right[,unique(cluster)]),
+    data.table(week=rep(ur, times=length(ulc)), inc=0, cluster=rep(ulc, each=length(ur)))
+  )
+}, Map(function(clus) week.melt[cluster == clus], week.melt[,unique(cluster)])), cluster, week)
+week.totals <- week.melt.fill[,list(agg = cumsum(inc), week), keyby=cluster]
+clusorder <- week.totals[,list(mx=max(agg)),keyby=cluster][,cluster,keyby=mx]$cluster
+week.totals$cluster <- factor(week.totals$cluster, levels=clusorder)
+ggplot(week.totals) + aes(x = week, y = agg, fill=cluster, order=cluster) + geom_area(position="fill")
+```
+
+This suggests that, at least to a reasonable approximation, the prevalance of cluster types is constant through the range we are considering for the population synthesis.
+
+Now, how do real users use these locations?
 
 * * *
 
