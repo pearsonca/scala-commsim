@@ -161,24 +161,6 @@ ggplot(dt) +
 The usage profile of hostspots also varies.  We can use this to categorize "types" of locations using a *k-means* approach.  First, let's look at grouping by typical *login* and *logout* times:
 
 ```{r, echo=FALSE}
-# shifthrs_trans <- function(hrs) {
-#   ihrs <- as.integer(hrs)
-#   scales::trans_new(
-#     paste0("shift",ihrs,"hrs"),
-#     function(y) {
-#       if (!is.numeric(y)) return(y)
-#       (floor(y) - ihrs) %% 24L
-#     },
-#     function(yinv) {
-#       if (!is.numeric(yinv)) return(yinv)
-#       (floor(yinv) + ihrs) %% 24L
-#     },
-#   )
-# }
-# shft <- 4
-# orig <- 0:23
-# hr_shf <- (orig - shft) %% 24
-# hr_lab <- (orig + shft) %% 24
 base <- censor.dt[,
   list(
     login_hour  = floor(login_time/60/60),
@@ -389,7 +371,9 @@ kmUserPlotter <- function(n, castdata, src,
 
 kmUserPlotter(5, compuserbyID, comp.user.short)
 
-
+# animation::saveVideo({
+#   
+# })
 #thing <- censor.dt[km.dt][,list(ul = length(unique(location_id))),by=list(user_id, cluster)][,max(ul),by=cluster]
 #test_users <- censor.dt[,.N,by=user_id][which(N==median(N)), user_id]
 #setkey(censor.dt, location_id)

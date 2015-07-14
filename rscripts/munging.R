@@ -22,3 +22,19 @@ trimLimits <- function(tar.dt, lim.dt) {
   setkeyv(res.dt, key(tar.dt))
   res.dt
 }
+
+kmParse <- function(src, k, nstart = k, key, refevent = "login") {
+  castdata <- reshape2::acast(src, eval(parse(text=paste0(key,"~hour+event"))), value.var = "norm", fill = 0)
+  km <- stats::kmeans(castdata, k, nstart = nstart)
+  cluster.dt <- data.table(cluster = km$cluster)
+  cluster.dt[[key]] = as.integer(names(km$cluster))
+  setkeyv(cluster.dt, key)
+  peakhours <- setkey(src[cluster.dt][,
+    list(peak=sum(hour*norm)/sum(norm)),
+    by=list(event, cluster)
+  ], event, peak)
+  reorder <- peakhours[event == refevent, order(cluster)]
+  peakhours[, cluster := reorder[cluster]]
+  cluster.dt[,cluster := reorder[cluster]]
+  return(list(clustering = cluster.dt, peaks = peakhours))
+}
