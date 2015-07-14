@@ -4,7 +4,7 @@ output: pdf_document
 ## Analysis and plots of montreal data.
 
 ```{r, echo=FALSE, include=FALSE}
-req.packages <- c("data.table", "ggplot2", "reshape2", "grid")
+req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales")
 sapply(req.packages, require, character.only = T)
 ```
 
@@ -161,10 +161,24 @@ ggplot(dt) +
 The usage profile of hostspots also varies.  We can use this to categorize "types" of locations using a *k-means* approach.  First, let's look at grouping by typical *login* and *logout* times:
 
 ```{r, echo=FALSE}
-shft <- 4
-orig <- 0:23
-hr_shf <- (orig - shft) %% 24
-hr_lab <- (orig + shft) %% 24
+# shifthrs_trans <- function(hrs) {
+#   ihrs <- as.integer(hrs)
+#   scales::trans_new(
+#     paste0("shift",ihrs,"hrs"),
+#     function(y) {
+#       if (!is.numeric(y)) return(y)
+#       (floor(y) - ihrs) %% 24L
+#     },
+#     function(yinv) {
+#       if (!is.numeric(yinv)) return(yinv)
+#       (floor(yinv) + ihrs) %% 24L
+#     },
+#   )
+# }
+# shft <- 4
+# orig <- 0:23
+# hr_shf <- (orig - shft) %% 24
+# hr_lab <- (orig + shft) %% 24
 base <- censor.dt[,
   list(
     login_hour  = floor(login_time/60/60),
@@ -177,7 +191,7 @@ both <- rbind(base[,
   keyby=list(location_id, login_hour)
 ][,
   list(
-    hour=hr_shf[login_hour+1],
+    hour=as.integer(login_hour),
     norm=login_count/max(login_count),
     event=factor("login", levels=c("logout","login"))
   ),
@@ -188,7 +202,7 @@ base[,
   keyby=list(location_id, logout_hour)
 ][,
   list(
-    hour=hr_shf[logout_hour+1],
+    hour=as.integer(logout_hour),
     norm=logout_count/max(logout_count),
     event=factor("logout", levels=c("logout","login"))
   ),
@@ -220,11 +234,12 @@ kmplotter <- function(n, castdata, src,
     cluster.dt[,cluster := reorder[cluster]]
   # reorder cluster ids
     ggplot(src[cluster.dt]) +
-      theme_bw() +
-      aes(x = factor(location_id), y = hour, fill = norm) + facet +
-      geom_raster() + geom_hline(data=peakhours, mapping=aes(yintercept = peak), color="red") +
+      theme_bw() + theme(panel.grid=element_blank(), panel.grid.major.y = element_line()) +
+      aes(x = factor(location_id), y = factor(hour), fill = norm) + facet +
+      geom_tile() + geom_hline(data=peakhours, mapping=aes(yintercept = peak), color="red") +
       scale_x_discrete("location",  labels="") +
-      scale_y_discrete(name="hour", labels=hr_lab, limits=0:23, expand = c(0,0)) +
+      scale_y_discrete(name="hour") +
+#      coord_trans(ytrans = shifthrs_trans(4)) +
       labs(fill="prop. max count")
 }
 # print(kmplotter(3))
@@ -245,7 +260,8 @@ TODO: could weight a user contribution to an hour by how much time they are pres
 ```{r, echo=FALSE}
 comp.short <- setkey(rbindlist(
   Map(function(hour) censor.dt[
-    (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600)), 
+    ((login_day == logout_day) & (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600))) |
+    ((login_day != logout_day) & ((floor(login_time/3600) <= hour) | (hour  <= floor(logout_time/3600))) ),
     list(count=.N, hour=hour, event="usage"),
     by=location_id
   ], 0:23)), location_id, hour
@@ -324,11 +340,16 @@ number_of_rows <- censor.dt[km.dt][,
   max(nrows)
 ]
 
-## TODO: handle day splits!
+## handle day splits:
+## if login_day == logout_day
+##  (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600))
+## else - n.b., already precluded logout_time > login_time, since enforced < 24hr sessions
+##  hour >= login | hour <= logout
 
 comp.user.short <- setkey(rbindlist(
   Map(function(hour) censor.dt[
-    (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600)), 
+    ((login_day == logout_day) & (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600))) |
+    ((login_day != logout_day) & ((floor(login_time/3600) <= hour) | (hour  <= floor(logout_time/3600))) ), 
     list(count=.N, hour=hour, event="usage"),
     by=user_id
   ], 0:23)), user_id, hour
@@ -358,11 +379,11 @@ kmUserPlotter <- function(n, castdata, src,
     cluster.dt[,cluster := reorder[cluster]]
   # reorder cluster ids
     ggplot(src[cluster.dt]) +
-      theme_bw() +
-      aes(x = factor(user_id), y = hour, fill = norm) + facet +
+      theme_bw() + theme(panel.grid=element_blank()) +
+      aes(x = factor(user_id), y = factor(hour), fill = norm) + facet +
       geom_raster() + geom_hline(data=peakhours, mapping=aes(yintercept = peak), color="red") +
       scale_x_discrete("user",  labels="") +
-      scale_y_discrete(name="hour", labels=hr_lab, limits=0:23, expand = c(0,0)) +
+      scale_y_discrete(name="hour") +
       labs(fill="prop. max count")
 }
 
