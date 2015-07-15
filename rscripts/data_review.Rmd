@@ -322,12 +322,6 @@ number_of_rows <- censor.dt[km.dt][,
   max(nrows)
 ]
 
-## handle day splits:
-## if login_day == logout_day
-##  (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600))
-## else - n.b., already precluded logout_time > login_time, since enforced < 24hr sessions
-##  hour >= login | hour <= logout
-
 comp.user.short <- setkey(rbindlist(
   Map(function(hour) censor.dt[
     ((login_day == logout_day) & (floor(login_time/3600) <= hour) & (hour  <= floor(logout_time/3600))) |
@@ -336,6 +330,7 @@ comp.user.short <- setkey(rbindlist(
     by=user_id
   ], 0:23)), user_id, hour
 )
+
 comp.user.short[,norm := count/max(count), by=user_id]
 compuserbyID <- acast(comp.user.short, user_id ~ hour, value.var = "norm", fill = 0)
 
@@ -369,7 +364,19 @@ kmUserPlotter <- function(n, castdata, src,
       labs(fill="prop. max count")
 }
 
-kmUserPlotter(5, compuserbyID, comp.user.short)
+## let's figure out user clusters
+## then join censor.dt to user clusters
+## then track those clusters as:
+##  panel col, color for each cluster (all in same row, since y axis shared)
+##  yaxis - cluster size / total user base at that time?
+##  line for current total in cluster
+##  width to represent turnover?  like ymax = count + additions, ymin = count - losses
+##  x axis - week; day will be too noisy w/ turnover / count?
+
+user.clusters <- kmParse(comp.user.short, 5, key="user_id", refevent="usage")
+censor.dt[user.clusters$clustering][,
+  list(leave=max(logout_time), join=min(login_time)), by=list(user_id,cluster)
+]
 
 # animation::saveVideo({
 #   
