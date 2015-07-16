@@ -5,7 +5,8 @@ output: pdf_document
 
 ```{r, echo=FALSE, include=FALSE}
 req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales")
-sapply(req.packages, require, character.only = T)
+need.pkgs <- req.packages[!sapply(req.packages, require, character.only = T)]
+if (length(need.pkgs) != 0) install.packages(need.pkgs, dependencies = T)
 ```
 
 ### Required packages: `r req.packages`.
@@ -281,10 +282,10 @@ week.melt.fill <- setkey(Reduce(function(left, right) {
   ul <- left[!(week %in% right[,unique(week)]), unique(week)]
   ur <- right[!(week %in% left[,unique(week)]), unique(week)]
   ulc <- left[,unique(cluster)]
-  rbind(left, right, 
-    data.table(week=ul, inc=0, cluster=right[,unique(cluster)]),
-    data.table(week=rep(ur, times=length(ulc)), inc=0, cluster=rep(ulc, each=length(ur)))
-  )
+  temp <- rbind(left, right)
+  if (length(ul) != 0) temp <- rbind(temp, data.table(week=ul, inc=0, cluster=right[,unique(cluster)]))
+  if (length(ur) != 0) temp <- rbind(temp, data.table(week=rep(ur, times=length(ulc)), inc=0, cluster=rep(ulc, each=length(ur))))
+  temp
 }, Map(function(clus) week.melt[cluster == clus], week.melt[,unique(cluster)])), cluster, week)
 week.totals <- week.melt.fill[,list(agg = cumsum(inc), week), keyby=cluster]
 clusorder <- week.totals[,list(mx=max(agg)),keyby=cluster][,cluster,keyby=mx]$cluster
@@ -374,9 +375,39 @@ kmUserPlotter <- function(n, castdata, src,
 ##  x axis - week; day will be too noisy w/ turnover / count?
 
 user.clusters <- kmParse(comp.user.short, 5, key="user_id", refevent="usage")
-censor.dt[user.clusters$clustering][,
-  list(leave=max(logout_time), join=min(login_time)), by=list(user_id,cluster)
+setkey(censor.dt, user_id)
+user.melt <- melt(censor.dt[user.clusters$clustering][,
+  list(leave=max(logout), join=min(login)), by=list(user_id, cluster)
+], id.vars = c("user_id","cluster"), value.name = "time", variable.name = "event")
+
+agg.dt <- user.melt[, 
+  week := floor(time/60/60/24/7)
+][,
+  inc := ifelse(event == "leave",-1,1)
+][,list(inc = sum(inc)),keyby=list(week, cluster)]
+
+agg.fill <- setkey(Reduce(function(left, right) {
+  ul <- left[!(week %in% right[,unique(week)]), unique(week)]
+  ur <- right[!(week %in% left[,unique(week)]), unique(week)]
+  ulc <- left[,unique(cluster)]
+  temp <- rbind(left, right)
+  if (length(ul) != 0) temp <- rbind(temp, data.table(week=ul, inc=0, cluster=right[,unique(cluster)]))
+  if (length(ur) != 0) temp <- rbind(temp, data.table(week=rep(ur, times=length(ulc)), inc=0, cluster=rep(ulc, each=length(ur))))
+  temp
+}, Map(function(clus) agg.dt[cluster == clus], agg.dt[,unique(cluster)])), cluster, week)
+
+agg.final <- agg.fill[,
+  list(net = sum(inc), gain = sum(inc[inc > 0]), loss = sum(inc[inc < 0])),
+  by=list(week, cluster)
+][,
+  list(net, gain, loss, cum=cumsum(net), week),
+  keyby=cluster
 ]
+
+ggplot(agg.final) + theme_bw() +
+  aes(fill = factor(cluster), x = week, y = cum) + geom_area(position="fill") +
+  ylab("prop. users by cluster") + labs(fill="cluster") +
+  coord_cartesian(xlim=c(34, 300), ylim=c(0,1))
 
 # animation::saveVideo({
 #   
