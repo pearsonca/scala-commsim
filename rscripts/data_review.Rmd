@@ -419,3 +419,16 @@ ggplot(agg.final) + theme_bw() +
 #typical_users[,.N,by=list(user_id,cluster)][N>1]
 
 ```
+
+clustering locations:
+
+ try categories of low, med, high usage rates
+ vs short, med, long login times
+ 
+ color vs y for membership
+ 
+ locations that disappeared between intervals - add holes?
+ 
+ rolling aggregration windows
+ 
+ highlight changes by size (+alpha)?
