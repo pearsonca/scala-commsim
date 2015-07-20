@@ -64,11 +64,11 @@ Relabel source data:
 
 ```{r, echo=FALSE}
 source("munging.R")
-setkey(breakoutDays(censor.dt[,
+zeroize(breakoutDays(censor.dt[,
   user_id := .GRP, by=user_id
 ][,
   location_id := .GRP, by=location_id
-]), login_day, login_time, logout_day, logout_time, user_id, location_id)
+], login_day, login_time, logout_day, logout_time, user_id, location_id))
 censor.dt
 ```
 
@@ -407,7 +407,7 @@ agg.final <- agg.fill[,
 ggplot(agg.final) + theme_bw() +
   aes(fill = factor(cluster), x = week, y = cum) + geom_area(position="fill") +
   ylab("prop. users by cluster") + labs(fill="cluster") +
-  coord_cartesian(xlim=c(34, 300), ylim=c(0,1))
+  coord_cartesian(ylim=c(0,1))
 
 # animation::saveVideo({
 #   
@@ -432,3 +432,12 @@ clustering locations:
  rolling aggregration windows
  
  highlight changes by size (+alpha)?
+
+```{r, echo=F}
+duration_breaks <- censor.dt[,quantile(logout-login, probs=(1:2)/3)]
+daily_login_breaks <- censor.dt[,.N,by=list(location_id, login_day)][,quantile(N,probs=(1:2)/3)] ## TODO zeros?
+# for 90 day window
+#  for extant locations
+#   - what percent of active days fall in each login category?
+#   - what percent of logins fall in each login category?
+```

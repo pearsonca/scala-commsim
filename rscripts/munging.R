@@ -1,7 +1,7 @@
 ## data munging utils
 require(data.table)
-breakoutDays <- function(dt) {
-  dt[,
+breakoutDays <- function(dt, ...) {
+  setkey(dt[,
     user_id     := .GRP, by=user_id
   ][,
     location_id := .GRP, by=location_id
@@ -13,8 +13,18 @@ breakoutDays <- function(dt) {
     login_time  := login - login_day*24*60*60
   ][,
     logout_time := logout - logout_day*24*60*60
-  ]
+  ], ...)
 }
+
+zeroize <- function(dt, z = dt[1, login-login_time], dz = dt[1, login_day], ks=key(dt)) setkeyv(dt[,
+  login := login - z
+][,
+  logout := logout - z
+][,
+  login_day := login_day - dz
+][,
+  logout_day := logout_day - dz
+], ks)
 
 trimLimits <- function(tar.dt, lim.dt) {
   res.dt <- merge(tar.dt, lim.dt, by = "location_id")[(login >= first) & (logout <= last),]
