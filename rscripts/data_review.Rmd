@@ -4,7 +4,7 @@ output: pdf_document
 ## Analysis and plots of montreal data.
 
 ```{r, echo=FALSE, include=FALSE}
-req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales")
+req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales", "animation")
 need.pkgs <- req.packages[!sapply(req.packages, require, character.only = T)]
 if (length(need.pkgs) != 0) install.packages(need.pkgs, dependencies = T)
 ```
@@ -484,18 +484,30 @@ cross_group <- function(timeslice, duration_breaks, daily_login_breaks) {
 }
 # censor.dt[,max(login_day)]
 
-prev.dt <- cross_group(censor.dt[offset <= login_day & login_day < (offset+window)], duration_breaks, daily_login_breaks)
-for (start in seq(offset+slide, 600-window, by=slide)) {
-  timeslice <- censor.dt[start <= login_day & login_day < (start+window)]
-  cross_data.dt <- cross_group(timeslice, duration_breaks, daily_login_breaks)
-  plotting.dt <- merge(cross_data.dt, prev.dt, by=c("location_id", "group.duration", "group.login"), all=T, suffixes = c("",".prev"))
-  print(ggplot(plotting.dt[!is.na(membership.duration.prev)]) + theme_bw() +
+base_scale_x <- scale_x_discrete("location",
+  limits = 1:censor.dt[,max(unique(location_id))])
+base_scale_y <- scale_y_continuous("membership", limits=c(0,1))
+
+base_plot <- ggplot() + theme_bw() +
     facet_grid(group.duration ~ group.login, labeller = function(var, val) {
       paste0(val,ifelse(var == "group.duration"," duration"," logins"))
     }) +
-    aes(x=location_id, y = membership.duration*membership.login,
+    aes(x=location_id, y=membership.duration*membership.login,
         color = membership.duration*membership.login - membership.duration.prev*membership.login.prev) +
-    geom_point(na.rm = TRUE) +
+    base_scale_x + base_scale_y + theme(
+      axis.text.x = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+    scale_color_gradient("change in membership", limits = c(-1,1), low="red", high="blue", na.value = "black")
+
+prev.dt <- cross_group(censor.dt[offset <= login_day & login_day < (offset+window)], duration_breaks, daily_login_breaks)
+saveGIF(for (start in seq(offset+slide, censor.dt[,max(login_day)]-window, by=slide)) {
+  timeslice <- censor.dt[start <= login_day & login_day < (start+window)]
+  cross_data.dt <- cross_group(timeslice, duration_breaks, daily_login_breaks)
+  plotting.dt <- merge(cross_data.dt, prev.dt, by=c("location_id", "group.duration", "group.login"), all=T, suffixes = c("",".prev"))
+  print(base_plot +
+    geom_point(data = plotting.dt[!is.na(membership.duration.prev)], na.rm = TRUE) +
     geom_point(data = plotting.dt[is.na(membership.duration.prev)]) +
     geom_point(
       data=plotting.dt[
@@ -505,9 +517,8 @@ for (start in seq(offset+slide, 600-window, by=slide)) {
           membership.login=membership.login.prev
         ),
         by=list(group.duration, group.login, location_id)
-      ], color="black", shape = 1) +
-    scale_color_gradient("change in membership", limits = c(-1,1), low="red", high="blue", na.value = "black")
+      ], color="black", shape = 1)
   )
   prev.dt <- cross_data.dt
-}
+})
 ```
