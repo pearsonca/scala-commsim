@@ -436,14 +436,10 @@ clustering locations:
 ```{r, echo=F}
 duration_breaks <- censor.dt[,quantile(logout-login, probs=(1:2)/3)]
 daily_login_breaks <- censor.dt[,.N,by=list(location_id, login_day)][,quantile(N,probs=(1:2)/3)] ## TODO zeros?
-duration_group.dt <- censor.dt[90 <= login_day & login_day < 180, 
-  list( # initial pass to get temp variables
-    low = sum(logout - login < duration_breaks[1]),
-    mid = sum(logout - login < duration_breaks[2]),
-    high = .N
-  ), 
-  keyby=location_id
-][,
+
+offset <- window <- 90; slide <- 30 ## TODO: go by actual months
+
+divy <- function(dt) dt[,
   list( # use temp vars to calc actuals
     low = low/high,
     mid = (mid-low)/high,
@@ -452,47 +448,66 @@ duration_group.dt <- censor.dt[90 <= login_day & login_day < 180,
   keyby=location_id
 ]
 
-login_group.dt <- censor.dt[90 <= login_day & login_day < 180, 
-  list(count = .N), 
-  by=list(login_day, location_id)
-][,
-  list( # initial pass to get temp variables
-    low = sum(count < daily_login_breaks[1]),
-    mid = sum(count < daily_login_breaks[2]),
-    high = .N
-  ), 
-  keyby=location_id
-][,
-  list( # use temp vars to calc actuals
-    low = low/high,
-    mid = (mid-low)/high,
-    high = (high-mid)/high
-  ),
-  keyby=location_id
-]
+cross_group <- function(timeslice, duration_breaks, daily_login_breaks) {
+  duration_group.dt <- divy(timeslice[,
+    list( # initial pass to get temp variables
+      low = sum((logout - login) <= duration_breaks[1]),
+      mid = sum((logout - login) <= duration_breaks[2]),
+      high = .N
+    ), 
+    keyby=location_id
+  ])
+  login_group.dt <- divy(timeslice[, 
+    list(count = .N), 
+    by=list(login_day, location_id)
+  ][,
+    list( # initial pass to get temp variables
+      low = sum(count <= daily_login_breaks[1]),
+      mid = sum(count <= daily_login_breaks[2]),
+      high = .N
+    ), 
+    keyby=location_id
+  ])
+  cross_data.dt <- merge(
+    melt(
+      duration_group.dt, id.vars = "location_id",
+      value.name="membership", variable.name="group"
+    ),
+    melt(
+      login_group.dt, id.vars = "location_id",
+      value.name="membership", variable.name="group"
+    ),
+    by = "location_id",
+    allow.cartesian = T,
+    suffixes = c(".duration",".login")
+  )
+}
+# censor.dt[,max(login_day)]
 
-cross_data.dt <- merge(
-  melt(
-    duration_group.dt, id.vars = "location_id",
-    value.name="membership", variable.name="group"
-  ),
-  melt(
-    login_group.dt, id.vars = "location_id",
-    value.name="membership", variable.name="group"
-  ),
-  by = "location_id",
-  allow.cartesian = T,
-  suffixes = c(".duration",".login")
-)
-
-ggplot(cross_data.dt) + theme_bw() +
-  facet_grid(group.duration ~ group.login, labeller = function(var, val) {
-    paste0(val,ifelse(var == "group.duration"," duration"," logins"))
-  }) +
-  aes(x=location_id, y = membership.duration*membership.login) +
-  geom_point()
-# for 90 day window
-#  for extant locations
-#   - what percent of active days fall in each login category?
-#   - what percent of logins fall in each login category?
+prev.dt <- cross_group(censor.dt[offset <= login_day & login_day < (offset+window)], duration_breaks, daily_login_breaks)
+for (start in seq(offset+slide, 600-window, by=slide)) {
+  timeslice <- censor.dt[start <= login_day & login_day < (start+window)]
+  cross_data.dt <- cross_group(timeslice, duration_breaks, daily_login_breaks)
+  plotting.dt <- merge(cross_data.dt, prev.dt, by=c("location_id", "group.duration", "group.login"), all=T, suffixes = c("",".prev"))
+  print(ggplot(plotting.dt[!is.na(membership.duration.prev)]) + theme_bw() +
+    facet_grid(group.duration ~ group.login, labeller = function(var, val) {
+      paste0(val,ifelse(var == "group.duration"," duration"," logins"))
+    }) +
+    aes(x=location_id, y = membership.duration*membership.login,
+        color = membership.duration*membership.login - membership.duration.prev*membership.login.prev) +
+    geom_point(na.rm = TRUE) +
+    geom_point(data = plotting.dt[is.na(membership.duration.prev)]) +
+    geom_point(
+      data=plotting.dt[
+        is.na(membership.duration),
+        list(
+          membership.duration=membership.duration.prev,
+          membership.login=membership.login.prev
+        ),
+        by=list(group.duration, group.login, location_id)
+      ], color="black", shape = 1) +
+    scale_color_gradient("change in membership", limits = c(-1,1), low="red", high="blue", na.value = "black")
+  )
+  prev.dt <- cross_data.dt
+}
 ```
