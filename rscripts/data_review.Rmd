@@ -436,6 +436,61 @@ clustering locations:
 ```{r, echo=F}
 duration_breaks <- censor.dt[,quantile(logout-login, probs=(1:2)/3)]
 daily_login_breaks <- censor.dt[,.N,by=list(location_id, login_day)][,quantile(N,probs=(1:2)/3)] ## TODO zeros?
+duration_group.dt <- censor.dt[90 <= login_day & login_day < 180, 
+  list( # initial pass to get temp variables
+    low = sum(logout - login < duration_breaks[1]),
+    mid = sum(logout - login < duration_breaks[2]),
+    high = .N
+  ), 
+  keyby=location_id
+][,
+  list( # use temp vars to calc actuals
+    low = low/high,
+    mid = (mid-low)/high,
+    high = (high-mid)/high
+  ),
+  keyby=location_id
+]
+
+login_group.dt <- censor.dt[90 <= login_day & login_day < 180, 
+  list(count = .N), 
+  by=list(login_day, location_id)
+][,
+  list( # initial pass to get temp variables
+    low = sum(count < daily_login_breaks[1]),
+    mid = sum(count < daily_login_breaks[2]),
+    high = .N
+  ), 
+  keyby=location_id
+][,
+  list( # use temp vars to calc actuals
+    low = low/high,
+    mid = (mid-low)/high,
+    high = (high-mid)/high
+  ),
+  keyby=location_id
+]
+
+cross_data.dt <- merge(
+  melt(
+    duration_group.dt, id.vars = "location_id",
+    value.name="membership", variable.name="group"
+  ),
+  melt(
+    login_group.dt, id.vars = "location_id",
+    value.name="membership", variable.name="group"
+  ),
+  by = "location_id",
+  allow.cartesian = T,
+  suffixes = c(".duration",".login")
+)
+
+ggplot(cross_data.dt) + theme_bw() +
+  facet_grid(group.duration ~ group.login, labeller = function(var, val) {
+    paste0(val,ifelse(var == "group.duration"," duration"," logins"))
+  }) +
+  aes(x=location_id, y = membership.duration*membership.login) +
+  geom_point()
 # for 90 day window
 #  for extant locations
 #   - what percent of active days fall in each login category?
