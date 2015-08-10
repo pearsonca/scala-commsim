@@ -1,5 +1,5 @@
 ## data munging utils
-require(data.table)
+require(data.table); require(lubridate)
 breakoutDays <- function(dt, ...) {
   setkey(dt[,
     user_id     := .GRP, by=user_id
@@ -16,15 +16,26 @@ breakoutDays <- function(dt, ...) {
   ], ...)
 }
 
-zeroize <- function(dt, z = dt[1, login-login_time], dz = dt[1, login_day], ks=key(dt)) setkeyv(dt[,
-  login := login - z
-][,
-  logout := logout - z
-][,
-  login_day := login_day - dz
-][,
-  logout_day := logout_day - dz
-], ks)
+zeroize <- function(dt, z = dt[1, login-login_time], dz = dt[1, login_day], ks=key(dt), ref.yr=2005) {
+  b <- ymd(paste(ref.yr, 01, 01))
+  mul <- 24*3600
+  dt[,
+    weekday := wday(b+mul*(login_day-1), label = T)
+  ][,
+    week    := week(b+mul*(login_day-1))
+  ][,
+    month   := month(b+mul*(login_day-1), label = T)
+  ]
+  setkeyv(dt[,
+    login := login - z
+  ][,
+    logout := logout - z
+  ][,
+    login_day := login_day - dz
+  ][,
+    logout_day := logout_day - dz
+  ], ks)
+}
 
 trimLimits <- function(tar.dt, lim.dt) {
   res.dt <- merge(tar.dt, lim.dt, by = "location_id")[(login >= first) & (logout <= last),]
@@ -47,4 +58,13 @@ kmParse <- function(src, k, nstart = k, key, refevent = "login") {
   peakhours[, cluster := reorder[cluster]]
   cluster.dt[,cluster := reorder[cluster]]
   return(list(clustering = cluster.dt, peaks = peakhours))
+}
+
+kmParse2 <- function(src, k, nstart = k, key, category) {
+  castdata <- reshape2::acast(src, eval(parse(text=paste0(key,"~",category))), value.var = "distribution", fill = 0)
+  km <- stats::kmeans(castdata, k, nstart = nstart)
+  cluster.dt <- data.table(cluster = km$cluster)
+  cluster.dt[[key]] = as.integer(names(km$cluster))
+  setkeyv(cluster.dt, key)
+  return(list(clustering = cluster.dt))
 }

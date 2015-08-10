@@ -522,3 +522,53 @@ saveGIF(for (start in seq(offset+slide, censor.dt[,max(login_day)]-window, by=sl
   prev.dt <- cross_data.dt
 })
 ```
+
+Looking at day-of-week, week-of-year patterns:
+
+```{r, echo=F}
+byweekday.dt <- censor.dt[,
+  .N,
+  keyby=list(location_id, weekday)
+]
+loctotals <- byweekday.dt[,list(total=sum(N)), keyby=location_id]
+weekday.kmeans.src <- byweekday.dt[loctotals][,list(distribution=N/total), keyby=list(location_id, weekday)]
+kmByWeekDayData <- kmParse2(weekday.kmeans.src, 10, 5, "location_id", "weekday")
+ggplot(weekday.kmeans.src[kmByWeekDayData$clustering]) +
+  theme_bw() + facet_grid(. ~ cluster, scales="free") +
+  aes(x=factor(location_id), y=weekday, fill=log(distribution)) +
+  geom_raster() +
+  scale_x_discrete("location_id", labels="")
+
+byweek.dt <- censor.dt[,
+  .N,
+  keyby=list(location_id, week)
+]
+week.kmeans.src <- byweek.dt[
+  byweek.dt[,list(total=sum(N)), keyby=location_id]
+][,
+  list(distribution=N/total), keyby=list(location_id, week)
+]
+kmByWeekData <- kmParse2(week.kmeans.src, 10, 5, "location_id", "week")
+ggplot(week.kmeans.src[kmByWeekData$clustering]) +
+  theme_bw() + facet_grid(. ~ cluster, scales="free") +
+  aes(x=factor(location_id), y=week, fill=log(distribution)) +
+  geom_raster() +
+  scale_x_discrete("location_id", labels="")
+
+bymonth.dt <- censor.dt[,
+  .N,
+  keyby=list(location_id, month)
+]
+month.kmeans.src <- bymonth.dt[
+  bymonth.dt[,list(total=sum(N)), keyby=location_id]
+][,
+  list(distribution=N/total), keyby=list(location_id, month)
+]
+kmBymonthData <- kmParse2(month.kmeans.src, 10, 5, "location_id", "month")
+ggplot(month.kmeans.src[kmBymonthData$clustering]) +
+  theme_bw() + facet_grid(. ~ cluster, scales="free") +
+  aes(x=factor(location_id), y=month, fill=log(distribution)) +
+  geom_raster() +
+  scale_x_discrete("location_id", labels="")
+
+```
