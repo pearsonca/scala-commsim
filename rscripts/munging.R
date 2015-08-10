@@ -16,7 +16,7 @@ breakoutDays <- function(dt, ...) {
   ], ...)
 }
 
-zeroize <- function(dt, z = dt[1, login-login_time], dz = dt[1, login_day], ks=key(dt), ref.yr=2005) {
+zeroize <- function(dt, z = dt[1, login-login_time], dz = dt[1, login_day], ks=key(dt), ref.yr=2004) {
   b <- ymd(paste(ref.yr, 01, 01))
   mul <- 24*3600
   dt[,

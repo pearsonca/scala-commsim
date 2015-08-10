@@ -4,7 +4,7 @@ output: pdf_document
 ## Analysis and plots of montreal data.
 
 ```{r, echo=FALSE, include=FALSE}
-req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales", "animation")
+req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales", "animation", "randomForest")
 need.pkgs <- req.packages[!sapply(req.packages, require, character.only = T)]
 if (length(need.pkgs) != 0) install.packages(need.pkgs, dependencies = T)
 ```
@@ -502,25 +502,25 @@ base_plot <- ggplot() + theme_bw() +
     scale_color_gradient("change in membership", limits = c(-1,1), low="red", high="blue", na.value = "black")
 
 prev.dt <- cross_group(censor.dt[offset <= login_day & login_day < (offset+window)], duration_breaks, daily_login_breaks)
-saveGIF(for (start in seq(offset+slide, censor.dt[,max(login_day)]-window, by=slide)) {
-  timeslice <- censor.dt[start <= login_day & login_day < (start+window)]
-  cross_data.dt <- cross_group(timeslice, duration_breaks, daily_login_breaks)
-  plotting.dt <- merge(cross_data.dt, prev.dt, by=c("location_id", "group.duration", "group.login"), all=T, suffixes = c("",".prev"))
-  print(base_plot +
-    geom_point(data = plotting.dt[!is.na(membership.duration.prev)], na.rm = TRUE) +
-    geom_point(data = plotting.dt[is.na(membership.duration.prev)]) +
-    geom_point(
-      data=plotting.dt[
-        is.na(membership.duration),
-        list(
-          membership.duration=membership.duration.prev,
-          membership.login=membership.login.prev
-        ),
-        by=list(group.duration, group.login, location_id)
-      ], color="black", shape = 1)
-  )
-  prev.dt <- cross_data.dt
-})
+# saveGIF(for (start in seq(offset+slide, censor.dt[,max(login_day)]-window, by=slide)) {
+#   timeslice <- censor.dt[start <= login_day & login_day < (start+window)]
+#   cross_data.dt <- cross_group(timeslice, duration_breaks, daily_login_breaks)
+#   plotting.dt <- merge(cross_data.dt, prev.dt, by=c("location_id", "group.duration", "group.login"), all=T, suffixes = c("",".prev"))
+#   print(base_plot +
+#     geom_point(data = plotting.dt[!is.na(membership.duration.prev)], na.rm = TRUE) +
+#     geom_point(data = plotting.dt[is.na(membership.duration.prev)]) +
+#     geom_point(
+#       data=plotting.dt[
+#         is.na(membership.duration),
+#         list(
+#           membership.duration=membership.duration.prev,
+#           membership.login=membership.login.prev
+#         ),
+#         by=list(group.duration, group.login, location_id)
+#       ], color="black", shape = 1)
+#   )
+#   prev.dt <- cross_data.dt
+# })
 ```
 
 Looking at day-of-week, week-of-year patterns:
