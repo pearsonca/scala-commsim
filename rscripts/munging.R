@@ -1,18 +1,23 @@
 ## data munging utils
 require(data.table); require(lubridate)
 breakoutDays <- function(dt, ...) {
+  secs_per_day <- 24*60*60
   setkey(dt[,
     user_id     := .GRP, by=user_id
   ][,
     location_id := .GRP, by=location_id
   ][,
-    login_day   := login %/% (24*60*60)
+    login_day   := login %/% secs_per_day
   ][,
-    logout_day  := logout %/% (24*60*60)
+    logout_day  := logout %/% secs_per_day
   ][,
-    login_time  := login - login_day*24*60*60
+    login_time  := login - login_day*secs_per_day
   ][,
-    logout_time := logout - logout_day*24*60*60
+    logout_time := logout - logout_day*secs_per_day
+  ][,
+    login_day_secs := ifelse(login_day == logout_day, logout_time - login_time, secs_per_day - login_time)
+  ][,
+    logout_day_secs := ifelse(login_day == logout_day, 0, logout_time)
   ], ...)
 }
 

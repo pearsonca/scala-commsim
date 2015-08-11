@@ -72,6 +72,34 @@ zeroize(breakoutDays(censor.dt[,
 censor.dt
 ```
 
+1. consider subset - subset of records? subset of users?  subset of locations?  want predictions about location "class", so subset of locations?  later, when locations classified, subset of users.
+2. using subset and some predictor measurements
+
+```{r,echo=F}
+## principle components analysis
+predictors <- function(SD) with(SD, {
+  duration <- logout - login
+  total_login_time <- sum(duration)
+  SD[,sum(logout - login), by=weekday]
+  list(
+    lifetime = max(logout) - min(login),
+    ave_duration = mean(duration),
+    med_duration = median(duration),
+    sd_duration = sd(duration),
+    max_duration = max(duration),
+    total_user_time = total_login_time
+  )
+})
+
+censor.dt[,predictors(.SD), by=location_id]
+```
+
+* * *
+
+
+
+
+
 Now we must try to understand the remaining data.
 
 First, what happens with our hotspot locations?  We need to understand how people appear connected to them, in order to properly model how our covert agents might use them.  To do that, we need to speculate about how these hotspots are behaving, *e.g.* are they new wifi access locations? are they substituting for existing services?
