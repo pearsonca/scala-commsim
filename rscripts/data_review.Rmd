@@ -77,21 +77,58 @@ censor.dt
 
 ```{r,echo=F}
 ## principle components analysis
+weekday_zeroes <- data.table(weekday=factor(c("Sun", "Mon", "Tues", "Wed","Thurs","Fri","Sat"), ordered = T), usage = 0, key = "weekday")
 predictors <- function(SD) with(SD, {
   duration <- logout - login
   total_login_time <- sum(duration)
-  SD[,sum(logout - login), by=weekday]
-  list(
-    lifetime = max(logout) - min(login),
+  usage_by_weekday <- SD[, list(usage = sum(login_day_secs)), keyby=weekday][weekday_zeroes][, list(usage = ifelse(is.na(usage), i.usage, usage)), keyby=weekday]
+  temp <- SD[, sum(logout_day_secs), keyby=weekday][weekday_zeroes][, list(usage = ifelse(is.na(usage), i.usage, usage)), keyby=weekday]
+  usage_by_weekday$usage <- usage_by_weekday$usage + c(temp$usage[7], temp$usage[-7])
+  store <- as.list(usage_by_weekday$usage / total_login_time)
+  names(store) <- usage_by_weekday$weekday
+  reduced_store <- list(weekend=store$Fri+store$Sat, midweek=store$Tues+store$Wed+store$Thurs, weekbegin = store$Sun+store$Mon)
+  user_count <- length(unique(user_id))
+  life <- max(logout) - min(login)
+  return(c(list(
+    log10_lifetime = log10(life),
     ave_duration = mean(duration),
     med_duration = median(duration),
     sd_duration = sd(duration),
     max_duration = max(duration),
-    total_user_time = total_login_time
-  )
+    total_user_time = total_login_time,
+    log10_user_per_life = log10(user_count/life),
+    log10_time_per_user = log10(total_login_time/user_count),
+    log10_time_per_life = log10(total_login_time/life),
+    log10_unique_users = log10(user_count)
+  ), reduced_store))
 })
-
-censor.dt[,predictors(.SD), by=location_id]
+unique_locs <- unique(censor.dt$location_id)
+slice <- sort(sample(unique_locs, size = length(unique_locs)/5, replace = F))
+pca.dt <- censor.dt[, predictors(.SD), by=location_id]
+centered <- pca.dt[,lapply(.SD[,-1,with=F],function(col) col-mean(col)),]
+scaled <- centered[,lapply(.SD, function(col) col/sd(col))]
+prediction.dt <- scaled[slice]
+validation.dt <- scaled[!slice]
+res <- prcomp(prediction.dt[, -1, with=F], scale. = F)
+res$var <- res$sdev^2
+res$pve <- res$var/sum(res$var)
+keep <- res$pve > 0.01 # 1/length(res$pve)
+orig.p <- par(mfrow=c(1,sum(keep)-1))
+for (x in 1:(sum(keep)-1)) biplot(res, choices=c(x,x+1), scale = 0)
+par(orig.p)
+with(res, {
+  plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", type="b", log="y")
+  abline(h=1/(length(pve)))
+  # abline(h=tail(pve, 1)*2)
+  plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1), type="b")
+  abline(h=0.9)
+  plot(log10(1-cumsum(pve)), xlab="Principal Component", ylab="Remaining Variance", type="b")
+  abline(a=0, b=log10(1-pve[1]))
+  #plot(pve/(1-c(0,head(cumsum(pve),-1))), xlab="Principal Component", ylab="Proportion of Remaining Variance Explained", ylim=c(0,1), type="b")
+})
+par(orig.p)
+res
+res$x[,]
 ```
 
 * * *
