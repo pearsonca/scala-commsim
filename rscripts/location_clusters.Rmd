@@ -1,0 +1,484 @@
+---
+output:
+    pdf_document:
+        includes:
+            in_header: header.tex
+        fig_caption: yes
+---
+## Analysis and plots of montreal data.
+
+```{r, echo=FALSE, include=FALSE}
+req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales", "animation", "randomForest","lubridate", "movMF")
+need.pkgs <- req.packages[!sapply(req.packages, require, character.only = T)]
+if (length(need.pkgs) != 0) install.packages(need.pkgs, dependencies = T)
+source("munging.R")
+source("pca_plots.R")
+```
+
+### Required packages: `r req.packages`.
+
+Source data:
+
+```{r}
+max_hours <- 24
+min_logins <- 2;    min_users <- 6 # 6 user min remove abberant location
+min_lifetime <- 30; min_loc_lifetime <- 30 # days
+censor.dt <- loadCensored(
+  raw.dt = loadRaw(),
+  max_hours = max_hours, min_logins = min_logins, min_lifetime = min_lifetime,
+  min_users = min_users, min_loc_lifetime = min_loc_lifetime
+)
+censor.dt
+set.seed(0); training_portion <- .8
+unique_locations <- censor.dt[,unique(location_id)]
+training_locations <- sort(sample(
+  unique_locations,
+  size = length(unique_locations)*training_portion, replace = F
+))
+# ggplot(censor.dt[,list(usage=sum(logout-login)/60/60), by=list(location_id, year, month)]) + aes(x=month, y=usage, group=location_id) + facet_grid(year ~ .) + geom_line(alpha=0.5)
+# users that qualify as regular:
+# censor.dt[,list(lifetime = max(logout)-min(login)), by=list(location_id, user_id)][lifetime > 60*60*24*365, unique(user_id)]
+```
+
+If want to identify locations which are "similar", so that we can inform how the covert group makes use
+of locations, but we have no particular information about those locations (*e.g.*, what businesses they are, where they are geographically), what are we to do?
+
+This question falls neatly into the sort of problems described as "unsupervised learning", so we will combine approaches from that field with "analyst discretion".  Having to rely on domain expert input here is largely unavoidable, but we can avoid some of the traps associated with that (more sophosticated, perhaps, but essentially 'p-hacking') by cross-validating the outcomes at different stages.
+
+TODO: what stages? how? definitely need at detection stage: can we get "no detect" when making non-covert synthetic people?
+
+Initially, we are going to trawl the data, sieving out a great variety of measurements for locations, and progressively identify which to maintain, discard, or merge, attempting to find a compelling argument as to why.  While these specific choices are unlikely to apply to another data source, we think the process will be illustrative as to what an analyst in the field should do.
+
+Our initial measures are:
+
+| measure | reasoning | transform? |
+|--------:|-----------|-----------:|
+| total lifetime | other parameters are likely normalized by this | log |
+| total usage | low vs. high use locations is obvious distinction | log |
+| number of unique users | few vs. many unique visitors indicates location "population" | log |
+| quartiles for login durations | typically short vs. long logins indicates turnover | none |
+| mean, sd of login durations | ibid. | none |
+| % of usage by week day | weekend vs working vs continuous availability | none |
+| % of usage by month | seasonal vs non | none |
+| % of log(in\|out), usage by hour | working day vs evening use | none |
+
+This is 101 (!) measures, so we definitely need to reduce the dimensionality.
+
+```{r, echo=F}
+process_hour_rle <- function(prefix) {
+  hrsind <- 0:23
+  nms <- sapply(hrsind, function(h) sprintf("%s_hr_%.2d", prefix, h))
+  function(hrrle) with(hrrle, {
+    missing <- hrsind[!(hrsind %in% values)]
+    res <- c(lengths, rep.int(0, length(missing)))[order(c(values, missing))] / sum(lengths)
+    names(res) <- nms
+    res
+  })
+}
+
+day.abb <- c("Sun", "Mon", "Tues", "Wed","Thurs","Fri","Sat")
+
+weekday_zeroes <- data.table(
+  weekday=factor(day.abb, levels = day.abb, ordered = T),
+  usage = 0, key = "weekday"
+)
+
+monthly_zeroes <- data.table(
+  month=factor(month.abb, levels = month.abb, ordered = T),
+  usage = 0, key = "month"
+)
+
+hourly_zeros <- data.table(
+  hour = 0:23,
+  usage = 0, key = "hour"
+)
+
+login_parser <- process_hour_rle("login")
+logout_parser <- process_hour_rle("logout")
+
+with_usage_zeros <- function(orig.usage, zeros) orig.usage[zeros][,
+  list(usage = ifelse(is.na(usage), i.usage, usage)), keyby=key(zeros)
+]
+
+refpredictors <- function(SD) with(SD, {
+  duration <- logout - login
+  total_login_time <- sum(duration)
+  usage_by_weekday <- with_usage_zeros(SD[,
+    list(usage = sum(login_day_secs)), keyby=weekday
+  ], weekday_zeroes)
+  usage_on_logout_day <- with_usage_zeros(SD[,
+    list(usage = sum(logout_day_secs)), keyby=weekday
+  ], weekday_zeroes)$usage
+  
+  weekday_percent <- with(usage_by_weekday, {
+    ## logout usage "on" Sunday belongs to Monday, on M to Tues, etc
+    usage <- (usage + c(usage_on_logout_day[7], usage_on_logout_day[-7])) / total_login_time
+    names(usage) <- weekday
+    usage
+  })
+  
+  usage_by_month <- with_usage_zeros(SD[,
+    list(usage = sum(logout - login) / total_login_time), keyby=month
+  ], monthly_zeroes)
+
+  monthly_percent <- with(usage_by_month, {
+    names(usage) <- month
+    usage
+  })
+  
+  user_count <- length(unique(user_id))
+  life <- max(logout) - min(login)
+
+  dur_quantiles <- quantile(duration)
+  login_hours <- login_parser(rle(sort(login_hour)))
+  logout_hours <- logout_parser(rle(sort(logout_hour)))
+    
+  short <- (login_hour == logout_hour) & (login_day == logout_day)
+  
+  login_usage_by_hour <- data.table(usage = 
+      ifelse(short, logout_time - login_time, (login_hour + 1)*3600 - login_time), hour = login_hour)
+  logout_usage_by_hour <- data.table(usage = 
+      logout_time[!short] - logout_hour[!short]*3600, hour = logout_hour[!short])
+  
+  long <- (login_day != logout_day) & !(login_hour == 23 & logout_hour == 0)
+  cross_day <- rbindlist(with(SD[long, list(login_hour, logout_hour)],
+    mapply(function(in_hr, out_hr) {
+      data.table(usage = rep.int(3600, out_hr-in_hr+23), hour = ((in_hr+1):(out_hr+23))%%24)
+    }, in_hr = login_hour, out_hr = logout_hour, SIMPLIFY = F)
+  ))
+  # what's left?
+  mid <- logout_hour > (login_hour + 1)
+  inday <- rbindlist(with(SD[mid, list(login_hour, logout_hour)],
+    mapply(function(in_hr, out_hr) {
+      data.table(usage = rep.int(3600, out_hr-in_hr-1), hour = (in_hr+1):(out_hr-1))
+    }, in_hr = login_hour, out_hr = logout_hour, SIMPLIFY = F)
+  ))
+  usage_by_hour <- with_usage_zeros(rbind(login_usage_by_hour, logout_usage_by_hour, cross_day, inday)[, list(usage = sum(usage)/total_login_time), keyby=hour], hourly_zeros)
+  
+  hourly_percent <- with(usage_by_hour, {
+    names(usage) <- paste0("hr", hour)
+    usage
+  })
+
+  return(c(list(
+      log10_lifetime = log10(life),
+      log10_total_duration = log10(total_login_time),
+      log10_unique_users = log10(user_count),
+      ave_duration = mean(duration), sd_duration = sd(duration)
+    ),
+    weekday_percent, monthly_percent, hourly_percent,
+    as.list(dur_quantiles), as.list(login_hours), as.list(logout_hours)
+  ))
+})
+digestor <- function(dt, preds, training, cache = "../input/initPred.RData") {
+  { if (!file.exists(cache)) {
+    d <- dt[, preds(.SD), by=location_id]
+    saveRDS(d, cache)
+    d
+  } else {
+    readRDS(cache)
+  } } -> ref
+  
+  centered <- ref[,lapply(.SD[,-1,with=F],function(col) col-mean(col))]
+  scaled <- cbind(location_id = ref$location_id, centered[,lapply(.SD, function(col) col/sd(col))])
+  list(raw = ref, training = scaled[training], validation = scaled[!training])
+}
+redigest <- function(ref, training) {
+  centered <- ref[,lapply(.SD[,-1,with=F],function(col) col-mean(col))]
+  scaled <- cbind(location_id = ref$location_id, centered[,lapply(.SD, function(col) col/sd(col))])
+  list(raw = ref, training = scaled[training], validation = scaled[!training])
+}
+dopca <- function(digest) with(digest, {
+  pca <- prcomp(training[,-1,with=F], center=F, scale. = F)
+  val <- predict(pca, validation[,-1,with=F])
+  return(list(pca=pca, val=val))
+})
+initial_digest <- digestor(censor.dt, refpredictors, training_locations)
+```
+
+Let's have a look at the time signature information first:
+
+```{r, echo=F}
+temporal_data_slice <- melt(initial_digest$raw[, .SD, .SDcols = c(1, grep("hr", names(initial_digest$raw)))], id.var = "location_id")
+temporal_data_slice[grepl("log", variable), measure := sub("_hr_.+","", variable)]
+temporal_data_slice[!grepl("log", variable), measure := "usage"]
+temporal_data_slice[, hour:= as.integer(gsub("[^\\d]","", variable, perl=T))]
+setkey(temporal_data_slice, location_id, measure, hour)
+```
+
+```{r, echo=F, fig.cap="Raw proportions by hour"}
+ggplot(temporal_data_slice) + theme_bw() + aes(group = location_id, x = hour, y = value) + facet_grid(measure ~ .) + geom_line(alpha=0.5) + scale_x_discrete(breaks=0:23, expand=c(0,0)) +
+  scale_y_continuous("proportion", expand=c(0,0))
+```
+
+```{r, echo=F, fig.cap="Measure Peak distribution"}
+peaks <- temporal_data_slice[, list(peak=which.max(value)-1), by=list(location_id, measure)]
+ggplot(peaks) + theme_bw() + aes(x = peak) + facet_grid(measure ~ .) + geom_bar(binwidth=1)
+```
+
+```{r, echo=F, fig.cap="Frequency Power Signatures"}
+freq_power <- function(ref, measure) {
+  mn <- mean(as.matrix(ref[,-1,with=F]))
+  fftref <- mvfft(t(ref[,-1,with=F])-mn)
+  meaningful <- fftref[1+1:12,]
+  pwr <- Re(meaningful*Conj(meaningful))
+  res <- t(pwr)[,c(1,2,3,4,6,8,12)]
+  dimnames(res)[[2]] <- paste0(as.integer(gsub("[^\\d]","",dimnames(res)[[2]], perl=T)), "_perday")
+  cbind(melt(data.table(cbind(location_id = ref[,location_id], res)), id.var = "location_id"), measure = measure)
+}
+
+ref_usage <- initial_digest$raw[,.SD,.SDcols=c(1,grep("^hr", names(initial_digest$raw)))]
+ref_login <- initial_digest$raw[,.SD,.SDcols=c(1,grep("^login", names(initial_digest$raw)))]
+ref_logout <- initial_digest$raw[,.SD,.SDcols=c(1,grep("^logout", names(initial_digest$raw)))]
+pwr <- rbind(
+  freq_power(ref_usage, "usage"),
+  freq_power(ref_login, "login"),
+  freq_power(ref_logout, "logout")
+)
+ggplot(pwr[,
+  list(power=value, frequency=as.numeric(sub("_perday","", variable))), by=list(location_id, measure)
+]) + theme_bw() + aes(y = power, x=frequency, group=location_id) + facet_grid(measure ~ .) + geom_line(alpha=0.5) + scale_x_continuous("per day frequency", breaks=c(1,2,3,4,6,8,12))
+```
+
+
+
+Some clear patterns there: distinct peak locations, distinct periodicity.  Let's develop categories:
+peak time characterization (for this work, just on usage - possible to have circular statistics grouping on all three peaks) and single principle mode of usage (i.e., majority of usage power in the daily frequency) vs. multi-mode.  We use a mixture von Mises model.
+
+Similar for weekly signatures - curve, peak day grouping.
+
+Drop monthly data - would have to de-trend?
+
+We will initially approach the measures with Principle Components Analysis (PCA).  PCA should discover the best bases to describe the locations - orthogonal, linear combinations of measurements about those locations - in a least squares sense.  The way PCA works implies two important criteria for inputs: (1) those measures need to be approximately normal and (2) we should ensure that factors that we expect to have non-linear combinations are accommodated.  Concern (1) is principally about measures that have a one-sided, long-tailed distribution.  Concern (2) is about measures that should really be combined multiplicatively - *e.g.* total usage (one measure) per unique user (another).
+
+Replacing measures with their logarithms is a coarse way to address these both concerns.  Taking the log compresses long-tailed distributions into something more Gaussian, and linear combinations of the logs is the same as combining the underlying metrics multiplicatively.  This approach is not perfect, but absent some principled reason to make particular transformations (or not), we anticipate it is better than not.
+
+A typically loadings plot (showing vectors for the original dimensions in the new principle component basis) will be a dense cloud of lines at this stage, so we need a different view to identify patterns for the first round of parameter culling.  We will look at just the first two principle components on a colored bar plot - with bar height for the first component, and color for the second.  If we see patterns in heights and colors that tell a story that makes sense in the domain, then we can reduce the input measures by combination or elimination.
+TODO: plot for resulting approx normality of measures?
+
+```{r, echo=F}
+initial_digest <- digestor(censor.dt, refpredictors, training_locations)
+initial_pca <- dopca(initial_digest)
+init_bars <- make_bars(initial_pca$pca)
+```
+
+\newpage
+\blandscape
+```{r, echo=F, fig.width=11.25, fig.height=7 }
+plot_pca_bars(init_bars)
+```
+\elandscape
+\newpage
+
+There seems to be something consistent going on with the hourly measures.  Upon closer examination:
+
+```{r, echo=F}
+zoom_plot <- function(pca, target = 1:2, brs = make_bars(pca, target)) {
+  pcs <- paste0("PC", target)
+  zoom_bars <- setnames(
+    brs[ grepl("hr", measure) ][, c(list(
+      type=ifelse(grepl("login", measure),"login",ifelse(grepl("logout", measure), "logout", "usage")),
+      hr = as.integer(sub("^[^\\d]+(\\d+)$","\\1", measure, perl=T))
+    ), y=.SD[,2,with=F], fill=.SD[,3,with=F]), .SDcols=c("measure", pcs)],
+    paste(c("y","fill"), pcs, sep='.'),
+    c("y","fill")
+  )
+  limY <- max(abs(zoom_bars[,3,with=F]))
+  limC <- max(abs(zoom_bars[,4,with=F]))
+  ggplot(zoom_bars) + facet_grid(type ~ .) + aes(x = hr, y = y, fill = fill) +
+    theme_bw() + geom_bar(stat="identity", position = "identity") +
+    labs(y=pcs[1]) + ylim(-limY,limY) +
+    scale_fill_gradient2(pcs[2], limits=c(-limC, limC), low="red", mid = "grey", high="blue")
+}
+zoom_plot(brs = init_bars)
+```
+
+The trends in between login, usage, and logout seem very similar in principle components 1 and 2, so it seems reasonable to just pick one of them.  Similarly, they seem to be obviously driven on a daily period, so perhaps we can just use the peak amplitude to distinguish locations.  Before we do so, let's check that trends persist for some of the higher order principle components.
+
+```{r, echo=F}
+zoom_plot(initial_pca$pca, 3:4)
+```
+
+```{r, echo=F}
+zoom_plot(initial_pca$pca, 5:6)
+```
+
+So those trends seem to be preserved, but that higher frequency content is necessary as well.  We will compare that frequency to our expectations, and see how much is worthy of keeping, and also check the distribution of peak usage:
+<!---
+with a two caveats: morning logouts (hour 8) are consistently different from usage, as are late night logins (peaks at hours 20 and 23).  This has a pretty compelling story: the differences between locations are generally about usage, though we can additionally differentiate places with variable morning turnover (excess of logouts) and variable evening (spiking with the dinner and "party" hours) starts (excess of logins).
+
+If we focus on just usage, the plots between the components are pretty clearly periodic in both dimensions - like rotating polarized light.  Perhaps the right usage measure is instead (1) how peaky is the distribution across hours (what is the amplitude of the wave), (2) what is the period of usage peaks (per day or multiples of per day), and (3) when are the peaks located?
+
+delta T = 1 hr
+1/(2 hr) = nyquist freq
+1/day, 2/day, 3/day, 4/day, 6/day, 8/day, 12/day <- valid signals
+--->
+```{r, echo=F}
+# http://stackoverflow.com/questions/18788748/fit-a-mixture-of-von-mises-distributions-in-r
+usage_peak_hr <- initial_digest$raw[, apply(.SD, 1, which.max), .SDcols=grep("^hr", names(initial_digest$raw))]
+ang <- usage_peak_hr/12*pi
+unit_circ <- cbind(cos(ang), sin(ang))
+#login_peak_hr <- initial_digest$raw[, apply(.SD, 1, which.max), .SDcols=grep("^login", names(initial_digest$raw))]
+#logout_peak_hr <- initial_digest$raw[, apply(.SD, 1, which.max), .SDcols=grep("^logout", names(initial_digest$raw))]
+#underlying <- cbind(usage_peak_hr, login_peak_hr, logout_peak_hr)/24
+thing <- movMF(unit_circ, 3, list(maxiter=10000, nruns=20))
+predthing <- predict(thing, unit_circ)
+ggplot(data.frame(hour = usage_peak_hr-1, clz=factor(predthing))) + theme_bw() + aes(x=hour, fill=clz, group=clz) +
+  geom_bar(binwidth=1) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_x_discrete(breaks=1:24)
+```
+
+superpose three normal distributions, on periodic boundary condition, assign usage based on most probably membership to peak 1, 2, 3
+
+```{r, echo=F}
+peak_freq_power <- {
+  ref <- initial_digest$raw[,.SD,.SDcols=c(1,grep("^hr", names(initial_digest$raw)))]
+  mn <- mean(as.matrix(ref[,-1,with=F]))
+  ref.mlt <- melt(ref, id.var = "location_id")
+#  ggplot(ref.mlt) + theme_bw() + aes(x=variable, y=value-mn, group=location_id) + geom_line(alpha=0.2)
+  fftref <- mvfft(t(ref[,-1,with=F])-mn)
+  meaningful <- fftref[1+1:12,] # trim average signal, freqs above Nyquist
+  pwr <- Re(meaningful*Conj(meaningful))
+#   thing <- melt(data.table(cbind(location_id = 1:297, t(pwr))), id.var = "location_id")
+#   thing[, period := 24/as.numeric(sub("hr","", variable)) ]
+#   ggplot(thing[variable %in% paste0("hr",c(1,2,3,4,6,8,12))]) + theme_bw() + aes(y = value, group = location_id, x = period) + geom_line(alpha=0.2) + scale_x_continuous(breaks=c(2,3,4,6,8,12,24))
+#   ggplot(thing[variable %in% paste0("hr",c(1,2,3,4,6,8,12))]) + theme_bw() + aes(x = log(value)) + facet_grid(period ~ .) + geom_bar()
+  res <- t(pwr)[,c(1,2,3,4,6,8,12)]
+  dimnames(res)[[2]] <- paste0("usage_period_", 24/as.integer(sub("hr","",dimnames(res)[[2]])))
+  res
+}
+ref <- copy(initial_digest$raw)
+setnames(ref, c("0%","100%"), c("min","max"))
+ref <- cbind(ref[,.SD, .SDcols=grep("(hr|%)", names(ref), invert=T)], usage_peak = usage_peak_hr, peak_freq_power)
+#freqs <- melt(ps, id.var="location_id")
+#freqs[, period := 24/as.numeric(sub("V","", variable))]
+
+# net <- cbind(location_id = initial_digest$raw$location_id, initial_digest$raw[, .SD[,1:24,with=F]-.SD[,1:24+24,with=F], .SDcols=grep("log(in|out)", names(initial_digest$raw))])[, {
+#   z  <- fft(t(.SD[,-1,with=F]))[1:12] # Nyquist limit is 24 samples / 24 hrs / 2 = 12 / 24 hrs = 1 / 2 hrs
+#   ps <- Re(z*Conj(z))
+#   as.list(ps[1:12])
+# }, by=location_id]
+# 
+# ggplot(freqs[variable %in% paste0("V",c(1,2,3,4,6,8,12))]) + theme_bw() + aes(y = value, group = location_id, x = period) + geom_line(alpha=0.2) + scale_x_continuous(breaks=c(2,3,4,6,8,12,24))
+```
+
+so pick an indicator for the full day, divided into comparable blocks, then have indicators for wonky periods:
+
+ usage, 2-5, 10-12, 13-15, 19-21
+
+
+There seems to be pretty clear relationships between hours 9 to 15 - pretty standard working day - across all measures, but hour 16 seems perhaps to differentiate on places that close earlier versus later.  Logins, logouts, and usage appear to have a similar trend from 0 to 7 - definite sleeping or early morning hours.  There appear to be some interesting outliers in hour 20 and 23 for logins - late night hotspots perhaps?
+
+Let's take these metrics down their weights between 0 to 7 (morning), 8 (opening), 9 to 15 (day), 16 (closing), 17-19 (evening), and then 20-23 (late night).
+
+```{r, echo=F, include=F}
+# decision free version? sort(kmeans(initial_pca$pca$rotation, 10, 10)$cluster)
+# ref <- copy(initial_digest$raw)
+# hr_items <- grep('hr', names(ref))
+# ref[,usage_morning := apply(.SD[, hr_items[1:8],with=F],1,sum)]
+# ref[,login_morning := apply(.SD[, hr_items[1:8+24],with=F],1,sum)]
+# ref[,logout_morning := apply(.SD[, hr_items[1:8+48],with=F],1,sum) ]
+# ref[,usage_opening := apply(.SD[, hr_items[9],with=F],1,sum)]
+# ref[,login_opening := apply(.SD[, hr_items[9+24],with=F],1,sum)]
+# ref[,logout_opening := apply(.SD[, hr_items[9+48],with=F],1,sum) ]
+# ref[,usage_day := apply(.SD[, hr_items[10:16],with=F],1,sum)]
+# ref[,login_day := apply(.SD[, hr_items[10:16+24],with=F],1,sum)]
+# ref[,logout_day := apply(.SD[, hr_items[10:16+48],with=F],1,sum) ]
+# ref[,usage_closing := apply(.SD[, hr_items[17],with=F],1,sum)]
+# ref[,login_closing := apply(.SD[, hr_items[17+24],with=F],1,sum)]
+# ref[,logout_closing := apply(.SD[, hr_items[17+48],with=F],1,sum) ]
+# ref[,usage_evening := apply(.SD[, hr_items[18:20],with=F],1,sum)]
+# ref[,login_evening := apply(.SD[, hr_items[18:20+24],with=F],1,sum)]
+# ref[,logout_evening := apply(.SD[, hr_items[18:20+48],with=F],1,sum) ]
+# ref[,usage_late := apply(.SD[, hr_items[21:24],with=F],1,sum)]
+# ref[,login_late := apply(.SD[, hr_items[21:24+24],with=F],1,sum)]
+# ref[,logout_late := apply(.SD[, hr_items[21:24+48],with=F],1,sum) ]
+# ref <- ref[,-hr_items,with=F]
+```
+
+With the consolidated measures:
+
+\newpage
+\blandscape
+```{r, echo=F, fig.width=11.25, fig.height=7 }
+second_digest <- redigest(ref, training_locations)
+second_pca <- dopca(second_digest)
+second_bars <- make_bars(second_pca$pca)
+plot_pca_bars(second_bars)
+```
+\elandscape
+\newpage
+
+There is pretty compellingly no information between the logins, logouts, and usage during the day.  This seems a reasonable conclusion for evening and morning as well.  We will use only login information for those categories, since that seems have the most weight in components 1 and 2.
+```{r, echo=F}
+# ref <- copy(second_digest$raw)
+# drop <- grep("(logout|usage)_(morning|day|evening)", names(ref))
+```
+
+There also seems to be fairly similar information between the middle duration quantiles, average, and standard deviations.  The max and min seem informative, but we will remove the inter-quartiles and median.
+```{r, echo=F}
+# ref <- copy(second_digest$raw)
+# drop <- c(drop, grep("(25|50|75)%", names(ref)))
+```
+
+Finally, Tuesday and Wednesday - early working week - seem very similar.  Thursday seems somewhat similar as well, but not enough.  We will try a Tue-Wed category - usage outside of the start of the working week (Monday), the days when people regularly go out in the evenings (Thurs-Fri), and the weekends.
+
+\newpage
+\blandscape
+```{r, echo=F}
+# decision free version? sort(kmeans(initial_pca$pca$rotation, 10, 10)$cluster)
+# ref[,TueWed := Tues + Wed]
+# drop <- c(drop, grep("^(Tues|Wed)$", names(ref)))
+# ref <- ref[,-drop, with=F]
+# setcolorder(ref,
+#   c("location_id", "log10_lifetime", "log10_total_duration", "log10_unique_users",
+#   "ave_duration", "sd_duration", "0%", "100%",
+#   "Sun", "Mon", "TueWed", "Thurs", "Fri", "Sat",
+# "login_morning", "usage_opening", "login_opening", "logout_opening", "login_day", "usage_closing", "login_closing", "logout_closing", "login_evening", "usage_late", "login_late", "logout_late",
+#   month.abb
+# ))
+# third_digest <- redigest(ref, training_locations)
+# third_pca <- dopca(third_digest)
+# third_bars <- make_bars(third_pca$pca)
+# plot_pca_bars(third_bars)
+```
+\elandscape
+\newpage
+
+Now if we look at the months, there seems to be a Winter group (Jan-Feb), a Summer group (Jun-Jul), and a Fall group (Oct-Nov)
+
+\newpage
+\blandscape
+```{r, echo=F}
+# decision free version? sort(kmeans(initial_pca$pca$rotation, 10, 10)$cluster)
+# ref <- copy(third_digest$raw)
+# ref[, JanFeb := Jan+Feb ]
+# ref[, JunJul := Jun+Jul ]
+# ref[, OctNov := Oct+Nov ]
+# drop <- grep("^(Jan|Feb|Jun|Jul|Oct|Nov)$", names(ref))
+# ref <- ref[,-drop, with=F]
+# setcolorder(ref,
+#   c("location_id", "log10_lifetime", "log10_total_duration", "log10_unique_users",
+#   "ave_duration", "sd_duration", "0%", "100%",
+#   "Sun", "Mon", "TueWed", "Thurs", "Fri", "Sat",
+# "login_morning", "usage_opening", "login_opening", "logout_opening", "login_day", "usage_closing", "login_closing", "logout_closing", "login_evening", "usage_late", "login_late", "logout_late",
+#   "JanFeb","Mar","Apr","May","JunJul","Aug","Sep","OctNov","Dec"
+# ))
+# fourth_digest <- redigest(ref, training_locations)
+# fourth_pca <- dopca(fourth_digest)
+# fourth_bars <- make_bars(fourth_pca$pca)
+# plot_pca_bars(fourth_bars)
+```
+\elandscape
+\newpage
+
+At this point, it seems like login proportions are sufficient to consider, and that usage and logout measures can be ignored.  Though usage and logout seem to have more weight in some periods, picking just one seems like a reasonable choice.
+
+TODO: more downselect
+
+TODO: vector/point cloud loadings plots w/ reduced measures
+
+TODO: re-run kmeans on reduced set to get clusters
+
+TODO: plots of measurement distributions, color categorized by cluster
