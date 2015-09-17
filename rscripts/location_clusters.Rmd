@@ -260,7 +260,13 @@ x1 <- sin(psi)*cos(tht)
 x2 <- sin(psi)*sin(tht)*cos(phi)
 x3 <- sin(psi)*sin(tht)*sin(phi)
 pos <- cbind(x0,x1,x2,x3)
+
+lls <- lapply(8:11, function(k) movMF(pos, k, list(maxiter=10000, nruns=20)))
+bics <- lapply(lls, stats::BIC)
+
 temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(movMF(pos, 3, list(maxiter=10000, nruns=20)), pos), key="location_id")
+
+alt_temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(lls[[1]], pos), key="location_id")
 
 # usage_peak_hr <- peaks[measure == "usage", peak]
 # ang <- usage_peak_hr/12*pi
@@ -296,7 +302,7 @@ pwr_divisions <- tot_pwr[,{
   res
 }, keyby=measure]
 pwr_cluster <- tot_pwr[pwr_divisions][peak_freq_cat][,
-  list(peak_freq, pwr_cat = ifelse(tot_pwr < low,"low",ifelse(tot_pwr < hi, "med","hi"))),
+  list(peak_freq, pwr_cat = ifelse(tot_pwr < low,"lo",ifelse(tot_pwr < hi, "med","hi"))),
   keyby=list(measure, location_id)
 ]
 ggplot(pwr[pwr_cluster][,
@@ -382,6 +388,19 @@ p + geom_path(aes(x=x, y=y, linetype=factor(user), color=NULL, alpha=NULL, size=
 ```
 \elandscape\newpage
 
+location diversity - share of locations in each type, in each dimension.  We know by construction that location diversity is uniform for low, medium, and high usage per lifetime categorization: we created the categories based on quantiles.  Same is true for use variation frequency power.  For the clusters of peak utilization characteristics, however, 
+
+```{r, echo=F}
+multinomtest <- function(xs, nh=rep(1/length(xs), times=length(xs))) {
+  N <- sum(xs)
+  2*N*log(N) - 2*sum(xs*log(nh/xs))
+}
+agg.dt[,.N,by=lifetime_cat][,list(lifetime_cat, share=N/sum(N))]
+agg.dt[,.N,by=pwr_clust][,list(pwr_clust, share=N/sum(N))]
+agg.dt[,.N,by=vMFcluster][,list(vMFcluster, share=N/sum(N))]
+```
+
+
 Now if take these clusters and characterize user visits in terms of cluster visits, instead of particular location visits, we can consider their usage of cluster "types".  There are two main questions: how much (relatively) do individuals use a type? and how often do they rotate between types?
 
 ```{r, echo=F}
@@ -408,62 +427,38 @@ categorizer <- function(src.dt, cat, ref) {
   rle_dt <- src.dt[, rle(eval(parse(text=cat))), keyby=user_id]
   prop_ref <- src.dt[,list(prop=sum(logout-login)), keyby=key_expr][ref][,list(prop=prop/usage), keyby=key_expr]
   prop_lab <- prop_ref[, eval(mx_expr), by=user_id]
-  opts <- sort(unique(rle_dt$values))
-  names(opts) <- paste0("cat_", opts)
-  fun <- categorizer_help(opts)
+  chunks <- data.table(dcast(rle_dt, user_id ~ values, value.var="lengths", fun.aggregate = sum), key="user_id")
   ## cast data, maybe?
-  digest <- rle_dt[, list(tot_visits = sum(lengths), mn_reps=mean(lengths), switches=.N), keyby=user_id][ref][prop_lab]
+  digest <- rle_dt[, list(tot_visits = sum(lengths), mn_reps=mean(lengths), switches=.N), keyby=user_id][ref][prop_lab][chunks]
   list(rle_dt=rle_dt, prop_ref=prop_ref, prop_lab=prop_lab, digest=digest)
 }
 
-#lifetime_dts <- categorizer(cluster_rle_src, "lifetime_cat", ref)
-#pwr_dts <- categorizer(cluster_rle_src, "pwr_clust", ref)
-#vMF_dts <- categorizer(cluster_rle_src, "vMFcluster", ref)
-
-# lifetime_rle <- cluster_rle_src[,rle(lifetime_cat),keyby=user_id]
-# lifetime_prop <- cluster_rle_src[,list(prop=sum(logout-login)), keyby=list(user_id, lifetime_cat)][ref][,list(prop=prop/usage), keyby=list(user_id, lifetime_cat)]
-# lifetime_cat_dt <- lifetime_prop[, list(main=lifetime_cat[which.max(prop)], majority=max(prop)>0.5), by=user_id]
-# 
-# pwr_rle <- cluster_rle_src[,rle(pwr_clust),keyby=user_id]
-# pwr_prop <- cluster_rle_src[,list(prop=sum(logout-login)), keyby=list(user_id, pwr_clust)][ref][,list(prop=prop/usage), keyby=list(user_id, pwr_clust)]
-# pwr_prop_dt <- pwr_prop[, list(main=pwr_clust[which.max(prop)], majority=max(prop)>0.5), by=user_id]
-# 
-# 
-# vMF_rle <- cluster_rle_src[,rle(vMFcluster), keyby=user_id]
-# vMF_prop <- cluster_rle_src[,list(prop=sum(logout-login)), keyby=list(user_id, vMFcluster)][ref][,list(prop=prop/usage), keyby=list(user_id, vMFcluster)]
-# vMF_prop_dt <- vMF_prop[, list(main=vMFcluster[which.max(prop)], majority=max(prop)>0.5), by=user_id]
-# 
-# 
-# digest_lifetime_rle <- lifetime_rle[,list(
-#     tot_visits = sum(lengths),
-#     lows=sum((values=="low")*lengths),
-#     mids=sum((values=="mid")*lengths),
-#     highs=sum((values=="high")*lengths),
-#     mn_reps=mean(lengths),
-#     switches = .N
-#   ), keyby=user_id][ref][lifetime_cat_dt]
-# digest_pwr_rle <- pwr_rle[,list(
-#     tot_visits = sum(lengths),
-#     lows=sum((values=="low")*lengths),
-#     mids=sum((values=="mid")*lengths),
-#     highs=sum((values=="high")*lengths),
-#     mn_reps=mean(lengths),
-#     switches = .N
-#   ), keyby=user_id][ref][pwr_prop_dt]
-# digest_vMF_rle <- vMF_rle[,list(
-#     tot_visits = sum(lengths),
-#     As=sum((values==1)*lengths),
-#     Bs=sum((values==2)*lengths),
-#     Cs=sum((values==3)*lengths),
-#     mn_reps=mean(lengths),
-#     switches = .N
-#   ), keyby=user_id][ref][vMF_prop_dt]
+lifetime_dts <- categorizer(cluster_rle_src, "lifetime_cat", ref)
+pwr_dts <- categorizer(cluster_rle_src, "pwr_clust", ref)
+vMF_dts <- categorizer(cluster_rle_src, "vMFcluster", ref)
 
 # path_by_cluster <- paths[, list(user_id, lengths, loc_cluster = interaction(lifetime_cat, pwr_clust, vMFcluster))]
 ```
 
-```{r, echo=F}
-#ggplot(lifetime_dts$digest) + theme_bw() + aes(x=log10(switches/usage), fill=main, alpha=majority) + geom_bar() + labs(title="By Lifetime Categories") + scale_alpha_manual(values=c(0.6, 1))
-#ggplot(pwr_dts$digest) + theme_bw() + aes(x=log10(switches/usage), fill=main, alpha=majority) + geom_bar() + labs(title="By Frequency Power Categories") + scale_alpha_manual(values=c(0.6, 1))
-#ggplot(vMF_dts$digest) + theme_bw() + aes(x=log10(switches/usage), fill=factor(main), alpha=majority) + geom_bar() + labs(title="By von Mises-Fisher Categories") + scale_alpha_manual(values=c(0.6, 1))
+
+
+
+\newpage\blandscape
+```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="distribution of main location type usage"}
+digests <- rbind(
+  lifetime_dts$digest[,list(switch_rate = switches/usage, main, share, type="usage")],
+  pwr_dts$digest[,list(switch_rate = switches/usage, main, share, type="power")],
+  vMF_dts$digest[,list(switch_rate = switches/usage, main, share, type="peaktime")]
+)
+ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1) + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1, position="fill") + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
 ```
+\elandscape\newpage
+
+\newpage\blandscape
+```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="user categorization, by primary location type utilization"}
+plot_ref <- ref[lifetime_dts$digest[, list(lifetime_main = main), keyby=user_id]][pwr_dts$digest[, list(pwr_main = main), keyby=user_id]][vMF_dts$digest[, list(peak_main = main), keyby=user_id]]
+#thing[, list(user_id, mains=interaction(lifetime_main, pwr_main, peak_main))][,.N,by=mains]
+ggplot(plot_ref[life > 365*24*60*60 & ul > 2 & ul < 20, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main)]) +facet_grid(pwr_main ~ lifetime_main) + aes(x=x,y=y, color=factor(peak_main)) + geom_point(alpha=0.3) + theme_bw()
+```
+\elandscape\newpage
