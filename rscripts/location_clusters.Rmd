@@ -261,12 +261,16 @@ x2 <- sin(psi)*sin(tht)*cos(phi)
 x3 <- sin(psi)*sin(tht)*sin(phi)
 pos <- cbind(x0,x1,x2,x3)
 
-lls <- lapply(8:11, function(k) movMF(pos, k, list(maxiter=10000, nruns=20)))
-bics <- lapply(lls, stats::BIC)
+#lls <- lapply(8:11, function(k) movMF(pos, k, list(maxiter=10000, nruns=20)))
+#bics <- lapply(lls, stats::BIC)
+vmfmodel <- movMF(pos, 3, list(maxiter=10000, nruns=20))
+temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(vmfmodel, pos), key="location_id")
+vmfrename <- peaks[measure == "usage"][temporal_cluster][,
+  list(med=median(peak)),by=vMFcluster
+][,vMFcluster, keyby=med][,list(vMFcluster, rename=factor(c("early","middle","late"), levels=c("early","middle","late"), ordered = T))]
+temporal_cluster <- merge(temporal_cluster, vmfrename, by="vMFcluster")[,list(vMFcluster=rename), keyby=location_id]
 
-temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(movMF(pos, 3, list(maxiter=10000, nruns=20)), pos), key="location_id")
-
-alt_temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(lls[[1]], pos), key="location_id")
+#alt_temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$location_id, vMFcluster = predict(lls[[1]], pos), key="location_id")
 
 # usage_peak_hr <- peaks[measure == "usage", peak]
 # ang <- usage_peak_hr/12*pi
@@ -287,7 +291,7 @@ alt_temporal_cluster <- data.table(location_id = peaks[measure == "usage"]$locat
 ```
 
 ```{r, echo=F, fig.cap="Login, Logout, Usage Peak Clusters"}
-ggplot(peaks[temporal_cluster]) + theme_bw() + aes(x = peak, fill=factor(vMFcluster)) + facet_grid(measure ~ .) + geom_bar(binwidth=1) + labs(fill="von Mises-Fisher\n3-Sphere\nCluster")
+ggplot(peaks[temporal_cluster]) + theme_bw() + aes(x = peak, fill=vMFcluster) + facet_grid(measure ~ .) + geom_bar(binwidth=1) + labs(fill="von Mises-Fisher\n3-Sphere\nCluster\nPeak Time")
 ```
 
 Let's turn to the powers:
@@ -316,7 +320,7 @@ Showing the power cluster breakdown
 pre_pwr_clust <- data.table(dcast(pwr_cluster, location_id ~ measure, value.var = "pwr_cat"))
 pwr_multi_clusters <- setorder(pre_pwr_clust[,.N,by=list(login, logout, usage)], -N)
 pwr_multi_clusters
-reduced_pwr_clust <- pre_pwr_clust[, list(pwr_clust = ifelse((login == logout) || (login == usage), login, logout)), keyby=location_id]
+reduced_pwr_clust <- pre_pwr_clust[, list(pwr_clust = factor(ifelse((login == logout) || (login == usage), login, logout), levels=c("lo","med","hi"), ordered=T)), keyby=location_id]
 ```
 Probably worth having all-(low|med|high) clusters; the other cases all (with one exception) are two the same, the third off by one.
 
@@ -336,11 +340,11 @@ Finally, we can look at the relative usage per user:
 agg.dt <- initial_digest$raw[,list(log10_total_duration,log10_unique_users,log10_lifetime), keyby=location_id]
 lg10lm <- lm(log10_total_duration-log10_unique_users ~ log10_lifetime, agg.dt)
 agg.dt <- cbind(agg.dt, predict(lg10lm, agg.dt, interval="prediction", level=1/3))[,
-  lifetime_cat := ifelse(log10_total_duration-log10_unique_users < lwr, "low",
-                  ifelse(log10_total_duration-log10_unique_users < upr, "mid", "high"))
+  lifetime_cat := factor(ifelse(log10_total_duration-log10_unique_users < lwr, "low",
+                  ifelse(log10_total_duration-log10_unique_users < upr, "mid", "high")), levels=c("low","mid","high"), ordered=T)
 ][reduced_pwr_clust][temporal_cluster]
 p <- ggplot(agg.dt) + theme_bw() +
-  aes(y = log10_total_duration-log10_unique_users, x = log10_lifetime, color = factor(vMFcluster), size = pwr_clust, alpha = pwr_clust) +
+  aes(y = log10_total_duration-log10_unique_users, x = log10_lifetime, color = vMFcluster, size = pwr_clust, alpha = pwr_clust) +
   with(agg.dt, annotate("ribbon", x=log10_lifetime, ymax=upr, ymin=lwr, fill="lightgrey")) +
   geom_vline(xintercept=log10(365*24*60*60), color="grey") +
   annotate("text", x=log10(365*24*60*60)+c(-0.02,0.02), y=5.75, label=c("< 1 year","> 1 year"), angle=90, color="grey") +
@@ -414,17 +418,12 @@ ref <- censor.dt[,
   keyby=user_id
 ]
 
-categorizer_help <- function(opts) function(SD) SD[,
-  c(list(tot_visits = sum(lengths), mn_reps=mean(lengths), switches=.N),
-    lapply(opts, function(v) SD[values == v, sum(lengths)])
-  )
-]
-
 categorizer <- function(src.dt, cat, ref) {
   rle_expr <- paste0("rle(",cat,")")
   key_expr <- c("user_id",cat)
-  mx_expr <- parse(text=paste0("list(main=",cat,"[which.max(prop)],share=max(prop))"))
-  rle_dt <- src.dt[, rle(eval(parse(text=cat))), keyby=user_id]
+  lvls <- levels(src.dt[[cat]])
+  mx_expr <- parse(text=paste0("list(main=factor(",cat,"[which.max(prop)], ordered=T, levels=lvls),share=max(prop))"))
+  rle_dt <- src.dt[, rle(as.numeric(eval(parse(text=cat)))), keyby=user_id]
   prop_ref <- src.dt[,list(prop=sum(logout-login)), keyby=key_expr][ref][,list(prop=prop/usage), keyby=key_expr]
   prop_lab <- prop_ref[, eval(mx_expr), by=user_id]
   chunks <- data.table(dcast(rle_dt, user_id ~ values, value.var="lengths", fun.aggregate = sum), key="user_id")
@@ -451,14 +450,46 @@ digests <- rbind(
   vMF_dts$digest[,list(switch_rate = switches/usage, main, share, type="peaktime")]
 )
 ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1) + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+```
+\elandscape\newpage
+
+\newpage\blandscape
+```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="normalized distribution of main location type usage"}
 ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1, position="fill") + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
 ```
 \elandscape\newpage
 
 \newpage\blandscape
 ```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="user categorization, by primary location type utilization"}
-plot_ref <- ref[lifetime_dts$digest[, list(lifetime_main = main), keyby=user_id]][pwr_dts$digest[, list(pwr_main = main), keyby=user_id]][vMF_dts$digest[, list(peak_main = main), keyby=user_id]]
+plot_ref <- ref[
+  lifetime_dts$digest[, list(lifetime_main = main, lifetime_share = share), keyby=user_id]
+][
+  pwr_dts$digest[, list(pwr_main = main, pwr_share = share), keyby=user_id]
+][
+  vMF_dts$digest[, list(peak_main = main, peak_share = share), keyby=user_id]
+]
+user_src.dt <- plot_ref[between(life, 365*24*60*60, 3*365*24*60*60) & between(ul,3,20)]
 #thing[, list(user_id, mains=interaction(lifetime_main, pwr_main, peak_main))][,.N,by=mains]
-ggplot(plot_ref[life > 365*24*60*60 & ul > 2 & ul < 20, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main)]) +facet_grid(pwr_main ~ lifetime_main) + aes(x=x,y=y, color=factor(peak_main)) + geom_point(alpha=0.3) + theme_bw()
+ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main, membership = lifetime_share * pwr_share * peak_share)]) +facet_grid(pwr_main ~ lifetime_main, labeller = function(var, val){
+  if (var == "pwr_main") {
+    ifelse(val == "lo", "smooth usage", ifelse(val=="med","some usage variability","highly variable usage"))
+  } else {
+    ifelse(val == "low", "low usage per time", ifelse(val=="mid","typical usage per time","high usage per time"))
+  }
+}) + aes(x=x,y=y, color=factor(peak_main), alpha = membership) + geom_point() + theme_bw() + labs(y="log(usage)", x="log(life)", color="usage\npeak")
 ```
 \elandscape\newpage
+
+```{r, echo=F}
+# thing <- 
+#   data.table(
+#     x=lifetime_dts$digest[, list(pos = (0.5*`2`+1*`3`)/(`1`+`2`+`3`), main, share, user_id)]$pos,
+#     y=pwr_dts$digest[, list(pos = (0.5*`2`+1*`3`)/(`1`+`2`+`3`), main, share, user_id)]$pos,
+#     z=vMF_dts$digest[, list(pos = (0.5*`2`+1*`3`)/(`1`+`2`+`3`), main, share, user_id)]$pos,
+#     key=c("x","y","z")
+#   )
+# uthing <- unique(thing)
+# lenthing <- dim(uthing)[1]
+# cloud(z ~ x*y, data=unique(thing)[sample.int(lenthing, 250)])
+# censor.dt[user_id %in% user_src.dt$user_id, .N*60*60*24*30/(max(logout)-min(login)), by=user_id][V1>1]
+```
