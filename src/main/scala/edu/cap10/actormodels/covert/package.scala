@@ -10,6 +10,9 @@ package object covert {
   type AccessRecord = (Day, UserID, Time, Time)
   type AccessPlan = (HotSpot, Time, Time)
   
-  type CDF = Array[Double]
+  type CDF = Array[Double] 
   
+  val locationMeanSrc = "./input/loc_means.csv"
+  val locationShapeSrc = "./input/loc_shapes.csv"
+  val locationProbSrc = "./input/loc_probs.csv"
 }

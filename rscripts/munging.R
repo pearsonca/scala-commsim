@@ -19,6 +19,11 @@ processRaw <- function(raw.dt,
   max_hours, min_logins, min_lifetime,
   min_users, min_loc_lifetime) {
   censor.dt <- raw.dt[(logout != login) & ((logout - login) <= max_hours*60*60), ]
+  # invalidate rows
+#   thing <- censor.dt[,list(
+#     good = all(login[-1] > head(logout,-1))
+#   ), by=user_id][good == FALSE, user_id]
+  
   invalid.users <- censor.dt[,list(.N, lifetime = (max(logout) - min(login))/60/60/24), by=user_id ][N < min_logins | lifetime < min_lifetime, user_id]
   while(length(invalid.users) > 0) {
     censor.dt     <- censor.dt[!user_id %in% invalid.users]
