@@ -10,9 +10,28 @@ package object covert {
   type AccessRecord = (Day, UserID, Time, Time)
   type AccessPlan = (HotSpot, Time, Time)
   
-  type CDF = Array[Double] 
+  type CDF = Array[Double]
+  type PDF = Array[Double]
+  
+  def pdf2CDF(pdf:PDF) : CDF = pdf.tail.scan(pdf.head)({ (a,b) => a+b })
+  
+  def pdfFind(pdf:Array[Double], p:Double) = {
+    var in = 0
+    var draw = p
+    System.out.println("pdfFind draw ", draw)
+    System.out.println("cdf: ", pdf2CDF(pdf) mkString ", ")
+    while (draw > pdf(in)) {
+      draw -= pdf(in)
+      in += 1
+    }
+    System.out.println("n: ", in)
+    in
+  }
   
   val locationMeanSrc = "./input/loc_means.csv"
   val locationShapeSrc = "./input/loc_shapes.csv"
-  val locationProbSrc = "./input/loc_probs.csv"
+  val locationCDFSrc = "./input/loc_cdf.csv"
+  
+  def strsToDoubles(ss:Array[String]) = ss.map(_.trim).map(_.toDouble)
+  
 }

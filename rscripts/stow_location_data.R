@@ -12,13 +12,13 @@ censor.dt <- loadCensored(
 
 require(stats4); require(reshape2)
 
-output <- censor.dt[, list(pois_mean = exp(mle(
-    function(logl, diffs) { 
-      -sum(dpois(diffs, exp(logl), log=T))
-    },
-    start=list(logl=0),
-    fixed=list(diffs=(logout-login))
-  )@coef), usage = sum(logout-login)), keyby=list(location_id, login_hour)]
+# output <- censor.dt[, list(pois_mean = exp(mle(
+#     function(logl, diffs) { 
+#       -sum(dpois(diffs, exp(logl), log=T))
+#     },
+#     start=list(logl=0),
+#     fixed=list(diffs=(logout-login))
+#   )@coef), usage = sum(logout-login)), keyby=list(location_id, login_hour)]
 
 output <- censor.dt[, c(as.list({
   if (.N > 5)
@@ -30,23 +30,33 @@ output <- censor.dt[, c(as.list({
       fixed=list(diffs=(logout-login)
     ))@coef)
   else res <- c(NaN, mean(logout-login))
-  names(res) <- c("shape", "mean")
+  names(res) <- c("shapes", "means")
   res
 }), usage = sum(logout-login)), keyby=list(location_id, login_hour)]
 
+# output[shapes == NaN] returns ~10% of rows, however only ~.1 of usage.  So: elimate.
+# discard times w/ login durations cannot be determined
 
-filled_probs <- dcast.data.table(output[,{
+filled_cdf <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
   res[login_hour+1] <- usage / sum(usage)
-  list(hour=0:23, prop = res)
+  list(hour=0:23, prop = cumsum(res))
 }, keyby=location_id], location_id ~ hour, value.var = "prop")
 
-write.table(filled_probs, file="../input/loc_probs.csv", sep=",", row.names = F, col.names = F)
+write.table(filled_cdf, file="../input/loc_cdf.csv", sep=",", row.names = F, col.names = F)
 
-filled_means <- dcast.data.table(output[,{
+filled_means <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
-  res[login_hour+1] <- pois_mean
-  list(hour=0:23, pois_mean = res)
-}, keyby=location_id], location_id ~ hour, value.var = "pois_mean")
+  res[login_hour+1] <- means
+  list(hour=0:23, means = res)
+}, keyby=location_id], location_id ~ hour, value.var = "means")
 
 write.table(filled_means, file="../input/loc_means.csv", sep=",", row.names = F, col.names = F)
+
+filled_shapes <- dcast.data.table(output[!is.nan(shapes),{
+  res <- rep(0, length.out=24)
+  res[login_hour+1] <- shapes
+  list(hour=0:23, shapes = res)
+}, keyby=location_id], location_id ~ hour, value.var = "shapes")
+
+write.table(filled_shapes, file="../input/loc_shapes.csv", sep=",", row.names = F, col.names = F)

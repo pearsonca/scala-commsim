@@ -7,15 +7,16 @@ import breeze.stats.distributions._
 
 case class UseEvent(startDaySecs:Long, endDaySecs:Long)
 
-case class Location(id: HotSpotID, cdf:Array[Double], means:Array[Double], ks:Array[Double]) {
+case class Location(id: HotSpotID, pdf:Array[Double], means:Array[Double], ks:Array[Double]) {
   val rng = new scala.util.Random(id)
-  val gen = means.zip(ks).map { case (mu, k) => Gamma(k, mu/k) }
+  val gen = means.zip(ks).map { 
+    case (mu, k) if k != 0d => Gamma(k, mu/k)
+    case _ => null
+  }
+  val cdf = pdf2CDF(pdf)
   val searchSrc = scala.collection.Searching.search(cdf)
-  def draw = {
-    var hour = searchSrc.search(rng.nextDouble).insertionPoint
-    while (hour != 0 && cdf(hour) == cdf(hour-1)) { // guarantee first insertion point
-      hour = hour - 1
-    }
+  def draw(hour:Int) = {
+    assert(gen(hour) != null, hour)
     val mean = means(hour)
     val start = hour*3600 + rng.nextInt(3600)
     val end = start + gen(hour).draw().round
@@ -38,28 +39,23 @@ object Locations {
   // each line is a location id, followed by info for 0, 1, 2, ..., 23 hr of day
   
   val alllocs = {
-    val stream_probs = io.Source.fromFile(locationProbSrc).getLines.toList
+    val stream_cdf = io.Source.fromFile(locationCDFSrc).getLines.toList
     val stream_means = io.Source.fromFile(locationMeanSrc).getLines.toList
     val stream_ks = io.Source.fromFile(locationShapeSrc).getLines.toList
     
-    val stream = (stream_probs, stream_means, stream_ks).zipped.toList
+    val stream = (stream_cdf, stream_means, stream_ks).zipped.toList
     
     stream.map { case (pline, mline, kline) =>
-      val means = mline.split(",").tail.map(_.trim).map(_.toDouble)
-      val ks    = kline.split(",").tail.map(_.trim).map(_.toDouble)
-      val other    = pline.split(",").map(_.trim)
-      
-      val ps  = other.tail.map(_.toDouble)
-      val cdf = ps.tail.scan(ps.head)( (a, b) => a+b )
-      var fromhour = 23
-      while(cdf(fromhour) == cdf(fromhour-1)) fromhour = fromhour - 1
-      for (i <- fromhour to 23) cdf(i) = 1.0
-      Location(ps.head.toInt, cdf, means, ks)
+      val means = strsToDoubles(mline.split(",").tail)
+      val ks    = strsToDoubles(kline.split(",").tail)
+      val other = pline.split(",")
+      val cdf   = strsToDoubles(other.tail)
+      Location(other.head.trim.toInt, cdf, means, ks)
     }.toArray
   }
 
 }
 
-object Main extends App {
-  for (l <- Locations.alllocs) System.out.println(l)
-}
+//object Main extends App {
+//  for (l <- Locations.alllocs) System.out.println(l)
+//}
