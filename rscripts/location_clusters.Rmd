@@ -493,3 +493,8 @@ ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main
 # cloud(z ~ x*y, data=unique(thing)[sample.int(lenthing, 250)])
 # censor.dt[user_id %in% user_src.dt$user_id, .N*60*60*24*30/(max(logout)-min(login)), by=user_id][V1>1]
 ```
+
+
+show swtiching rate normalized by visit rate on a per user basis
+
+show 27 categories
