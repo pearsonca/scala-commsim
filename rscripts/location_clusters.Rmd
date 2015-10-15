@@ -469,6 +469,7 @@ plot_ref <- ref[
   vMF_dts$digest[, list(peak_main = main, peak_share = share), keyby=user_id]
 ]
 user_src.dt <- plot_ref[between(life, 365*24*60*60, 3*365*24*60*60) & between(ul,3,20)]
+saveRDS(user_src.dt, "../input/user.RData")
 #thing[, list(user_id, mains=interaction(lifetime_main, pwr_main, peak_main))][,.N,by=mains]
 ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main, membership = lifetime_share * pwr_share * peak_share)]) +facet_grid(pwr_main ~ lifetime_main, labeller = function(var, val){
   if (var == "pwr_main") {
@@ -481,6 +482,16 @@ ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main
 \elandscape\newpage
 
 ```{r, echo=F}
+saveRDS(agg.dt[,list(lifetime_cat, pwr_clust, vMFcluster), by=location_id], "../input/locClusters.RData")
+intermediate <- censor.dt[user_id %in% user_src.dt$user_id, list(visits = .N), by=list(user_id, location_id)][,
+  list(location_id, pref=visits/sum(visits)), keyby=user_id
+][,list(user_id, pref), keyby=location_id]
+saveRDS(intermediate[agg.dt[location_id %in% unique(intermediate$location_id), list(lifetime_cat, pwr_clust, vMFcluster), keyby=location_id]][,
+  list(lifetime_cat, pwr_clust, vMFcluster, pref),
+  keyby=user_id
+],"../input/userPrefs.RData")
+
+#[,.N,keyby=list(user_id, lifetime_cat, pwr_clust, vMFcluster)][,list(pref = N/sum(N),keyby=list(user_id, lifetime_cat, pwr_clust, vMFcluster)]
 # thing <- 
 #   data.table(
 #     x=lifetime_dts$digest[, list(pos = (0.5*`2`+1*`3`)/(`1`+`2`+`3`), main, share, user_id)]$pos,

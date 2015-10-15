@@ -2,6 +2,8 @@ import com.typesafe.sbt.SbtStartScript
 
 seq(SbtStartScript.startScriptForClassesSettings: _*)
 
+mainClass in (Compile, run) := Some("edu.cap10.actormodels.covert.SynthUser")
+
 scalaVersion := "2.11.6"
 
 sbtVersion := "0.13.7"

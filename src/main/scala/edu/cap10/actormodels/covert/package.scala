@@ -18,19 +18,17 @@ package object covert {
   def pdfFind(pdf:Array[Double], p:Double) = {
     var in = 0
     var draw = p
-    System.out.println("pdfFind draw ", draw)
-    System.out.println("cdf: ", pdf2CDF(pdf) mkString ", ")
     while (draw > pdf(in)) {
       draw -= pdf(in)
       in += 1
     }
-    System.out.println("n: ", in)
     in
   }
   
   val locationMeanSrc = "./input/loc_means.csv"
   val locationShapeSrc = "./input/loc_shapes.csv"
   val locationCDFSrc = "./input/loc_cdf.csv"
+  val locationPDFSrc = "./input/loc_probs.csv"
   
   def strsToDoubles(ss:Array[String]) = ss.map(_.trim).map(_.toDouble)
   

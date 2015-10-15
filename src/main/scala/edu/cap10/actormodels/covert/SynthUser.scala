@@ -2,17 +2,28 @@ package edu.cap10.actormodels.covert
 
 import breeze.stats.distributions._
 
-case class LoginEvent(user_id:UserID, location_id:HotSpotID, login:Long, logout:Long)
+case class LoginEvent(user_id:UserID, location_id:HotSpotID, login:Long, logout:Long, purpose:String = "background") {
+  override val toString = f"$user_id,$location_id,$login,$logout,$purpose"
+}
+
+import scala.math.Ordering
+
+object LoginEventOrder extends Ordering[LoginEvent] {
+  def compare(e1:LoginEvent, e2:LoginEvent) = e1.login compare e2.login
+}
 
 /**
  * @author cap10
  */
 case class SynthUser(id:Int,
-    shape:Double, mean:Double, 
-    locations:Array[Location], prefPDF:Array[Double],
-    geomP:Double) {
+    shape:Double, mean:Double, binop:Double, 
+    locations:Array[Location], prefPDF:Array[Double]
+) {
   
   // build prefs
+  
+  assert(locations.length == prefPDF.length)
+  assert(Math.abs(prefPDF.sum - 1) <= 1e-6)
   
   val pdfHour = {
     val lp = locations.zip(prefPDF)
@@ -22,7 +33,8 @@ case class SynthUser(id:Int,
     val tot = pref.sum
     pref.map(_ / tot)
   }
-  val cdfHour = pdf2CDF(pdfHour)
+
+  val maxVisits = pdfHour.filter(_ != 0d).length
   
   val pdfLocs = {
     Array.tabulate[Double](24, locations.size) {
@@ -32,44 +44,44 @@ case class SynthUser(id:Int,
       x.map(_ / tot)
     } }
   }
-  
-  val cdfLocs = pdfLocs.map { x => pdf2CDF(x) }
-  
+   
   val gen = Gamma(shape, mean/shape)
-  val geomVisits = Geometric(geomP)
-  val searchSrc = scala.collection.Searching.search(prefPDF)
+  val geomVisits = Binomial(maxVisits-1, binop*9/(maxVisits-1))
   val rng = new scala.util.Random(id)
 
   var tilEvent : Int = gen.draw.toInt
   var meeting : Option[LoginEvent] = None
   def meet(l:Location, e:UseEvent) = {
-    meeting = Some(LoginEvent(id, l.id, e.startDaySecs, e.endDaySecs))
+    meeting = Some(LoginEvent(id, l.id, e.startDaySecs, e.endDaySecs, "covert"))
   }
   
-  val maxVisits = scala.math.min(pdfHour.filter(_ > 0).size, 5)
+  def drawHour(pdf:Double) = ???
   
-  def tick = {
+  def tick(day:Int) = {
+    val dayOffset : Long = day*24*60*60
     val res : List[LoginEvent] = if (!meeting.isEmpty) {
-      List(meeting.get)
+      val res = meeting.get
+      meeting = None
+      List(res.copy(login=res.login+dayOffset, logout=res.logout+dayOffset))
     } else if (tilEvent == 0) {
-      val n = scala.math.min(geomVisits.draw(), 5)
+      val n = geomVisits.draw()+1
       var pdfs = pdfHour.clone
       var left = 1.0
-      (0 until n).map { _ =>
+      val hours = Array.ofDim[Int](n)
+      (0 until n).map { i =>
         var draw = rng.nextDouble() * left
         val hour = pdfFind(pdfs, draw)
-        left -= pdfs(hour)
+        left = left - pdfs(hour)
         pdfs(hour) = 0
-        hour
-      }.map { hour =>
+        hours(i) = hour
+      }
+          
+      hours.sorted.map { hour =>
         val drw = rng.nextDouble
         val insert = pdfFind(pdfLocs(hour), drw)
         val l = locations(insert)
-        System.out.println(pdfLocs(hour) mkString ", ")
-        System.out.println(hour)
-        System.out.println(l.pdf mkString ", ")
         val event = l.draw(hour)
-        LoginEvent(id, l.id, event.startDaySecs, event.endDaySecs)
+        LoginEvent(id, l.id, event.startDaySecs+dayOffset, event.endDaySecs+dayOffset)
       }.toList
     } else List()
     
@@ -82,15 +94,35 @@ case class SynthUser(id:Int,
 }
 
 object Main extends App {
-  val locs = scala.util.Random.shuffle(Locations.alllocs.toList).take(5).toArray
-  val rpdf = {
-    val src = Array.fill(5)(scala.util.Random.nextDouble)
-    val tot = src.sum
-    src.map(_ / tot)
-  }
-  val synth = SynthUser(1, 1d, 10d, locs, rpdf, 0.9)
-  for (i <- 0 to 100) synth.tick match {
-    case List() =>
-    case l => System.out.println(l)
+  val userfile = args(0)
+  val location = Locations.alllocs(args(1).toInt-1)
+  val shape = args(2).toDouble
+  val mean = args(3).toDouble
+  val gen = Gamma(shape, mean/shape)
+  val users = io.Source.fromFile(userfile).getLines.zipWithIndex.map { case (line, i) =>
+    val (same, varying) = line.split(" ").splitAt(3)
+    val Array(shape, mean, binop) = same.map(_.toDouble)
+    val len = varying.length / 2
+    val (locs, prefs) = varying.splitAt(len)
+    SynthUser(i+1, shape, mean, binop, Locations.get(locs.map(_.toInt - 1)), prefs.map(_.toDouble))
+  }.toList
+  
+  var timeToMeet = gen.draw.toInt
+  
+  for (i <- 0 to 2*365) {
+    if (timeToMeet == 0) { // is meeting day?
+      val List(first, second) = scala.util.Random.shuffle(users).take(2) // if yes, who meeting?
+      val hr = pdfFind(location.pdf, scala.util.Random.nextDouble)
+      val firstVisit, secondVisit = location.draw(hr)
+      first.meet(location, firstVisit)
+      second.meet(location, secondVisit)
+      // give them meeting event
+      timeToMeet = gen.draw.toInt
+    } else timeToMeet -= 1
+    users.map(_.tick(i)).flatten.sorted(LoginEventOrder).foreach { println }
+//    for (synth <- users) synth.tick(i) match {
+//      case List() =>
+//      case l => l foreach println
+//    }
   }
 }
