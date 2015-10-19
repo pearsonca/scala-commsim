@@ -20,39 +20,32 @@ count <- as.integer(args[2])
 refusers <- readRDS("../input/user.RData")
 user_rows <- readRDS("../input/userPrefs.RData")
 censor.dt <- readRDS("../input/censor.RData")
-locs <- readRDS("../input/redLocClusters.RData")
+locs <- readRDS("../input/locClusters.RData")
 
 compute <- function(n, lcat, pcat, vcat) sample(locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat], n)
 
 invlogit <- function(a) 1/(1+exp(-a))
 
-allpotentialusers <- refusers[lifetime_main == args[3] & pwr_main == args[4] & peak_main == args[5], user_id]
-
-refbino <- censor.dt[user_id %in% allpotentialusers, .N, by=list(user_id, login_day)][,
-  list(pbin = mean(sapply(N, function(n) min(n-1, 9)))/9),
-  keyby=user_id
-]
-
-refgamma <- censor.dt[user_id %in% allpotentialusers, list(diffs = diff(unique(sort(login_day)))), by=list(user_id)][,
-  as.list(exp(mle(
-    function(logk, logmu, diffs) -sum(dgamma(diffs, shape=exp(logk), scale=exp(logmu-logk), log=T)),
-      start=list(logk=0, logmu=log(max(mean(diffs),1))),
-      fixed=list(diffs=diffs)
-    )@coef)),
-  keyby=user_id
-]
-setnames(refgamma, c("logk","logmu"),c("shape","mean"))
-
-ressrc = user_rows[user_id %in% allpotentialusers,
-  list(.N, p = list(pref)),
-  keyby=list(user_id, lifetime_cat, pwr_clust, vMFcluster)
-][refbino][refgamma]
-
 for (i in 1:sets) {
-  nm <- sprintf("covert-set-%d.csv",i)
-  if (file.create(nm)) config <- file(nm, open = "w")
-  users <- sample(allpotentialusers, count)
-  res <- ressrc[user_id %in% users]
+  if (file.create(sprintf("covert-set-%d.csv",i))) config <- file(sprintf("covert-set-%d.csv",i), open = "w")
+  users <- refusers[lifetime_main == args[3] & pwr_main == args[4] & peak_main == args[5], sample(user_id, count)]
+  refbino <- censor.dt[user_id %in% users, .N, by=list(user_id, login_day)][,
+    list(pbin = mean(sapply(N, function(n) min(n-1, 9)))/9),
+    keyby=user_id
+  ]
+  refgamma <- censor.dt[user_id %in% users, list(diffs = diff(unique(sort(login_day)))), by=list(user_id)][,
+   as.list(exp(mle(
+     function(logk, logmu, diffs) -sum(dgamma(diffs, shape=exp(logk), scale=exp(logmu-logk), log=T)),
+     start=list(logk=0, logmu=log(max(mean(diffs),1))),
+     fixed=list(diffs=diffs)
+    )@coef)),
+    keyby=user_id
+  ]
+  setnames(refgamma, c("logk","logmu"),c("shape","mean"))
+  res <- user_rows[user_id %in% users,
+    list(.N, p = list(pref)),
+    keyby=list(user_id, lifetime_cat, pwr_clust, vMFcluster)
+  ][refbino][refgamma]
   res[,{
     things <- Reduce(function(left, right) {
       list(lc = c(left$lc, right$lc), ps = c(left$ps, right$ps))
