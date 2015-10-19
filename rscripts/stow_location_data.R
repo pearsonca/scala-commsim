@@ -34,18 +34,16 @@ output <- censor.dt[, c(as.list({
   res
 }), usage = sum(logout-login)), keyby=list(location_id, login_hour)]
 
-reducedlocs <- readRDS("../input/locClusters.RData")[location_id %in% output[!is.nan(shapes), unique(location_id)]]
-saveRDS(reducedlocs, "../input/redLocClusters.RData")
 # output[shapes == NaN] returns ~10% of rows, however only ~.1 of usage.  So: elimate.
 # discard times w/ login durations cannot be determined
 
-filled_pdf <- dcast.data.table(output[!is.nan(shapes),{
+filled_cdf <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
   res[login_hour+1] <- usage / sum(usage)
-  list(hour=0:23, prop = res)
+  list(hour=0:23, prop = cumsum(res))
 }, keyby=location_id], location_id ~ hour, value.var = "prop")
 
-write.table(filled_pdf, file="../input/loc_probs.csv", sep=",", row.names = F, col.names = F)
+write.table(filled_cdf, file="../input/loc_cdf.csv", sep=",", row.names = F, col.names = F)
 
 filled_means <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
