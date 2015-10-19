@@ -44,13 +44,20 @@ object Locations {
     
     val stream = (stream_pdf, stream_means, stream_ks).zipped.toList
     
-    stream.map { case (pline, mline, kline) =>
+    val prelim = stream.map { case (pline, mline, kline) =>
       val means = strsToDoubles(mline.split(",").tail)
       val ks    = strsToDoubles(kline.split(",").tail)
       val other = pline.split(",")
-      val cdf   = strsToDoubles(other.tail)
-      Location(other.head.trim.toInt, cdf, means, ks)
+      val pdf   = strsToDoubles(other.tail)
+      Location(other.head.trim.toInt, pdf, means, ks)
     }.toArray
+    
+    val maxid = prelim.map(_.id.toInt).max
+    val res = Array.ofDim[Location](maxid)
+    prelim.foreach { l => 
+      res(l.id.toInt-1) = l
+    }
+    res
   }
 
   def get(l:Iterable[Int]) = l.map(alllocs(_)).toArray
