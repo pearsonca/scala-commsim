@@ -29,7 +29,6 @@ package object covert {
   val locationShapeSrc = "./input/loc_shapes.csv"
   val locationCDFSrc   = "./input/loc_cdf.csv"
   val locationPDFSrc   = "./input/loc_probs.csv"
-  val refLogins        = "./input/merged.o"
   
   def strsToDoubles(ss:Array[String]) = ss.map(_.trim).map(_.toDouble)
   

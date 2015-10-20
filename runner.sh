@@ -6,6 +6,7 @@ for f in $FILES
 do
   tar=${f/$rep/$sub}
   echo "Processing $f to $tar..."
-  target/start $f $2 $3 $4 > $tar 
+  target/start $f $2 $3 $4 > $tar
+  ../montreal-process/target/start ./target/start $tar 209263 20649600 
   # take action on each file. $f store current file name
 done

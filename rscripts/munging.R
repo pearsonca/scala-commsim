@@ -18,34 +18,35 @@ loadRaw <- function(raw.src = "../input/merged.o", cache.src = "../input/raw.RDa
 processRaw <- function(raw.dt,
   max_hours, min_logins, min_lifetime,
   min_users, min_loc_lifetime) {
-  censor.dt <- raw.dt[(logout != login) & ((logout - login) <= max_hours*60*60), ]
+  res.dt <- raw.dt[(logout != login) & ((logout - login) <= max_hours*60*60), ]
   # invalidate rows
-#   thing <- censor.dt[,list(
+#   thing <- res.dt[,list(
 #     good = all(login[-1] > head(logout,-1))
 #   ), by=user_id][good == FALSE, user_id]
   
-  invalid.users <- censor.dt[,list(.N, lifetime = (max(logout) - min(login))/60/60/24), by=user_id ][N < min_logins | lifetime < min_lifetime, user_id]
+  invalid.users <- res.dt[,list(.N, lifetime = (max(logout) - min(login))/60/60/24), by=user_id ][N < min_logins | lifetime < min_lifetime, user_id]
   while(length(invalid.users) > 0) {
-    censor.dt     <- censor.dt[!user_id %in% invalid.users]
-    invalid.locs  <- censor.dt[,list(.N, uc=length(unique(user_id)), lifetime=(max(logout)-min(login))/60/60/24), by=location_id ][
+    res.dt     <- res.dt[!user_id %in% invalid.users]
+    invalid.locs  <- res.dt[,list(.N, uc=length(unique(user_id)), lifetime=(max(logout)-min(login))/60/60/24), by=location_id ][
       N < min_logins | uc < min_users | lifetime < min_loc_lifetime,
       location_id
     ]
-    censor.dt     <- censor.dt[!location_id %in% invalid.locs]
-    invalid.users <- censor.dt[,list(.N, lifetime = (max(logout) - min(login))/60/60/24), by=user_id ][N < min_logins | lifetime < min_lifetime, user_id]
+    res.dt     <- res.dt[!location_id %in% invalid.locs]
+    invalid.users <- res.dt[,list(.N, lifetime = (max(logout) - min(login))/60/60/24), by=user_id ][N < min_logins | lifetime < min_lifetime, user_id]
   }
-  censor.dt
+  res.dt
 }
 
 loadCensored <- function(
   cache.src = "../input/raw.RData",
   cache.censor = "../input/censor.RData", ...) {
   if (!file.exists(cache.censor) || (file.mtime(cache.src) > file.mtime(cache.censor))) {
-    res <- zeroize(breakoutDays(processRaw(...)[,
-      user_id := .GRP, by=user_id
-    ][,
-      location_id := .GRP, by=location_id
-    ], login_day, login_time, logout_day, logout_time, user_id, location_id))
+    rw <- breakoutDays(processRaw(...), login_day, login_time, logout_day, logout_time, user_id, location_id)
+    res <- zeroize(rw)
+    write(res[, list(location_id = unique(location_id)), keyby=new_location_id]$location_id, "../input/locRef.csv", ncolumns = 1)
+    # res[, location_id, by=new_location_id]
+    res[,location_id := new_location_id]
+    res$new_location_id <- NULL
     saveRDS(res, cache.censor)
     res
   } else readRDS(cache.censor)
@@ -56,7 +57,7 @@ breakoutDays <- function(dt, ...) {
   setkey(dt[,
     user_id     := .GRP, by=user_id
   ][,
-    location_id := .GRP, by=location_id
+    new_location_id := .GRP, by=location_id
   ][,
     login_day   := login %/% secs_per_day
   ][,
