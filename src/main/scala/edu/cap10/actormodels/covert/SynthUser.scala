@@ -98,6 +98,14 @@ object Main extends App {
   val location = Locations.alllocs(args(1).toInt-1)
   val shape = args(2).toDouble
   val mean = args(3).toDouble
+  val cProbs = args.length == 4 // if args length == 4, then last arg is switch to use semi-complement of locations
+  
+  val locProb = if (!cProbs)
+    location.pdf
+  else {
+    
+  }
+  
   val gen = Gamma(shape, mean/shape)
   val users = io.Source.fromFile(userfile).getLines.zipWithIndex.map { case (line, i) =>
     val (same, varying) = line.split(" ").splitAt(3)
