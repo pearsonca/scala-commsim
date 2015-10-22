@@ -24,7 +24,15 @@ user_rows <- readRDS("../input/userPrefs.RData")
 censor.dt <- readRDS("../input/censor.RData")
 locs <- readRDS("../input/locClusters.RData")
 
-compute <- function(n, lcat, pcat, vcat) sample(locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat], n)
+compute <- function(n, lcat, pcat, vcat, rep=F) sample(
+  locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat],
+  n, replace = rep
+)
+
+anticompute <- function(n, lcat, pcat, vcat, rep=F) sample(
+  locs[lifetime_cat != lcat | pwr_clust != pcat | vMFcluster != vcat],
+  n, replace = rep
+)
 
 invlogit <- function(a) 1/(1+exp(-a))
 
@@ -51,7 +59,12 @@ ressrc = user_rows[user_id %in% allpotentialusers,
   keyby=list(user_id, lifetime_cat, pwr_clust, vMFcluster)		
 ][refbino][refgamma]
 
-## save
+## save matched
+matched <- compute(sets, args[3], args[4], args[5], T)
+unmatched <- anticompute(sets, args[3], args[4], args[5], T)
+
+write(matched, file="matchedlocs.txt", ncolumns = 1)
+write(unmatched, file="unmatchedlocs.txt", ncolumns = 1)
 
 for (i in 1:sets) {
   nm <- sprintf("covert-set-%d.csv",i)
