@@ -1,17 +1,14 @@
-#!/usr/bin/Rscript
+#!/bin/env Rscript
 
 ## invoke from command line, w/ rscripts as wd
-## follow invocation w/
-## mv covert-set-*.csv ../input/$SUBDIRFORTHISSET/
-## mv matched.txt ../input/$SUBDIRFORTHISSET/
-## mv unmatched.txt ../input/$SUBDIRFORTHISSET/
 
 args <- commandArgs(trailingOnly = T)
 
-if (length(args) == 0) args <- c('1000', '6', 'mid', 'med', 'middle')
+if (length(args) == 0) args <- c('1000', '6', 'mid', 'med', 'middle','.')
 
 sets <- as.integer(args[1])
 count <- as.integer(args[2])
+basedir <- args[6]
 
 suppressPackageStartupMessages({
   require(data.table)
@@ -61,11 +58,11 @@ ressrc = user_rows[user_id %in% allpotentialusers,
 matched <- compute(sets, args[3], args[4], args[5], T)
 unmatched <- anticompute(sets, args[3], args[4], args[5], T)
 
-write(matched, file="matchedlocs.txt", ncolumns = 1)
-write(unmatched, file="unmatchedlocs.txt", ncolumns = 1)
+write(matched, file=paste0(basedir, "/matchedlocs.txt"), ncolumns = 1)
+write(unmatched, file=paste0(basedir, "/unmatchedlocs.txt"), ncolumns = 1)
 
 for (i in 1:sets) {
-  nm <- sprintf("covert-set-%d.csv",i)
+  nm <- sprintf("%s/covert-set-%d.csv",basedir,i)
   if (file.create(nm)) config <- file(nm, open = "w")
   users <- sample(allpotentialusers, count)
   ressrc[user_id %in% users][,{

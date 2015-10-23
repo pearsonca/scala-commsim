@@ -1,3 +1,4 @@
+#!/apps/R/3.2.0/bin/Rscript
 # TODO receive arg(s)
 #  - a config file
 #  - a series of files that provides lists to combine
@@ -10,7 +11,7 @@ size <- c(seq(5, 20, 5),30)
 k <- 2
 meetFrequency <- c(7, 14, 28)
 
-write.table(expand.grid(lifetime, variability, peakTime, size, k, meetFrequency), "../params.src",
+write.table(expand.grid(lifetime, variability, peakTime, size, k, meetFrequency), "../sim-src.pars",
   row.names = F, col.names = F, quote = F)
 
 ## script
