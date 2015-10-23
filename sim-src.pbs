@@ -8,17 +8,25 @@
 #PBS -l walltime=24:00:00
 #PBS -l nodes=1:ppn=8
 #PBS -l pmem=1G
-#PBS -t 1-1080
+#PBS -t 1-1620
 
+module load R/3.2.0
+module load scala/2.11.5
+module load java/1.8.0_31
 cd /scratch/lfs/cap10/scala-commsim
 parameters=`cat sim-src.pars | tail -n +$PBS_ARRAYID | head -1`
 IFS=', ' read -a elems <<< "$parameters"
-sz = ${elems[3]}
-k = ${elems[4]}
-fr = ${elems[5]}
-pth = ${elems[0]}-${elems[1]}-${elems[2]}-$sz
+sz=${elems[3]}
+k=${elems[4]}
+fr=${elems[5]}
+pth=${elems[0]}-${elems[1]}-${elems[2]}-$sz
 rep=input/$pth
 sub=output/$pth-$fr-matched-like
+mkdir $rep
+mkdir $sub
+cd rscripts
+./mk-users.R 100 $sz ${elems[0]} ${elems[1]} ${elems[2]} ../$rep
+cd ..
 FILES=$rep/*.csv
 LOCS=$rep/matchedlocs.txt
 i=1
@@ -27,8 +35,8 @@ do
   tar=${f/$rep/$sub}
   loc=`cat $LOCS | tail -n +$i | head -1`
   echo "Processing $f to $tar; using loc $loc"
-  # target/start $f $sz $k $fr > $tar
+  target/start $f $sz $k $fr > $tar
   #../montreal-process/target/start ./target/start $tar 209263 20649600
-  i = i+1
+  i=$[$i+1]
   # take action on each file. $f store current file name
 done

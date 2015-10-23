@@ -5,6 +5,8 @@ import scala.util.Random
 
 import breeze.stats.distributions._
 
+import util.Properties.lineSeparator
+
 case class UseEvent(startDaySecs:Long, endDaySecs:Long)
 
 case class Location(id: HotSpotID, val pdf:Array[Double], means:Array[Double], ks:Array[Double]) {
@@ -23,9 +25,9 @@ case class Location(id: HotSpotID, val pdf:Array[Double], means:Array[Double], k
   }
   
   override val toString = {
-    id.toString() + System.lineSeparator() +
-    "probabilities ("+pdf.size+"): "+ pdf.mkString(", ") +System.lineSeparator() + //
-    "means("+means.size+"): "+ means.mkString(", ") +System.lineSeparator() // 
+    id.toString() + lineSeparator +
+    "probabilities ("+pdf.size+"): "+ pdf.mkString(", ") + lineSeparator + //
+    "means("+means.size+"): "+ means.mkString(", ") + lineSeparator // 
   }
 }
 
