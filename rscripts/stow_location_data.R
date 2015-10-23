@@ -37,13 +37,13 @@ output <- censor.dt[, c(as.list({
 # output[shapes == NaN] returns ~10% of rows, however only ~.1 of usage.  So: elimate.
 # discard times w/ login durations cannot be determined
 
-filled_cdf <- dcast.data.table(output[!is.nan(shapes),{
+filled_pdf <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
   res[login_hour+1] <- usage / sum(usage)
-  list(hour=0:23, prop = cumsum(res))
+  list(hour=0:23, prop = res)
 }, keyby=location_id], location_id ~ hour, value.var = "prop")
 
-write.table(filled_cdf, file="../input/loc_cdf.csv", sep=",", row.names = F, col.names = F)
+write.table(filled_pdf, file="../input/loc_probs.csv", sep=",", row.names = F, col.names = F)
 
 filled_means <- dcast.data.table(output[!is.nan(shapes),{
   res <- rep(0, length.out=24)
