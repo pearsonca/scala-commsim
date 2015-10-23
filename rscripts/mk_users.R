@@ -4,7 +4,7 @@
 
 args <- commandArgs(trailingOnly = T)
 
-if (length(args) == 0) args <- c('1000', '6', 'mid', 'med', 'middle','.')
+if (length(args) == 0) args <- c('10', '6', 'mid', 'med', 'middle','.')
 
 sets <- as.integer(args[1])
 count <- as.integer(args[2])
@@ -22,12 +22,12 @@ censor.dt <- readRDS("../input/censor.RData")
 locs <- readRDS("../input/locClusters.RData")
 
 compute <- function(n, lcat, pcat, vcat, rep=F) sample(
-  locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat],
+  locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat, location_id],
   n, replace = rep
 )
 
 anticompute <- function(n, lcat, pcat, vcat, rep=F) sample(
-  locs[lifetime_cat != lcat | pwr_clust != pcat | vMFcluster != vcat],
+  locs[lifetime_cat != lcat | pwr_clust != pcat | vMFcluster != vcat, location_id],
   n, replace = rep
 )
 
