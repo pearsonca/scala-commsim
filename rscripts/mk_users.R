@@ -19,7 +19,9 @@ suppressPackageStartupMessages({
 refusers <- readRDS("../input/user.RData")
 user_rows <- readRDS("../input/userPrefs.RData")
 censor.dt <- readRDS("../input/censor.RData")
-locs <- readRDS("../input/locClusters.RData")
+locsub <- fread("../input/loc_probs.csv")$V1
+locs <- readRDS("../input/locClusters.RData")[location_id %in% locsub]
+
 
 compute <- function(n, lcat, pcat, vcat, rep=F) sample(
   locs[lifetime_cat == lcat & pwr_clust == pcat & vMFcluster == vcat, location_id],

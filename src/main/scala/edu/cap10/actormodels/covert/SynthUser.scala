@@ -24,6 +24,7 @@ case class SynthUser(id:Int,
   
   assert(locations.length == prefPDF.length)
   assert(Math.abs(prefPDF.sum - 1) <= 1e-6)
+  assert(locations.find({ _ == null }).isEmpty, id.toString + ":" + locations.indexOf(null) + "\n" + (locations mkString "\n"))
   
   val pdfHour = {
     val lp = locations.zip(prefPDF)
@@ -68,7 +69,7 @@ case class SynthUser(id:Int,
       var pdfs = pdfHour.clone
       var left = 1.0
       val hours = Array.ofDim[Int](n)
-      (0 until n).map { i =>
+      (0 until n).foreach { i =>
         var draw = rng.nextDouble() * left
         val hour = pdfFind(pdfs, draw)
         left = left - pdfs(hour)
