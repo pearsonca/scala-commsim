@@ -7,17 +7,17 @@ object shared {
   type Time = Long
   type UserID = Int
   type LocID = Int
-  case class Observation(user:UserID, loc:LocID, start:Time, end:Time) {
+  case class Observation(user:UserID, loc:LocID, start:Time, end:Time, reason:String = "background") {
     def contained: Observation => Boolean = (other:Observation) => inGroup(other) && (other match {
-      case Observation(_,_,oStart,oEnd) => start <= oStart & oEnd <= end
+      case Observation(_,_,oStart,oEnd,_) => start <= oStart & oEnd <= end
     })
     def inGroup: Observation => Boolean = {
-      case Observation(this.user,this.loc,_,_) => true
+      case Observation(this.user,this.loc,_,_,_) => true
       case _ => false
     }
     // assert: only applied to list of elements where start <= other.start
     def overlapping: Observation => Boolean = {
-      case Observation(_, _, start, _) => start <= end
+      case Observation(_, _, start, _,_) => start <= end
     }
     def upEnd(newEnd:Time) = Observation(user, loc, start, newEnd)
   }

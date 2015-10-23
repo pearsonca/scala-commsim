@@ -509,3 +509,11 @@ saveRDS(intermediate[agg.dt[location_id %in% unique(intermediate$location_id), l
 show swtiching rate normalized by visit rate on a per user basis
 
 show 27 categories
+
+group sizes 5-20 by 5, also a 30
+meeting frequency - once a week, once every two weeks, once every month
+try
+ - meeting at less probable times
+ - meeting location be inconsistent with normal behavior
+
+detection based on cycles

@@ -25,10 +25,10 @@ package object covert {
     in
   }
   
-  val locationMeanSrc = "./input/loc_means.csv"
+  val locationMeanSrc  = "./input/loc_means.csv"
   val locationShapeSrc = "./input/loc_shapes.csv"
-  val locationCDFSrc = "./input/loc_cdf.csv"
-  val locationPDFSrc = "./input/loc_probs.csv"
+  val locationCDFSrc   = "./input/loc_cdf.csv"
+  val locationPDFSrc   = "./input/loc_probs.csv"
   
   def strsToDoubles(ss:Array[String]) = ss.map(_.trim).map(_.toDouble)
   
