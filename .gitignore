@@ -2,6 +2,9 @@
 .Rhistory
 .RData*
 
+*.o-*
+*.err-*
+
 *.Rproj
 
 *.gz
