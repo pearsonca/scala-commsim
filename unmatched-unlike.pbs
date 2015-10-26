@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -r n
-#PBS -N minerva
-#PBS -o minnow.o
-#PBS -e minnow.err
+#PBS -N unmatched-unlike
+#PBS -o unmatched-unlike.o
+#PBS -e unmatched-unlike.err
 #PBS -m a
 #PBS -M cap10@ufl.edu
 #PBS -l walltime=24:00:00
@@ -29,7 +29,7 @@ for f in $FILES
 do
   tar=${f/$rep/$sub}
   loc=`cat $LOCS | tail -n +$i | head -1`
-  echo "Processing $f to $tar; using unloc $loc"
+  echo "Processing $f to $tar; using unloc $loc unlike probs"
   target/start $f $sz $k $fr -c > $tar
   #../montreal-process/target/start ./target/start $tar 209263 20649600
   i=$[$i+1]

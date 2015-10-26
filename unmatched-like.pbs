@@ -1,11 +1,11 @@
 #!/bin/bash
 #PBS -r n
-#PBS -N minerva
-#PBS -o minnow.o
-#PBS -e minnow.err
+#PBS -N unmatched-like
+#PBS -o unmatched-like.o
+#PBS -e unmatched-like.err
 #PBS -m a
 #PBS -M cap10@ufl.edu
-#PBS -l walltime=24:00:00
+#PBS -l walltime=00:30:00
 #PBS -l nodes=1:ppn=8
 #PBS -l pmem=1G
 #PBS -t 1-405
@@ -29,7 +29,7 @@ for f in $FILES
 do
   tar=${f/$rep/$sub}
   loc=`cat $LOCS | tail -n +$i | head -1`
-  echo "Processing $f to $tar; using loc $loc"
+  echo "Processing $f to $tar; using unloc $loc"
   target/start $f $sz $k $fr > $tar
   #../montreal-process/target/start ./target/start $tar 209263 20649600
   i=$[$i+1]

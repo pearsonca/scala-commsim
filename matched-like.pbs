@@ -1,11 +1,11 @@
 #!/bin/bash
 #PBS -r n
-#PBS -N minerva
-#PBS -o minnow.o
-#PBS -e minnow.err
+#PBS -N muri-matched-like
+#PBS -o matched-like.o
+#PBS -e matched-like.err
 #PBS -m a
 #PBS -M cap10@ufl.edu
-#PBS -l walltime=24:00:00
+#PBS -l walltime=2:00:00
 #PBS -l nodes=1:ppn=8
 #PBS -l pmem=1G
 #PBS -t 1-405
