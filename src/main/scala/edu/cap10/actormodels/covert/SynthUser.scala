@@ -104,7 +104,9 @@ object Main extends App {
   val locProb = if (!cProbs)
     location.pdf
   else {
-    
+    val temp = location.pdf.map { p => if (p == 0d) p else 1-p }
+    val tot = temp.sum
+    temp.map(_/tot)
   }
   
   val gen = Gamma(shape, mean/shape)
