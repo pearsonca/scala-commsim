@@ -10,7 +10,6 @@
 #PBS -l pmem=1G
 #PBS -t 1-405
 
-module load R/3.2.0
 module load scala/2.11.5
 module load java/1.8.0_31
 cd /scratch/lfs/cap10/scala-commsim
@@ -22,11 +21,7 @@ fr=${elems[5]}
 pth=${elems[0]}-${elems[1]}-${elems[2]}-$sz
 rep=input/$pth
 sub=output/$pth-$fr-matched-like
-mkdir $rep
 mkdir $sub
-cd rscripts
-Rscript mk_users.R 100 $sz ${elems[0]} ${elems[1]} ${elems[2]} ../$rep
-cd ..
 FILES=$rep/*.csv
 LOCS=$rep/matchedlocs.txt
 i=1

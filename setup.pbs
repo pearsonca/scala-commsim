@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -r n
+#PBS -N minerva
+#PBS -o minnow.o
+#PBS -e minnow.err
+#PBS -m a
+#PBS -M cap10@ufl.edu
+#PBS -l walltime=24:00:00
+#PBS -l nodes=1:ppn=8
+#PBS -l pmem=1G
+#PBS -t 1-405
+
+module load R/3.2.0
+cd /scratch/lfs/cap10/scala-commsim
+parameters=`cat sim-src.pars | tail -n +$PBS_ARRAYID | head -1`
+IFS=', ' read -a elems <<< "$parameters"
+sz=${elems[3]}
+k=${elems[4]}
+fr=${elems[5]}
+pth=${elems[0]}-${elems[1]}-${elems[2]}-$sz
+rep=input/$pth
+mkdir $rep
+cd rscripts
+Rscript mk_users.R 100 $sz ${elems[0]} ${elems[1]} ${elems[2]} ../$rep
