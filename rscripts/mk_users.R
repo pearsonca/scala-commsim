@@ -63,10 +63,13 @@ unmatched <- anticompute(sets, args[3], args[4], args[5], T)
 write(matched, file=paste0(basedir, "/matchedlocs.txt"), ncolumns = 1)
 write(unmatched, file=paste0(basedir, "/unmatchedlocs.txt"), ncolumns = 1)
 
+repl <- (count > length(allpotentialusers))
+# if we want more than the possible number of users, resample them, otherwise don't
+
 for (i in 1:sets) {
   nm <- sprintf("%s/covert-set-%d.csv",basedir,i)
   if (file.create(nm)) config <- file(nm, open = "w")
-  users <- sample(allpotentialusers, count)
+  users <- sample(allpotentialusers, count, replace = repl)
   ressrc[user_id %in% users][,{
     things <- Reduce(function(left, right) {
       list(lc = c(left$lc, right$lc), ps = c(left$ps, right$ps))
