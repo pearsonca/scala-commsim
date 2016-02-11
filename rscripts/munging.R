@@ -11,6 +11,7 @@ loadRaw <- function(raw.src = "../input/merged.o", cache.src = "../input/raw.RDa
       login, logout, user_id, location_id
     )
     saveRDS(res, cache.src)
+    saveRDS(res[,list(start=min(login), end=max(logout)), keyby=location_id], sub("raw","locLimits", cache.src))
     res
   } else readRDS(cache.src)
 }

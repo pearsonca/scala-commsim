@@ -16,16 +16,16 @@ object LoginEventOrder extends Ordering[LoginEvent] {
  * @author cap10
  */
 case class SynthUser(id:Int,
-    shape:Double, mean:Double, binop:Double, 
+    shape:Double, mean:Double, binop:Double,
     locations:Array[Location], prefPDF:Array[Double]
 ) {
-  
+
   // build prefs
-  
+
   assert(locations.length == prefPDF.length)
   assert(Math.abs(prefPDF.sum - 1) <= 1e-6)
   assert(locations.find({ _ == null }).isEmpty, id.toString + ":" + locations.indexOf(null) + "\n" + (locations mkString "\n"))
-  
+
   val pdfHour = {
     val lp = locations.zip(prefPDF)
     val pref = (0 to 23).toArray.map { hour =>
@@ -36,7 +36,7 @@ case class SynthUser(id:Int,
   }
 
   val maxVisits = pdfHour.filter(_ != 0d).length
-  
+
   val pdfLocs = {
     Array.tabulate[Double](24, locations.size) {
       (hour, l) => locations(l).pdf(hour)
@@ -45,7 +45,7 @@ case class SynthUser(id:Int,
       x.map(_ / tot)
     } }
   }
-   
+
   val gen = Gamma(shape, mean/shape)
   val geomVisits = Binomial(maxVisits-1, binop*9/(maxVisits-1))
   val rng = new scala.util.Random(id)
@@ -55,9 +55,9 @@ case class SynthUser(id:Int,
   def meet(l:Location, e:UseEvent) = {
     meeting = Some(LoginEvent(id, l.id, e.startDaySecs, e.endDaySecs, "covert"))
   }
-  
+
   def drawHour(pdf:Double) = ???
-  
+
   def tick(day:Int) = {
     val dayOffset : Long = day*24*60*60
     val res : List[LoginEvent] = if (!meeting.isEmpty) {
@@ -76,7 +76,7 @@ case class SynthUser(id:Int,
         pdfs(hour) = 0
         hours(i) = hour
       }
-          
+
       hours.sorted.map { hour =>
         val drw = rng.nextDouble
         val insert = pdfFind(pdfLocs(hour), drw)
@@ -85,7 +85,7 @@ case class SynthUser(id:Int,
         LoginEvent(id, l.id, event.startDaySecs+dayOffset, event.endDaySecs+dayOffset)
       }.toList
     } else List()
-    
+
     if (tilEvent == 0) {
       tilEvent = gen.draw.toInt
     } else tilEvent -= 1
@@ -100,7 +100,7 @@ object Main extends App {
   val shape = args(2).toDouble
   val mean = args(3).toDouble
   val cProbs = args.length == 4 // if args length == 4, then last arg is switch to use semi-complement of locations
-  
+
   val locProb = if (!cProbs)
     location.pdf
   else {
@@ -108,7 +108,7 @@ object Main extends App {
     val tot = temp.sum
     temp.map(_/tot)
   }
-  
+
   val gen = Gamma(shape, mean/shape)
   val users = io.Source.fromFile(userfile).getLines.zipWithIndex.map { case (line, i) =>
     val (same, varying) = line.split(" ").splitAt(3)
@@ -117,9 +117,9 @@ object Main extends App {
     val (locs, prefs) = varying.splitAt(len)
     SynthUser(i+1, shape, mean, binop, Locations.get(locs.map(_.toInt - 1)), prefs.map(_.toDouble))
   }.toList
-  
+
   var timeToMeet = gen.draw.toInt
-  
+
   for (i <- 0 to 2*365) {
     if (timeToMeet == 0) { // is meeting day?
       val List(first, second) = scala.util.Random.shuffle(users).take(2) // if yes, who meeting?
