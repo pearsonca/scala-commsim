@@ -3,43 +3,24 @@
 #setwd("~/git/scala-commsim/")
 rm(list=ls())
 require(data.table)
+require(bit64)
 require(igraph)
 require(parallel)
 args <- commandArgs(trailingOnly = T)
-args <- c("output/process-test", "output/analyze-test", "input")
+# args <- c("output/process-test", "output/analyze-test", "input")
 
-locLimits <- readRDS("input/location-lifetimes.rds")
+# locLimits <- readRDS("input/location-lifetimes.rds")
 
-getSimRes <- function(tar="cc") list.files(args[1], pattern = paste0(tar,".csv"), full.names = T)
-
-# cnt <- args[1]
-# inter <- args[2]
-# locs <- args[3]
-
-# getCCPairs <- function(count, intervals, locations) list.files(path = "./cc_files", pattern=paste(count, intervals, locations, ".+cc", sep = "-"))
-# getCUPairs <- function(count, intervals, locations) list.files(path = "./cu_files", pattern=paste(count, intervals, locations, ".+cu", sep = "-"))
-
+getSimRes <- function(wh="cc") list.files(args[1], pattern = paste0(wh,".rds"), full.names = T)
 src.dt <- readRDS(paste0(args[3],"/raw-input.rds"))
+max.uid <- as.integer(src.dt[,max(user_id)]+1)
 
-#src.dt <- src.dt[delta != 0,]
-max.uid <- src.dt[,max(user_id)]+1
-#min.login <- src.dt[,min(login)]
-#oldorig <- trunc(as.POSIXlt("2005-01-01", tz="EST"), "days")
-#neworig <- trunc(as.POSIXlt(min.login, origin = "2005-01-01", tz = "EST"), "days")
-#del <- as.numeric(neworig)-as.numeric(as.POSIXlt("2005-01-01"))
-
-readELtable <- function(tar, offsetid) {
-  res <- data.table(fread(
-    tar, header = F,
-    col.names = c("user.a", "user.b", "location_id", "login", "logout", "type")
-  ), key = c("location_id", "login", "logout", "user.a", "user.b")
-  )
-  # trim locations ids
-  
+readELtable <- function(fname, offsetid) {
+  res <- readRDS(fname)
   res[user.a < 0, user.a := -user.a + offsetid]
   res[user.b < 0, user.b := -user.b + offsetid]
   res[user.b < user.a, `:=`(user.b = user.a, user.a = user.b)]
-  res[,list(user.a, user.b, location_id), keyby=list(login, logout)]
+  res[,list(user.a, user.b, location_id, arrive, depart), keyby=list(login, logout)]
 }
 
 base.dt <- readRDS(paste0(args[3],"/raw-pairs.rds"))
@@ -61,42 +42,35 @@ slice <- function(el.dt, start.day, end.day) {
   list(res=relabelled, mp=remap_ids)
 }
 
-resolve <- function(cc.pairs, cu.pairs, increment=30, st=365) mapply(function(cc.file, cu.file) {
-  cc.EL <- readELtable(cc.file, max.uid)
-  cu.EL <- readELtable(cu.file, max.uid)
+resolve <- function(cc.pairs, cu.pairs, increment=30, st=365) mapply(function(ccfile, cufile) {
+  cc.EL <- readELtable(ccfile, max.uid)
+  cu.EL <- readELtable(cufile, max.uid)
   count <- cc.EL[,length(unique(c(user.a,user.b)))]
-  covert.ids <- max.uid + 1:count
-  covs <- locLimits[setkey(rbind(cc.EL, cu.EL), location_id)][logout > arrive & login < depart][,list(user.a,user.b,login,logout)]
+  covert.ids <- data.table(user_id=max.uid+ 1:count, key = "user_id")
+  covs <- rbind(cc.EL, cu.EL)[logout > arrive & login < depart][,list(user.a,user.b,login,logout)]
   combo.EL <- rbind(base.dt, covs)
   myears <- round(max(combo.EL$logout)/60/60/24/365)
   days <- seq(st,myears*365,by=increment)
-  res <- lapply(days, function(day) {
+  res <- rbindlist(mclapply(days, function(day) {
     sl = slice(combo.EL, day-increment, day)
     gg <- graph(t(sl$res), directed=F)
     cs <- fastgreedy.community(gg)
     #browser()
-    members <- membership(cs)[sl$mp[user_id %in% covert.ids]$new_user_id]
+    members <- membership(cs)[sl$mp[covert.ids, new_user_id]]
     comm.counts <- sizes(cs)[members]
-    cat(day, "\n")
-    list(m=members,co=comm.counts,d=day)
-  })
-  members.wh <- file(gsub("cc\\.csv", "members.csv", cc.file), open = "w")
-  sizes.wh <- file(gsub("cc\\.csv", "sizes.csv", cc.file), open = "w")
-  lapply(res, function(l) with(l,{
-    write(c(d,m), members.wh, ncolumns = count+1, append = T)
-    write(c(d,co), sizes.wh, ncolumns = count+1, append = T)
-  }))
-  flush(members.wh)
-  flush(sizes.wh)
-  close(members.wh)
-  close(sizes.wh)
-}, cc.file=cc.pairs, cu.file=cu.pairs)
+    as.list(c(day=day, community=members, size=comm.counts, negpop=sl$mp[!covert.ids,.N]))
+  }, mc.cores = detectCores()-1))
+  
+  setnames(res,c("day",paste0("covert_community_",1:count), paste0("community_size_",1:count),"negpop"))
+  res[, count:=count ]
+  saveRDS(res, gsub("process", "analyze", gsub("cc", "fgcomm", ccfile)))
+}, ccfile=cc.pairs, cufile=cu.pairs)
 
 cc.pairs <- getSimRes()
 cu.pairs <- getSimRes("cu")
 
-# cc.file <- cc.pairs[1]
-# cu.file <- cu.pairs[1]
+# ccfile <- cc.pairs[1]
+# cufile <- cu.pairs[1]
 # day <- 2*365
 
 resolve(cc.pairs, cu.pairs)
