@@ -42,41 +42,44 @@ slice <- function(el.dt, start.day, end.day) {
   list(res=relabelled, mp=remap_ids)
 }
 
-emptygraph <- data.table(V1=list(), V2=list(), t=list())
+emptygraph <- data.table(user.a=list(), user.b=list(), t=list())
 
-resolve <- function(cc.pairs, cu.pairs, increment=30, window=increment, st=365) mapply(function(ccfile, cufile) {
+cc.pairs <- getSimRes()
+cu.pairs <- getSimRes("cu")
+
+# ccfile <- cc.pairs[1]; cufile <- cu.pairs[1]
+# increment=30; window=increment; st=365; mxinc=48
+
+resolve <- function(cc.pairs, cu.pairs, increment=30, window=increment, st=365, mxinc=48) mapply(function(ccfile, cufile) {
   cc.EL <- readELtable(ccfile, max.uid)
   cu.EL <- readELtable(cufile, max.uid)
   count <- cc.EL[,length(unique(c(user.a,user.b)))]
   covert.ids <- data.table(user_id=max.uid+ 1:count, key = "user_id")
   covs <- rbind(cc.EL, cu.EL)[logout > arrive & login < depart][,list(user.a,user.b,login,logout)]
   combo.EL <- rbind(base.dt, covs)
-  n <- round(max(combo.EL$logout)/60/60/24/increment)
-  system.time(
-  res <- rbindlist(mclapply(1:n, function(inc) {
-    sl = slice(combo.EL, st + inc*increment, st + inc*increment + window)
+  n <- min(round(max(combo.EL$logout)/60/60/24/increment), mxinc)
+#  system.time(
+  mclapply(1:n, function(inc) {
+    sl = slice(combo.EL, st + (inc-1)*increment, st + (inc-1)*increment + window)
     if (dim(sl$res)[1] != 0) {
       gg <- graph(t(sl$res), directed=F)
       cs <- fastgreedy.community(gg)
-      ret <- rbindlist(lapply(communities(cs), function(comm) {
-        data.table(t(combn(comm, 2)), t=inc)
+      tmp <- rbindlist(lapply(communities(cs), function(comm) {
+        data.table(t(combn(sort(comm), 2)))
       }))
+      saveRDS(
+        data.table(user.a = sl$mp[tmp$V1, user_id], user.b = sl$mp[tmp$V2, user_id]),
+        gsub("process", "analyze", gsub("cc", sprintf("fgcomm-%02d",inc), ccfile))
+      )
     } else {
-      ret <- emptygraph
+      saveRDS(
+        emptygraph,
+        gsub("process", "analyze", gsub("cc", sprintf("fgcomm-%02d",inc), ccfile))
+      )
     }
-    ret
-  }, mc.cores = detectCores()-1))
-  )
-  setnames(res,c("day",paste0("covert_community_",1:count), paste0("community_size_",1:count),"negpop"))
-  res[, count:=count ]
-  saveRDS(res, gsub("process", "analyze", gsub("cc", "fgcomm", ccfile)))
+    
+  }, mc.cores = detectCores()-1)
+#  )
 }, ccfile=cc.pairs, cufile=cu.pairs)
-
-cc.pairs <- getSimRes()
-cu.pairs <- getSimRes("cu")
-
-# ccfile <- cc.pairs[1]
-# cufile <- cu.pairs[1]
-# day <- 2*365
 
 resolve(cc.pairs, cu.pairs)
