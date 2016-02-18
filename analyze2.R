@@ -1,13 +1,16 @@
 #!/usr/bin/env Rscript
 
-#setwd("~/git/scala-commsim/")
+#setwd(sprintf("%s/scala-commsim/", Sys.getenv("GITPROJHOME"))) # n.b., need to have .Renviron file with this in it
 rm(list=ls())
 require(data.table)
 require(bit64)
 require(igraph)
 require(parallel)
 args <- commandArgs(trailingOnly = T)
-# args <- c("output/process-test", "output/analyze-test", "input")
+if (length(args) == 0) { # manual mode
+  warning("no arguments provided, working in manual mode.")
+  args <- c("output/process-test", "output/analyze-test", "input")
+}
 
 # locLimits <- readRDS("input/location-lifetimes.rds")
 
