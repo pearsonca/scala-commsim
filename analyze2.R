@@ -15,8 +15,7 @@ if (length(args) == 0) { # manual mode
 # locLimits <- readRDS("input/location-lifetimes.rds")
 
 getSimRes <- function(wh="cc") list.files(args[1], pattern = paste0(wh,".rds"), full.names = T)
-src.dt <- readRDS(paste0(args[3],"/raw-input.rds"))
-max.uid <- as.integer(src.dt[,max(user_id)]+1)
+max.uid <- as.integer(readRDS(paste0(args[3],"/raw-input.rds"))[,max(user_id)]+1)
 
 readELtable <- function(fname, offsetid) {
   res <- readRDS(fname)
