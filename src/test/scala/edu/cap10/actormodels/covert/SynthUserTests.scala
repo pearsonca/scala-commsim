@@ -18,26 +18,26 @@ class SynthUserTests extends FunSuite {
       (List.fill(12)(0d) ++ List.fill(12)(1d)).toArray
   )
   
-  test("a synth user with one location just uses that location pdf") {
-    val userA = SynthUser(-1, 1, 1, .9, Array(testLocOne), Array(1.0))
-    assert(userA.pdfHour.length === testLocOne.pdf.length)
-    for (i <- 0 until 24) assert(userA.pdfHour(i) === testLocOne.pdf(i) +- 1e-8)
-  }
-  
-  test("a synth user with two locations uses the combined pdf, weighted by pref") {
-    val userA = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(0.5, 0.5))
-    val ref = (List.fill(12)(1d/48) ++ List.fill(12)(3d/48)).toArray
-    for (i <- 0 until 24) assert(userA.pdfHour(i) === ref(i) +- 1e-8)
-    val userB = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(1d/4, 3d/4))
-    val refB = (List.fill(12)(1d/96) ++ List.fill(12)(7d/96)).toArray
-    for (i <- 0 until 24) assert(userB.pdfHour(i) === refB(i) +- 1e-8, "problem in i = "+i)
-  }
-  
-  test("all hours have location pdfs that sum to 1") {
-    val userB = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(1d/4, 3d/4))
-    val refB = (List.fill(12)(1d/96) ++ List.fill(12)(7d/96)).toArray
-    for (i <- 0 until 24) assert(userB.pdfLocs(i).sum === 1d +- 1e-8, "problem in i = "+i)
-  }
+//  test("a synth user with one location just uses that location pdf") {
+//    val userA = SynthUser(-1, 1, 1, .9, Array(testLocOne), Array(1.0))
+//    assert(userA.pdfHour.length === testLocOne.pdf.length)
+//    for (i <- 0 until 24) assert(userA.pdfHour(i) === testLocOne.pdf(i) +- 1e-8)
+//  }
+//  
+//  test("a synth user with two locations uses the combined pdf, weighted by pref") {
+//    val userA = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(0.5, 0.5))
+//    val ref = (List.fill(12)(1d/48) ++ List.fill(12)(3d/48)).toArray
+//    for (i <- 0 until 24) assert(userA.pdfHour(i) === ref(i) +- 1e-8)
+//    val userB = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(1d/4, 3d/4))
+//    val refB = (List.fill(12)(1d/96) ++ List.fill(12)(7d/96)).toArray
+//    for (i <- 0 until 24) assert(userB.pdfHour(i) === refB(i) +- 1e-8, "problem in i = "+i)
+//  }
+//  
+//  test("all hours have location pdfs that sum to 1") {
+//    val userB = SynthUser(-1, 1, 1, .9, Array(testLocOne, testLocTwo), Array(1d/4, 3d/4))
+//    val refB = (List.fill(12)(1d/96) ++ List.fill(12)(7d/96)).toArray
+//    for (i <- 0 until 24) assert(userB.pdfLocs(i).sum === 1d +- 1e-8, "problem in i = "+i)
+//  }
   
   test("draws work properly") {
     val ref = (List.fill(12)(1d/48) ++ List.fill(12)(3d/48)).toArray

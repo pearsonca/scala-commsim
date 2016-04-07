@@ -15,8 +15,10 @@ object LoginEventOrder extends Ordering[LoginEvent] {
 /**
  * @author cap10
  */
-case class SynthUser(id:Int,
-    shape:Double, mean:Double, binop:Double,
+case class SynthUser(
+    id:Int,
+    waitingDistro:Rand[Double],
+    binop:Double,
     locations:Array[Location], prefPDF:Array[Double]
 ) {
 
@@ -45,12 +47,12 @@ case class SynthUser(id:Int,
       x.map(_ / tot)
     } }
   }
-
-  val gen = Gamma(shape, mean/shape)
+  
+  //val gen = Gamma(shape, mean/shape)
   val geomVisits = Binomial(maxVisits-1, binop*9/(maxVisits-1))
   val rng = new scala.util.Random(id)
 
-  var tilEvent : Int = gen.draw.toInt
+  var tilEvent : Int = waitingDistro.draw.toInt
   var meeting : Option[LoginEvent] = None
   def meet(l:Location, e:UseEvent) = {
     meeting = Some(LoginEvent(id, l.id, e.startDaySecs, e.endDaySecs, "covert"))
@@ -87,48 +89,69 @@ case class SynthUser(id:Int,
     } else List()
 
     if (tilEvent == 0) {
-      tilEvent = gen.draw.toInt
+      tilEvent = waitingDistro.draw.toInt
     } else tilEvent -= 1
     res
   }
 
 }
 
-object Main extends App {
-  val userfile = args(0)
-  val location = Locations.alllocs(args(1).toInt-1)
-  val shape = args(2).toDouble
-  val mean = args(3).toDouble
-  val cProbs = args.length == 4 // if args length == 4, then last arg is switch to use semi-complement of locations
-
-  val locProb = if (!cProbs)
-    location.pdf
-  else {
-    val temp = location.pdf.map { p => if (p == 0d) p else 1-p }
-    val tot = temp.sum
-    temp.map(_/tot)
-  }
-
-  val gen = Gamma(shape, mean/shape)
-  val users = io.Source.fromFile(userfile).getLines.zipWithIndex.map { case (line, i) =>
-    val (same, varying) = line.split(" ").splitAt(3)
+object SynthUser {
+  def build(in: (String, Int)) : SynthUser = {
+    val (same, varying) = in._1.split(" ").splitAt(3)
     val Array(shape, mean, binop) = same.map(_.toDouble)
     val len = varying.length / 2
     val (locs, prefs) = varying.splitAt(len)
-    SynthUser(i+1, shape, mean, binop, Locations.get(locs.map(_.toInt - 1)), prefs.map(_.toDouble))
-  }.toList
+    SynthUser(in._2+1, Gamma(shape, mean/shape), binop, Locations.get(locs.map(_.toInt - 1)), prefs.map(_.toDouble))
+  }
+}
 
-  var timeToMeet = gen.draw.toInt
+case class RunConfig(
+  users:List[SynthUser],
+  covertLocation:Location,
+  covertMeetingGenerator:Rand[Double],
+  meetingTimePDF:Array[Double],
+  durationYears:Int
+)
 
-  for (i <- 0 to 2*365) {
+object RunConfig {
+  def build(args:Array[String]) : RunConfig = {
+    val input = io.Source.fromFile(args(0)).getLines
+    
+    val location_id = input.next.toInt
+    val covertLocation = Locations.alllocs(location_id-1)
+    val users = input.zipWithIndex.map { SynthUser.build }.toList
+    
+    val Array(shape, mn) = args.slice(1, 3).map { _.toDouble }
+    
+    val durationYears = args(3).toInt
+    
+    val locProb = if (args.length == 4) {
+      val temp = covertLocation.pdf.map { p => if (p == 0d) p else 1-p }
+      val tot = temp.sum
+      temp.map(_/tot)
+    } else {
+      covertLocation.pdf
+    }
+    
+    RunConfig(users, covertLocation, Gamma(shape, mn/shape), locProb, durationYears)
+  }
+}
+
+object Main extends App {
+  val rc = RunConfig.build(args)
+  import rc._
+
+  var timeToMeet = covertMeetingGenerator.draw.toInt
+
+  for (i <- 0 to durationYears*365) {
     if (timeToMeet == 0) { // is meeting day?
       val List(first, second) = scala.util.Random.shuffle(users).take(2) // if yes, who meeting?
-      val hr = pdfFind(location.pdf, scala.util.Random.nextDouble)
-      val firstVisit, secondVisit = location.draw(hr)
-      first.meet(location, firstVisit)
-      second.meet(location, secondVisit)
-      // give them meeting event
-      timeToMeet = gen.draw.toInt
+      val hr = pdfFind(covertLocation.pdf, scala.util.Random.nextDouble)
+      val firstVisit, secondVisit = covertLocation.draw(hr)
+      first.meet(covertLocation, firstVisit)
+      second.meet(covertLocation, secondVisit)
+      timeToMeet = covertMeetingGenerator.draw.toInt // draw new meeting day
     } else timeToMeet -= 1
     users.map(_.tick(i)).flatten.sorted(LoginEventOrder).foreach { println }
 //    for (synth <- users) synth.tick(i) match {
