@@ -7,7 +7,7 @@ output:
 ---
 ## Analysis and plots of montreal data.
 
-```{r, echo=FALSE, include=FALSE}
+```{r, loadpkgs, echo=FALSE, include=FALSE}
 req.packages <- c("data.table", "ggplot2", "reshape2", "grid", "scales", "lubridate", "movMF")
 need.pkgs <- req.packages[!sapply(req.packages, require, character.only = T)]
 if (length(need.pkgs) != 0) install.packages(need.pkgs, dependencies = T)
@@ -19,7 +19,7 @@ source("pca_plots.R")
 
 Source data:
 
-```{r, echo=FALSE}
+```{r, loadData, echo=FALSE}
 max_hours <- 24
 min_logins <- 2;    min_users <- 6 # 6 user min remove abberant location
 min_lifetime <- 30; min_loc_lifetime <- 30 # days
@@ -38,6 +38,43 @@ training_locations <- sort(sample(
 # ggplot(censor.dt[,list(usage=sum(logout-login)/60/60), by=list(location_id, year, month)]) + aes(x=month, y=usage, group=location_id) + facet_grid(year ~ .) + geom_line(alpha=0.5)
 # users that qualify as regular:
 # censor.dt[,list(lifetime = max(logout)-min(login)), by=list(location_id, user_id)][lifetime > 60*60*24*365, unique(user_id)]
+```
+
+Let's look at some quick views of some components of the data.  First, how many hotspots are in use?  We can look at the life of all hotspots:
+
+```{r, location_counts, echo=F, fig.cap="Location Counts"}
+loclifetimes <- censor.dt[,
+  list(start=min(login), end=max(logout)),
+  keyby=location_id
+]
+p <- ggplot(loclifetimes) + theme_bw() + aes(y=location_id, yend=location_id, x=start/3600/24, xend=end/3600/24) + geom_segment(alpha=0.5) + labs(x="start / end day", y="location") + scale_x_continuous(breaks=(0:6)*365)
+ggsave("location-liftimes.png", p, width=7, height=4)
+p
+```
+
+as well as the net count of locations over time:
+
+```{r, location_counts, echo=F, fig.cap="Location Counts"}
+locCounts <- melt.data.table(loclifetimes, id.vars = "location_id")[,
+  list(change=sum(c(1,-1)[variable])), keyby=value
+]
+p <- ggplot(locCounts[,list(time=value/3600/24, net=cumsum(change))][net>0]) + theme_bw() + aes(x=time, y=net) + geom_step() + coord_cartesian(xlim=c(1,2000), ylim=c(1,300), expand = F) + scale_y_log10("net locations", breaks=c(1,2,5,10,20,50,100,200)) + scale_x_continuous(breaks=(0:6)*365)
+ggsave("location-net.png", p, width=7, height=4)
+p
+```
+
+There's a similar trend in users:
+
+```{r, location_counts, echo=F, fig.cap="Location Counts"}
+userCounts <- melt.data.table(lifetimes <- censor.dt[,
+  list(start=min(login), end=max(logout)),
+  keyby=user_id
+], id.vars = "user_id")[,
+  list(change=sum(c(1,-1)[variable])), keyby=value
+]
+p <- ggplot(userCounts[,list(time=value/3600/24, net=cumsum(change))][net>0]) + theme_bw() + aes(x=time, y=net) + geom_step() + coord_cartesian(xlim=c(1,2000), ylim=c(1,20000), expand = F) + scale_x_continuous(breaks=(0:6)*365) + scale_y_log10("net users", breaks=c(1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000))
+ggsave("user-net.png", p, width=7, height=4)
+p
 ```
 
 If want to identify locations which are "similar", so that we can inform how the covert group makes use
@@ -207,13 +244,18 @@ setkey(temporal_data_slice, location_id, measure, hour)
 ```
 
 ```{r, echo=F, fig.cap="Raw proportions by hour"}
-ggplot(temporal_data_slice) + theme_bw() + aes(group = location_id, x = hour, y = value) + facet_grid(measure ~ .) + geom_line(alpha=0.2) + scale_x_discrete(breaks=0:23, expand=c(0,0)) +
+p <- ggplot(temporal_data_slice) + theme_bw() + aes(group = location_id, x = hour, y = value) + facet_grid(measure ~ .) + geom_line(alpha=0.2) + scale_x_discrete(breaks=0:23, expand=c(0,0)) +
   scale_y_continuous("proportion", expand=c(0,0))
+ggsave("time-sig.png", p, width=7, height=4)
+p
 ```
 
 ```{r, echo=F, fig.cap="Measure Peak distribution"}
 peaks <- temporal_data_slice[, list(peak=which.max(value)-1), by=list(location_id, measure)]
-ggplot(peaks) + theme_bw() + aes(x = peak) + facet_grid(measure ~ .) + geom_bar(binwidth=1)
+p <- ggplot(peaks) + theme_bw() + aes(x = peak) + facet_grid(measure ~ .) +
+  geom_bar() +
+  scale_x_discrete("peak hour", limits=0:23)
+p
 ```
 
 ```{r, echo=F, fig.cap="Frequency Power Signatures"}
@@ -235,10 +277,11 @@ pwr <- rbind(
   freq_power(ref_logout, "logout")
 )
 
-ggplot(pwr[,
+p <- ggplot(pwr[,
   list(power=value, frequency=as.numeric(sub("_perday","", variable))), by=list(location_id, measure)
 ]) + theme_bw() + aes(y = power, x=frequency, group=location_id) + facet_grid(measure ~ .) + geom_line(alpha=0.2) + scale_x_continuous("per day frequency", breaks=c(1,2,3,4,6,8,12))
 # pwr[, list(peak_freq = variable[which.max(value)]), by=list(location_id, measure)][,.N,by=list(measure, peak_freq)]
+p
 ```
 
 By-eye conclusions:
@@ -291,7 +334,9 @@ temporal_cluster <- merge(temporal_cluster, vmfrename, by="vMFcluster")[,list(vM
 ```
 
 ```{r, echo=F, fig.cap="Login, Logout, Usage Peak Clusters"}
-ggplot(peaks[temporal_cluster]) + theme_bw() + aes(x = peak, fill=vMFcluster) + facet_grid(measure ~ .) + geom_bar(binwidth=1) + labs(fill="von Mises-Fisher\n3-Sphere\nCluster\nPeak Time")
+p <- ggplot(peaks[temporal_cluster]) + theme_bw() + aes(x = peak, fill=vMFcluster) + facet_grid(measure ~ .) + geom_bar(binwidth=1) + labs(fill="von Mises-Fisher\n3-Sphere\nCluster\nPeak Time")
+ggsave("time-peaks.png", p, width=7, height=4)
+p
 ```
 
 Let's turn to the powers:
@@ -309,10 +354,12 @@ pwr_cluster <- tot_pwr[pwr_divisions][peak_freq_cat][,
   list(peak_freq, pwr_cat = ifelse(tot_pwr < low,"lo",ifelse(tot_pwr < hi, "med","hi"))),
   keyby=list(measure, location_id)
 ]
-ggplot(pwr[pwr_cluster][,
+p <- ggplot(pwr[pwr_cluster][,
   list(power=value, frequency=as.numeric(sub("_perday","", variable)), peak_freq, pwr_cat),
   by=list(location_id, measure)
 ]) + theme_bw() + aes(y = power, x=frequency, group=location_id, alpha=peak_freq, color = pwr_cat) + facet_grid(measure ~ .) + geom_line() + scale_x_continuous("per day frequency", breaks=c(1,2,3,4,6,8,12))
+ggsave("freq-powers.png", p, width=7, height=4)
+p
 ```
 
 Showing the power cluster breakdown
@@ -356,6 +403,7 @@ p <- ggplot(agg.dt) + theme_bw() +
     color = "von Mises-Fisher\nPeak Time\nCluster"
   ) + scale_size_manual("power\ncluster", limits=c("low","med","hi"), values=c(2,5,8)) +
   scale_alpha_manual("power\ncluster", limits=c("low","med","hi"), values=(2^0.5)/c(2,5,8)^0.5)
+ggsave("locationclusters.png", p, width=7, height=4)
 p
 ```
 \elandscape\newpage
@@ -363,11 +411,12 @@ p
 \newpage\blandscape
 ```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="Raw proportions by hour"}
 setkey(pwr_cluster, location_id, measure)
-ggplot(temporal_data_slice[temporal_cluster][pwr_cluster]) + theme_bw() +
+p <- ggplot(temporal_data_slice[temporal_cluster][pwr_cluster]) + theme_bw() +
   aes(group = location_id, x = hour, y = value, color=pwr_cat) +
   facet_grid(measure ~ vMFcluster) + geom_line(alpha=0.3) +
   scale_x_discrete(breaks=0:23, expand=c(0,0)) +
   scale_y_continuous("proportion", expand=c(0,0))
+p
 ```
 \elandscape\newpage
 
@@ -449,13 +498,15 @@ digests <- rbind(
   pwr_dts$digest[,list(switch_rate = switches/usage, main, share, type="power")],
   vMF_dts$digest[,list(switch_rate = switches/usage, main, share, type="peaktime")]
 )
-ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1) + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+p <- ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1) + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+p
 ```
 \elandscape\newpage
 
 \newpage\blandscape
 ```{r, echo=F, fig.width=11.25, fig.height=7, fig.cap="normalized distribution of main location type usage"}
-ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1, position="fill") + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+p <- ggplot(digests) + facet_grid(type ~ .) + theme_bw() + aes(x=log10(switch_rate), fill=main, alpha=factor(floor(share*10))) + geom_bar(binwidth=0.1, position="fill") + scale_alpha_manual(breaks=0:10, values=seq(0.5,1,length.out = 11))
+p
 ```
 \elandscape\newpage
 
@@ -471,13 +522,15 @@ plot_ref <- ref[
 user_src.dt <- plot_ref[between(life, 365*24*60*60, 3*365*24*60*60) & between(ul,3,20)]
 saveRDS(user_src.dt, "../input/user.RData")
 #thing[, list(user_id, mains=interaction(lifetime_main, pwr_main, peak_main))][,.N,by=mains]
-ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main, membership = lifetime_share * pwr_share * peak_share)]) +facet_grid(pwr_main ~ lifetime_main, labeller = function(var, val){
-  if (var == "pwr_main") {
-    ifelse(val == "lo", "smooth usage", ifelse(val=="med","some usage variability","highly variable usage"))
+p <- ggplot(user_src.dt[, list(y=log10(usage), x=log10(life), pwr_main, lifetime_main, peak_main, membership = lifetime_share * pwr_share * peak_share)]) +facet_grid(pwr_main ~ lifetime_main, labeller = function(vardt){
+  if (!is.null(vardt$pwr_main)) {
+    list(c(lo="smooth usage",med="some usage variability",hi="highly variable usage")[as.character(vardt$pwr_main)])
   } else {
-    ifelse(val == "low", "low usage per time", ifelse(val=="mid","typical usage per time","high usage per time"))
+    list(c(low="low usage per time", mid="typical usage per time",high="high usage per time")[as.character(vardt[[1]])])
   }
 }) + aes(x=x,y=y, color=factor(peak_main), alpha = membership) + geom_point() + theme_bw() + labs(y="log(usage)", x="log(life)", color="usage\npeak")
+ggsave("users.png", p)
+p
 ```
 \elandscape\newpage
 
@@ -505,6 +558,40 @@ saveRDS(intermediate[agg.dt[location_id %in% unique(intermediate$location_id), l
 # censor.dt[user_id %in% user_src.dt$user_id, .N*60*60*24*30/(max(logout)-min(login)), by=user_id][V1>1]
 ```
 
+
+```{r}
+slice <- user_src.dt[lifetime_main=="mid" & pwr_main == "med" & peak_main == "middle"]
+mlt.slice <- melt.data.table(slice[,list(life,ulog=log10(usage), unilocs=ul),by=user_id], id.vars = "user_id", measure.vars = c("life","ulog","unilocs"))
+ggsave("mmm_life.png", ggplot(mlt.slice[variable == "life"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="lifetime (end - start)", y="density"), width=7, height=4)
+ggsave("mmm_usage.png", ggplot(mlt.slice[variable == "ulog"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="log10(usage)", y="density"), width=7, height=4)
+ggsave("mmm_ulocs.png", ggplot(mlt.slice[variable == "unilocs"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="unique locations", y="density"), width=7, height=4)
+
+slice <- user_src.dt[lifetime_main=="mid" & pwr_main == "lo" & peak_main == "early"]
+mlt.slice <- melt.data.table(slice[,list(life,ulog=log10(usage), unilocs=ul),by=user_id], id.vars = "user_id", measure.vars = c("life","ulog","unilocs"))
+ggsave("mle_life.png", ggplot(mlt.slice[variable == "life"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="lifetime (end - start)", y="density"), width=7, height=4)
+ggsave("mle_usage.png", ggplot(mlt.slice[variable == "ulog"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="log10(usage)", y="density"), width=7, height=4)
+ggsave("mle_ulocs.png", ggplot(mlt.slice[variable == "unilocs"]) + theme_bw() + aes(x=value, y=..density..) + geom_histogram() + labs(x="unique locations", y="density"), width=7, height=4)
+```
+
+```{r}
+mmm.cc <- loclifetimes[setkey(fread("../../muri-overall/output/matched/mid/med/middle/10/001-covert-0-cc.csv", col.names = c("user.a","user.b","location_id","start","end","other")), location_id)][start < i.end & i.start < end, list(start=i.start, end=i.end, user.a, user.b, location_id)]
+mmm.cu <- loclifetimes[setkey(fread("../../muri-overall/output/matched/mid/med/middle/10/001-covert-0-cu.csv", col.names = c("user.a","user.b","location_id","start","end","other")), location_id)][start < i.end & i.start < end, list(start=i.start, end=i.end, user.a, user.b, location_id)]
+mmm.all <- rbind(mmm.cc, mmm.cu)
+mmm.both <- rbind(
+  mmm.all[user.a < 0, list(mx=max(end),mn=min(start),sm=sum(end-start),ul=length(unique(location_id))), by=list(user_id=user.a)],
+  mmm.all[user.b < 0, list(mx=max(end),mn=min(start),sm=sum(end-start),ul=length(unique(location_id))), by=list(user_id=user.b)]
+)[,list(life=max(mx)-min(mn), usage=sum(sm), ul=sum(ul)),by=user_id]
+```
+
+```{r}
+mle.cc <- loclifetimes[setkey(fread("../../muri-overall/output/matched/mid/lo/late/10/001-covert-0-cc.csv", col.names = c("user.a","user.b","location_id","start","end","other")), location_id)][start < i.end & i.start < end, list(start=i.start, end=i.end, user.a, user.b, location_id)]
+mle.cu <- loclifetimes[setkey(fread("../../muri-overall/output/matched/mid/lo/late/10/001-covert-0-cu.csv", col.names = c("user.a","user.b","location_id","start","end","other")), location_id)][start < i.end & i.start < end, list(start=i.start, end=i.end, user.a, user.b, location_id)]
+mle.all <- rbind(mle.cc, mle.cu)
+mle.both <- rbind(
+  mle.all[user.a < 0, list(mx=max(end),mn=min(start),sm=sum(end-start),ul=length(unique(location_id))), by=list(user_id=user.a)],
+  mle.all[user.b < 0, list(mx=max(end),mn=min(start),sm=sum(end-start),ul=length(unique(location_id))), by=list(user_id=user.b)]
+)[,list(life=max(mx)-min(mn), usage=sum(sm), ul=sum(ul)),by=user_id]
+```
 
 show swtiching rate normalized by visit rate on a per user basis
 
