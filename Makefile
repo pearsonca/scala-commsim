@@ -73,7 +73,10 @@ ALLPBS :=
 define dirtars
 $(call factorial2dir,$(1))
 
-$(OUTSRC)/$(1)/%/out.csv: $(START) $(INPUTSRC)/$(1)/%.csv
+$(OUTSRC)/$(1)/%/: | $(OUTSRC)/$(1)
+	mkdir -p $$@
+
+$(OUTSRC)/$(1)/%/out.csv: $(START) $(INPUTSRC)/$(1)/%.csv | $(OUTSRC)/$(1)/%/
 	./$$^ 10 7 4 > $$@
 
 $(OUTSRC)/$(1)/%/trans.csv: translate.R $(INDIR)/remap-location-ids.rds $(OUTSRC)/$(1)/%/out.csv
