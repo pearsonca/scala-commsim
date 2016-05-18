@@ -34,13 +34,22 @@ SZS := 5 10 20
 $(INPUTSRC): | $(INPUT)
 	mkdir -p $@
 
+$(OUTSRC): | $(INPUT)
+	mkdir -p $@
+
 define factorial1dir
 $(INPUTSRC)/$(1): | $(INPUTSRC)
+	mkdir $$@
+
+$(OUTSRC)/$(1): | $(OUTSRC)
 	mkdir $$@
 endef
 
 define factorial2dir
 $(INPUTSRC)/$(1): | $(INPUTSRC)/$(dir $(1))
+	mkdir $$@
+
+$(OUTSRC)/$(1): | $(OUTSRC)/$(dir $(1))
 	mkdir $$@
 endef
 
