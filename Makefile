@@ -86,7 +86,7 @@ $(OUTSRC)/$(1)/%/out.csv: $(START) $(INPUTSRC)/$(1)/%.csv
 	mkdir -p $$(dir $$@)
 	./$$^ 10 7 4 > $$@
 
-$(OUTSRC)/$(1)/%/trans.csv: translate.R $(INDIR)/remap-location-ids.rds $(OUTSRC)/$(1)/%/out.csv
+$(OUTSRC)/$(1)/%/trans.csv: translate.R $(OUTSRC)/$(1)/%/out.csv
 	$(R) $$^ 20649600 > $$@
 
 $(OUTSRC)/$(1)/%/cc.csv $(OUTSRC)/$(1)/%/cu.csv: $(STARTDIG) $(OUTSRC)/$(1)/%/trans.csv
