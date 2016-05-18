@@ -102,17 +102,6 @@ Our initial measures are:
 This is 101 (!) measures, so we definitely need to reduce the dimensionality.
 
 ```{r, echo=F}
-process_hour_rle <- function(prefix) {
-  hrsind <- 0:23
-  nms <- sapply(hrsind, function(h) sprintf("%s_hr_%.2d", prefix, h))
-  function(hrrle) with(hrrle, {
-    missing <- hrsind[!(hrsind %in% values)]
-    res <- c(lengths, rep.int(0, length(missing)))[order(c(values, missing))] / sum(lengths)
-    names(res) <- nms
-    res
-  })
-}
-
 day.abb <- c("Sun", "Mon", "Tues", "Wed","Thurs","Fri","Sat")
 
 weekday_zeroes <- data.table(
@@ -129,6 +118,17 @@ hourly_zeros <- data.table(
   hour = 0:23,
   usage = 0, key = "hour"
 )
+
+process_hour_rle <- function(prefix) {
+  hrsind <- 0:23
+  nms <- sapply(hrsind, function(h) sprintf("%s_hr_%.2d", prefix, h))
+  function(hrrle) with(hrrle, {
+    missing <- hrsind[!(hrsind %in% values)]
+    res <- c(lengths, rep.int(0, length(missing)))[order(c(values, missing))] / sum(lengths)
+    names(res) <- nms
+    res
+  })
+}
 
 login_parser <- process_hour_rle("login")
 logout_parser <- process_hour_rle("logout")
@@ -207,6 +207,7 @@ refpredictors <- function(SD) with(SD, {
     as.list(dur_quantiles), as.list(login_hours), as.list(logout_hours)
   ))
 })
+
 digestor <- function(dt, preds, training, cache = "../input/initPred.RData") {
   { if (!file.exists(cache)) {
     d <- dt[, preds(.SD), by=location_id]
