@@ -87,7 +87,7 @@ $(OUTSRC)/$(1)/%/out.csv: $(START) $(INPUTSRC)/$(1)/%.csv
 	./$$^ 10 7 4 > $$@
 
 $(OUTSRC)/$(1)/%/trans.csv: translate.R $(INDIR)/remap-location-ids.rds $(OUTSRC)/$(1)/%/out.csv
-	$(RPATH) $$^ 20649600 > $$@
+	$(R) $$^ 20649600 > $$@
 
 $(OUTSRC)/$(1)/%/cc.csv $(OUTSRC)/$(1)/%/cu.csv: $(STARTDIG) $(OUTSRC)/$(1)/%/trans.csv
 	./$$^
@@ -96,6 +96,8 @@ $(INPUTSRC)/$(1)/%.csv: mkusergroup.R\
  $(DIGESTDATA)/userrefs.rds $(FILTERDATA)/detail_input.rds $(DIGESTDATA)/locrefs.rds\
  $(FILTERDATA)/location_pdf.csv $(DIGESTDATA)/uprefs.rds | $(INPUTSRC)/$(1)
 	$(R) $$^ $(subst /,$(SPACE),$(1)) $$* > $$@
+
+.PRECIOUS: $(INPUTSRC)/$(1)/%.csv $(OUTSRC)/$(1)/%/out.csv $(OUTSRC)/$(1)/%/trans.csv
 
 ALLPBS += samples-$(subst /,-,$(1)).pbs
 

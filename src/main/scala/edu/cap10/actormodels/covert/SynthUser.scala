@@ -102,7 +102,7 @@ object SynthUser {
     val Array(shape, mean, binop) = same.map(_.toDouble)
     val len = varying.length / 2
     val (locs, prefs) = varying.splitAt(len)
-    SynthUser(in._2+1, Gamma(shape, mean/shape), binop, Locations.get(locs.map(_.toInt - 1)), prefs.map(_.toDouble))
+    SynthUser(in._2+1, Gamma(shape, mean/shape), binop, Locations.get(locs.map(_.toInt)), prefs.map(_.toDouble))
   }
 }
 

@@ -54,11 +54,9 @@ object Locations {
       Location(other.head.trim.toInt, cdf, means, ks)
     }.toArray
     
-    val maxid = prelim.map(_.id.toInt).max
+    val maxid = prelim.map(_.id.toInt).max + 1
     val res = Array.ofDim[Location](maxid)
-    prelim.foreach { l => 
-      res(l.id.toInt-1) = l
-    }
+    prelim.foreach { l => res(l.id.toInt) = l }
     res
   }
 
