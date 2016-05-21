@@ -2,6 +2,7 @@
 
 include references.mk
 include $(REFDIR)/references.mk
+include dims.mk
 
 INPUTSRC   := $(INDIR)/$(WORKINGDIR)/covert
 OUTSRC     := $(INDIR)/simulate/covert
@@ -15,9 +16,6 @@ START  := target/start
 DIGPATH := ../montreal-reprocess
 STARTDIG  := $(DIGPATH)/$(START)
 
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
-
 R := /usr/bin/env Rscript
 
 $(START): $(shell find ./src -type f)
@@ -25,11 +23,6 @@ $(START): $(shell find ./src -type f)
 
 $(STARTDIG): $(shell find $(DIGPATH)/src -type f)
 	@cd $(DIGPATH); sbt start-script
-
-USAGE := low mid high
-PWRS := lo med hi
-TIMS := early middle late
-SZS := 5 10 20
 
 $(INPUTSRC): | $(INPUT)
 	mkdir -p $@
@@ -63,19 +56,6 @@ $(foreach u,$(USAGE),\
   $(foreach t,$(TIMS),\
    $(eval $(call factorial2dir,$(u)/$(p)/$(t)))\
 )))
-
-COVERTDIMS :=
-
-$(foreach u,$(USAGE),\
- $(foreach p,$(PWRS),\
-  $(foreach t,$(TIMS),\
-   $(foreach s,$(SZS),\
-$(eval COVERTDIMS += $(u)/$(p)/$(t)/$(s))\
-))))
-
-#$(info $(words $(COVERTDIMS)) $(COVERTDIMS))
-
-SAMPN := 60
 
 ALLPBS :=
 
