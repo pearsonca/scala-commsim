@@ -119,7 +119,7 @@ cat(with(parse_args(
          ]
      }))
     paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = " ")
-  }, by=user_id]$V1
+  }]$V1
   #browser()
   paste(c(sprintf("%d", covertLoc), ret), collapse = "\n")
 }))
