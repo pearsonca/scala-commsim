@@ -118,7 +118,7 @@ cat(with(parse_args(
          list(lc=sample(location_id, dtrow$N), ps=unlist(dtrow$p))
          ]
      }))
-    paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = " ")
+    paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = "\n")
   }]
   #browser()
   paste(c(sprintf("%d", covertLoc), ret), collapse = "\n")
