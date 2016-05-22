@@ -57,7 +57,7 @@ parse_args <- function(argv = commandArgs(trailingOnly = T)) {
 }
 
 cat(with(parse_args(
-c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "low", "lo", "early", "5", "001")
+# c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "low", "lo", "early", "5", "001")
 # c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "high", "hi", "late", "20", "001")
 ), {
   template_user_ids <- users.dt[
