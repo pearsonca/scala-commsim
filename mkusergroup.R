@@ -57,6 +57,7 @@ parse_args <- function(argv = commandArgs(trailingOnly = T)) {
 }
 
 cat(with(parse_args(
+c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "low", "lo", "early", "5", "001")
 # c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "high", "hi", "late", "20", "001")
 ), {
   template_user_ids <- users.dt[
@@ -109,8 +110,11 @@ cat(with(parse_args(
   covertLoc <- sample(src, 1, replace = T)
   repl <- (count > length(template_user_ids))
 
-  users <- sample(template_user_ids, count, replace = repl)
-  ret <- ressrc[user_id %in% users][,{
+  users <- data.table(user_id=sample(template_user_ids, count, replace = repl))
+  pre <- ressrc[users]
+  pre[, new_user_id := rep(1:count, rle(user_id)$lengths)]
+  
+  ret <- pre[,{
     things <- Reduce(function(left, right) rbind(left, right),
      apply(.SD, 1, function(dtrow) {
        locs[
@@ -118,8 +122,8 @@ cat(with(parse_args(
          list(lc=sample(location_id, dtrow$N), ps=unlist(dtrow$p))
          ]
      }))
-    paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = "\n")
-  }]
+    paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = " ")
+  }, by=new_user_id]$V1
   #browser()
   paste(c(sprintf("%d", covertLoc), ret), collapse = "\n")
 }))
