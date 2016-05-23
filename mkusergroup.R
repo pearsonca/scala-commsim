@@ -111,7 +111,7 @@ cat(with(parse_args(
   repl <- (count > length(template_user_ids))
 
   users <- data.table(user_id=sample(template_user_ids, count, replace = repl), new_user_id = 1:count, key="user_id")
-  pre <- merge(ressrc, users, by="user_id")
+  pre <- merge.data.frame(ressrc, users, by="user_id", allow.cartesian = T)
   
   ret <- pre[,{
     things <- Reduce(function(left, right) rbind(left, right),
