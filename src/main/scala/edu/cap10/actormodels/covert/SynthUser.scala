@@ -119,7 +119,7 @@ object RunConfig {
     val input = io.Source.fromFile(args(0)).getLines
     
     val location_id = input.next.toInt
-    val covertLocation = Locations.alllocs(location_id-1)
+    val covertLocation = Locations.alllocs(location_id)
     val users = input.zipWithIndex.map { SynthUser.build }.toList
     
     val Array(shape, mn) = args.slice(1, 3).map { _.toDouble }
