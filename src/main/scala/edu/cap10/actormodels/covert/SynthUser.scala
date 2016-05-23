@@ -126,7 +126,7 @@ object RunConfig {
     
     val durationYears = args(3).toInt
     
-    val locProb = if (args.length == 4) {
+    val locProb = if (args.length == 5) {
       val temp = covertLocation.pdf.map { p => if (p == 0d) p else 1-p }
       val tot = temp.sum
       temp.map(_/tot)
