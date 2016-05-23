@@ -59,8 +59,8 @@ parse_args <- function(argv = commandArgs(trailingOnly = T)) {
 invlogit <- function(a) 1/(1+exp(-a))
 
 cat(with(parse_args(
-#  high hi late 10 016
-# c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "high", "hi", "late", "10", "016")
+#  mid med middle 5 009
+# c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "mid", "med", "middle", "5", "009")
 # c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "high", "hi", "late", "20", "001")
 ), {
   template_user_ids <- users.dt[
@@ -111,7 +111,7 @@ cat(with(parse_args(
   repl <- (count > length(template_user_ids))
 
   users <- data.table(user_id=sample(template_user_ids, count, replace = repl), new_user_id = 1:count, key="user_id")
-  pre<-users[ressrc, allow.cartesian=T]
+  pre <- merge(ressrc, users, by="user_id")
   
   ret <- pre[,{
     things <- Reduce(function(left, right) rbind(left, right),
@@ -119,7 +119,7 @@ cat(with(parse_args(
        locs[
          lifetime_cat == dtrow$lifetime_cat & pwr_clust == dtrow$pwr_clust & vMFcluster == dtrow$vMFcluster,
          list(lc=sample(location_id, dtrow$N), ps=unlist(dtrow$p))
-         ]
+       ]
      }))
     paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = " ")
   }, by=new_user_id]$V1
