@@ -12,7 +12,7 @@ cat <<EOF
 #PBS -t 1-$3
 
 module load gcc/5.2.0 R/3.2.2 java/1.8.0_31 scala
-cd /scratch/lfs/cap10/scala-commsim
+cd /ufrc/singer/cap10/scala-commsim
 tar=\$(printf 'input/simulate/covert/$2/%03d/cc.csv' \$PBS_ARRAYID)
 make \$tar
 EOF
