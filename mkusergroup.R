@@ -56,7 +56,11 @@ parse_args <- function(argv = commandArgs(trailingOnly = T)) {
   result
 }
 
+invlogit <- function(a) 1/(1+exp(-a))
+
 cat(with(parse_args(
+#  mid med middle 5 009
+# c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "mid", "med", "middle", "5", "009")
 # c("input/digest/clustering/userrefs.rds", "input/digest/filter/detail_input.rds", "input/digest/clustering/locrefs.rds", "input/digest/filter/location_pdf.csv", "input/digest/clustering/uprefs.rds", "high", "hi", "late", "20", "001")
 ), {
   template_user_ids <- users.dt[
@@ -74,21 +78,18 @@ cat(with(parse_args(
     keyby=user_id
   ]
 
-  invlogit <- function(a) 1/(1+exp(-a))
-
   gamma_usage_waiting_distro <- censor.dt[
     user_id %in% template_user_ids,
     list(diffs = diff(unique(sort(login_day)))),
     by=list(user_id)
-  ][,
-    {
-      res <- as.list(exp(mle(
-        function(logk, logmu, diffs) -sum(dgamma(diffs, shape=exp(logk), scale=exp(logmu-logk), log=T)),
-        start=list(logk=0, logmu=log(max(mean(diffs),1))),
-        fixed=list(diffs=diffs)
-      )@coef))
-      names(res) <- c("shape","mean")
-      res
+  ][,{
+    res <- as.list(exp(mle(
+      function(logk, logmu, diffs) -sum(dgamma(diffs, shape=exp(logk), scale=exp(logmu-logk), log=T)),
+      start=list(logk=0, logmu=log(max(mean(diffs),1))),
+      fixed=list(diffs=diffs)
+    )@coef))
+    names(res) <- c("shape","mean")
+    res
     },
     keyby=user_id
   ]
@@ -109,17 +110,19 @@ cat(with(parse_args(
   covertLoc <- sample(src, 1, replace = T)
   repl <- (count > length(template_user_ids))
 
-  users <- sample(template_user_ids, count, replace = repl)
-  ret <- ressrc[user_id %in% users][,{
+  users <- data.table(user_id=sample(template_user_ids, count, replace = repl), new_user_id = 1:count, key="user_id")
+  pre <- merge(ressrc, users, by="user_id", allow.cartesian = T)
+  
+  ret <- pre[,{
     things <- Reduce(function(left, right) rbind(left, right),
      apply(.SD, 1, function(dtrow) {
        locs[
          lifetime_cat == dtrow$lifetime_cat & pwr_clust == dtrow$pwr_clust & vMFcluster == dtrow$vMFcluster,
          list(lc=sample(location_id, dtrow$N), ps=unlist(dtrow$p))
-         ]
+       ]
      }))
     paste(shape[1], mean[1], pbin[1], paste(things$lc, collapse = " "), paste(things$ps, collapse = " "), collapse = " ")
-  }, by=user_id]$V1
+  }, by=new_user_id]$V1
   #browser()
   paste(c(sprintf("%d", covertLoc), ret), collapse = "\n")
 }))

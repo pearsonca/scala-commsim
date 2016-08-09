@@ -119,14 +119,14 @@ object RunConfig {
     val input = io.Source.fromFile(args(0)).getLines
     
     val location_id = input.next.toInt
-    val covertLocation = Locations.alllocs(location_id-1)
+    val covertLocation = Locations.alllocs(location_id)
     val users = input.zipWithIndex.map { SynthUser.build }.toList
     
     val Array(shape, mn) = args.slice(1, 3).map { _.toDouble }
     
     val durationYears = args(3).toInt
     
-    val locProb = if (args.length == 4) {
+    val locProb = if (args.length == 5) {
       val temp = covertLocation.pdf.map { p => if (p == 0d) p else 1-p }
       val tot = temp.sum
       temp.map(_/tot)
