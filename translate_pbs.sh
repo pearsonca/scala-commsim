@@ -2,8 +2,8 @@ cat <<EOF
 #!/bin/bash
 #PBS -r n
 #PBS -N $1
-#PBS -o $1.o
-#PBS -e $1.err
+#PBS -o $1.o-%a
+#PBS -e $1.err-%a
 #PBS -m a
 #PBS -M cap10@ufl.edu
 #PBS -l walltime=01:00:00
@@ -13,6 +13,6 @@ cat <<EOF
 
 module load gcc/5.2.0 R/3.2.2 java/1.8.0_31 scala
 cd /ufrc/singer/cap10/scala-commsim
-tar=\$(printf 'input/simulate/covert/$2/%03d/cc.csv' \$PBS_ARRAYID)
+tar=\$(printf 'input/simulate/covert/$2/%03d/cc.csv' \$SLURM_ARRAY_TASK_ID)
 make \$tar
 EOF
